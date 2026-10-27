@@ -33,6 +33,11 @@
       "icons/icon.icns"
     ],
     "shortDescription": "Local dictation, voice typing and audio transcription.",
-    "longDescription": "Dictate, transcribe audio, and edit with your voice. Local processing, multilingual support, and text insertion across apps."
+    "longDescription": "Dictate, transcribe audio, and edit with your voice. Local processing, multilingual support, and text insertion across apps.",
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      }
+    }
   }
 }
