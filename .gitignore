@@ -22,3 +22,5 @@ gosu-speech-to-text-chrome.zip
 voz-chrome-extension.zip
 
 .venv.before-startup-*/
+
+/src-tauri/gen/
