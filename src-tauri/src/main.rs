@@ -7,8 +7,10 @@ mod engine_paths;
 mod platform;
 use tauri::Manager;
 
+#[cfg(windows)]
 use std::sync::atomic::{AtomicIsize, Ordering};
 static CLIPBOARD: std::sync::Mutex<Option<arboard::Clipboard>> = std::sync::Mutex::new(None);
+#[cfg(windows)]
 static TARGET: AtomicIsize = AtomicIsize::new(0);
 
 #[tauri::command]
