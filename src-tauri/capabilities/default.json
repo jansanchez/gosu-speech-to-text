@@ -1,0 +1,1 @@
+{"identifier":"default","description":"Main window and user-configured global shortcut","windows":["main"],"permissions":["core:default","core:window:allow-set-always-on-top","core:window:allow-set-size","global-shortcut:allow-register","global-shortcut:allow-unregister"]}

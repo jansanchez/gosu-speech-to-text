@@ -1,0 +1,8 @@
+{
+  "name": "GOSU Speech to Text",
+  "fullName": "GOSU Speech to Text — Dictation & Voice Typing",
+  "descriptor": "Dictation & Voice Typing",
+  "slug": "gosu-speech-to-text",
+  "version": "0.3.2",
+  "description": "Dictate, transcribe audio, and edit with your voice. Local processing, multilingual support, and text insertion across apps."
+}

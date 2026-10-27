@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "GOSU Speech to Text — Dictation & Voice Typing",
+  "version": "0.3.2",
+  "description": "Dictate, transcribe audio, and edit with your voice. Local processing, multilingual support, and text insertion across apps.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://huggingface.co/*",
+    "https://*.huggingface.co/*",
+    "https://*.hf.co/*",
+    "https://*.xethub.hf.co/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}

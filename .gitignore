@@ -1,0 +1,24 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+src-tauri/target/
+.env
+*.log
+
+engine-dist/
+build-engine/
+extension-dist/
+
+*.log
+rustup-init.sh
+
+.voz-backups/
+
+ready/
+gosu-speech-to-text-chrome.zip
+
+# Legacy build archive, excluded during migration
+voz-chrome-extension.zip
+
+.venv.before-startup-*/

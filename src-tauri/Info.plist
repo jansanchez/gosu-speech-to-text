@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict><key>NSMicrophoneUsageDescription</key><string>GOSU Speech to Text utiliza el micrófono para transcribir tu dictado localmente.</string><key>NSAppleEventsUsageDescription</key><string>GOSU Speech to Text solicita permiso para pegar el texto revisado en la aplicación que elijas.</string></dict></plist>

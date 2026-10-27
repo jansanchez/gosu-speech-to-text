@@ -1,0 +1,38 @@
+{
+  "name": "gosu-speech-to-text",
+  "private": true,
+  "version": "0.3.2",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
+    "build": "node scripts/sync-brand.mjs --check && tsc --noEmit && vite build",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "desktop": "node scripts/prepare-desktop.mjs && tauri dev",
+    "desktop:build": "node scripts/build-desktop.mjs",
+    "extension:build": "node scripts/sync-brand.mjs --check && node scripts/build-extension.mjs",
+    "brand:sync": "node scripts/sync-brand.mjs",
+    "brand:check": "node scripts/sync-brand.mjs --check"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-global-shortcut": "^2.0.0",
+    "idb-keyval": "^6.2.1",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.28.2",
+    "fake-indexeddb": "^6.2.6",
+    "happy-dom": "^21.0.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  },
+  "description": "Dictate, transcribe audio, and edit with your voice. Local processing, multilingual support, and text insertion across apps.",
+  "license": "MIT"
+}

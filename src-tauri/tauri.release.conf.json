@@ -1,0 +1,11 @@
+{
+  "bundle": {
+    "resources": {
+      "../engine-dist/gosu-engine/": "engine/"
+    },
+    "targets": "all",
+    "macOS": {
+      "infoPlist": "Info.plist"
+    }
+  }
+}
