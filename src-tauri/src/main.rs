@@ -1,4 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#[cfg(target_os = "linux")]
+mod linux_microphone;
 mod engine;
 mod engine_paths;
 #[cfg(not(windows))]
@@ -85,7 +87,11 @@ async fn paste_here(text: String, window: tauri::WebviewWindow) -> Result<(), St
 fn main() {
     let app = tauri::Builder::default()
         .manage(engine::Engine::default())
-        .setup(|app| { engine::start(app.handle()); Ok(()) })
+        .setup(|app| {
+            #[cfg(target_os = "linux")]
+            linux_microphone::install(app)?;
+            engine::start(app.handle()); Ok(())
+        })
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![remember_target,copy_text,paste_target,paste_here,engine::engine_connection,engine::engine_health,engine::engine_transcribe,engine::engine_diagnostics,engine::engine_rewrite,engine::engine_search])
         .build(tauri::generate_context!()).expect("No se pudo iniciar GOSU Speech to Text");
