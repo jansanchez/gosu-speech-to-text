@@ -1,3 +1,27 @@
+# Estado al cerrar la sesión — 2026-11-05
+
+## Punto de reanudación
+
+- Rama `main`, versión **0.4.1**; commit funcional actual `0741fc6461d89cd336336a07804f27ddf23efc00`, etiqueta anotada `v0.4.1`. `v0.4.0` sigue en `0b32242` y no se movió.
+- El usuario confirmó que ejecutó los comandos fuera de Codex y la subida funcionó. Al guardar este resumen se comprobó que `HEAD` y la referencia local `origin/main` coinciden en `0741fc6`; el árbol estaba limpio antes de esta actualización documental. No se consultó de nuevo el servidor ni se verificó el resultado de Actions 0.4.1 en este cierre.
+- Los intentos anteriores desde Codex y algunos desde la terminal fallaron con `remote: fatal error in commit_refs_rules`, incluso sin `--atomic`. El usuario confirmó que el repositorio no tiene reglas configuradas. No atribuirlo a una regla concreta ni a Codex: no se estableció la causa del fallo del servidor. No se cambiaron protecciones ni se usó force push.
+- `make check` de 0.4.1 aprobado fuera del sandbox en Linux/CachyOS x86_64: frontend, extensión, Python, formato y Rust. Las pruebas de plataforma macOS son simuladas; no equivalen a validar un instalador macOS.
+- Correcciones incluidas: búsqueda de bibliotecas privadas del motor durante build Linux; pruebas de migración de atajos diferenciando Control y Cmd; plazo de pruebas TypeScript de 30 segundos por archivo. La versión y lockfiles están sincronizados y CI comprueba etiqueta/changelog.
+
+## Próxima tarea
+
+1. Consultar [GitHub Actions](https://github.com/jansanchez/gosu-speech-to-text/actions) para el commit `0741fc6` y la etiqueta `v0.4.1`. Confirmar por separado Checks y candidatos de Windows x64, Linux x64, macOS ARM64, macOS Intel y Chrome. Registrar enlaces y resultados efectivos.
+2. Si falla un job, leer el primer error y corregir con evidencia. Los logs anteriores `job-logs.txt` y `job-logs-2.txt`, aportados en Downloads, corresponden a macOS de **0.4.0**, no a 0.4.1. Conservar las etiquetas existentes; cualquier corrección posterior necesita su versión conforme a la política del proyecto.
+3. Descargar los candidatos del mismo commit, revisar hashes y validar instalación limpia e inicio/cierre del motor por SO/arquitectura. Probar micrófono, reconocimiento, permisos, atajos, conservación del texto e inserción sin Enter. No hay evidencia nueva de instalación limpia.
+4. Preparar notas desde [CHANGELOG.md](CHANGELOG.md) y actualizar [VALIDACION.md](VALIDACION.md). La release pública y firmas siguen pendientes; **no se publicó ni firmó una release durante esta sesión**.
+5. Mantener los pendientes funcionales del registro histórico: pruebas en aplicaciones reales y escritorios, RAM/CPU y revisión de dependencias npm.
+
+## Retomar con Codex
+
+Desde la raíz del proyecto, `codex resume --last` retoma la sesión más reciente; `codex resume` permite elegir. En una conversación nueva: «Lee AGENTS.md y ESTADO-DEL-PROYECTO.md, contrasta con Git y revisa los candidatos v0.4.1». No hace falta repetir setup ni modificar las etiquetas para retomar.
+
+Esta actualización solo guarda contexto documental; no cambia código ni versión. Los registros siguientes son históricos y no sustituyen el punto de reanudación anterior.
+
 # Corrección de candidatos — 2026-11-05
 
 Versión vigente **0.4.1**, corrección de pruebas multiplataforma sobre `0b32242` (`v0.4.0`). `v0.4.0` se subió a GitHub y se conserva inmutable. Los candidatos de esa etiqueta fallaron en macOS por dos aserciones de atajos que confundían Control con Cmd y, en Intel, por el límite de 15 s del archivo completo de interfaz. Logs del usuario revisados; evidencia en [VALIDACION.md](VALIDACION.md).
