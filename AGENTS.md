@@ -1,5 +1,7 @@
 # GOSU Speech to Text
 
+- Al retomar el proyecto, lee [ESTADO-DEL-PROYECTO.md](ESTADO-DEL-PROYECTO.md) para el avance guardado y los pendientes; contrástalo con Git y la evidencia actual.
+
 - Lee `ARCHITECTURE.md` y `CONTRIBUTING.md` antes de cambiar almacenamiento, audio o ciclo de vida del motor.
 - La aplicación incluye React/TypeScript, Tauri/Rust, FastAPI/Python y una extensión Chrome independiente. Comprueba los consumidores compartidos al cambiar `src/`.
 - Conserva `org.voz.prototype`, `voz-state`, `voz-jobs` y los formatos de respaldo existentes salvo que el trabajo incluya una migración probada.
