@@ -31,17 +31,20 @@ Los estados describen el código entregado; no equivalen a una certificación mu
 | Lectura de voz | Voces locales del sistema | Voces locales del sistema |
 | Alto contraste / tamaño | Sí / sí | Sí / controles del navegador |
 | Portapapeles | Sí | Sí |
+| Vista editor/minimalista | Atajo configurable; panel con nivel real del micrófono | No aplica |
+| Ocultar/restaurar aplicación | Atajo configurable; conserva la vista durante la ejecución | No aplica |
+| Dictado mínimo y portapapeles | Atajo configurable; copia antes de intentar pegar, sin Enter; recuperación ante fallos | Flujo propio del grabador |
 | Pegado externo Windows | Adaptador confirmado en versión anterior; repetir pruebas 0.3 | Campos compatibles |
 | Pegado X11 / macOS | Adaptadores incluidos, requieren herramientas/permisos y pruebas | Campos compatibles |
 | Wayland | Modo mínimo con Hyprland o portales autorizados compatibles; copiar/pegar manual disponible | Dentro del navegador |
 | Instaladores y workflow | Fuente y automatización de builds | Fuente y ZIP generado |
 
-Consulta [MINIMAL-MODE.md](MINIMAL-MODE.md) para el flujo de un solo atajo y los requisitos por sistema. Las rutas Windows, X11, GNOME/KDE y macOS requieren validación en sus escritorios reales.
+Consulta [MINIMAL-MODE.md](MINIMAL-MODE.md) para los tres atajos independientes y los requisitos por sistema. Las rutas Windows, X11, GNOME/KDE y macOS requieren validación en sus escritorios reales.
 
 ## Capacidades de la visión aún no implementadas
 
 - Streaming de palabras provisionales y marcadores anclados que se mantengan después de cualquier edición; esta versión presenta tramos terminados y señales del último tramo.
-- Edición sincronizada directamente dentro de aplicaciones externas con seguimiento completo del cursor y sus cambios manuales. El pegado se solicita después de revisar.
+- Edición sincronizada directamente dentro de aplicaciones externas con seguimiento completo del cursor y sus cambios manuales. El modo mínimo intenta pegar al terminar en el destino enfocado; no sigue las ediciones externas.
 - Calibración de confianza por idioma y auditoría con hablantes, NVDA y VoiceOver.
 - Órdenes deterministas traducidas a todos los idiomas del dictado.
 - OAuth de Google Drive, sincronización automática, fusión de conflictos y claves entre dispositivos. Hay respaldos portables cifrados para transferir mediante archivo.

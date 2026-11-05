@@ -111,13 +111,15 @@ La firma y notarización para publicación requieren configurar los certificados
 
 | Atajo de escritorio | Acción |
 |---|---|
-| Ctrl+Shift+Space (configurable) | Iniciar/detener el modo actual |
+| Ctrl+Shift+Espacio (configurable) | Iniciar/detener el dictado; en modo mínimo copia e intenta insertar al terminar |
+| Ctrl+Shift+M (configurable) | Alternar editor/minimalista |
+| Ctrl+Shift+H (configurable) | Ocultar/restaurar la aplicación conservando su vista |
 | Ctrl+Alt+D | Iniciar dictado o detener la grabación activa |
 | Ctrl+Alt+E | Iniciar corrección o detener la grabación activa |
 | Ctrl+Alt+C | Copiar el borrador |
 | Ctrl+Alt+V | Solicitar pegado en la ventana activa |
 
-Los atajos pueden entrar en conflicto con los del sistema; la aplicación muestra los errores de registro. En macOS, el atajo principal CommandOrControl utiliza Command. Los atajos fijos anteriores utilizan Control+Option. Los botones siguen disponibles.
+Los atajos pueden entrar en conflicto con los del sistema; la aplicación muestra los errores de registro. En macOS, los tres atajos configurables predeterminados utilizan Command en lugar de Control. Los atajos fijos anteriores utilizan Control+Option. Los botones siguen disponibles.
 
 ## 5. Correcciones por voz y teclado
 

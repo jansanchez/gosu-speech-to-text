@@ -1,17 +1,17 @@
 # Dictado mínimo
 
-El modo mínimo usa una ventana pequeña con el nivel real del micrófono y un solo atajo para iniciar y terminar. El editor completo sigue disponible para preferencias, historial y recuperación.
+El modo mínimo usa una ventana pequeña con el nivel real del micrófono y tres atajos independientes para dictado, cambio de vista y visibilidad. El editor completo sigue disponible para preferencias, historial y recuperación.
 
 ## Uso
 
 1. Mantén GOSU abierto y espera a que el motor esté listo.
-2. Pulsa **Ctrl+Shift+M** para alternar entre el editor y el panel minimalista. Si GOSU estaba oculto, muestra la vista elegida.
+2. Pulsa **Ctrl+Shift+M** para alternar entre el editor y el panel minimalista. Si GOSU estaba oculto, alterna a la otra vista y la muestra; para restaurar la misma vista utiliza Ctrl+Shift+H.
 3. Pulsa **Ctrl+Shift+Espacio** para comenzar a grabar. En el editor conserva el flujo de grabación del editor; en el panel controla la sesión de dictado mínimo.
 4. Habla. Puedes cambiar de aplicación o campo mientras grabas. Las barras responden al sonido y el texto se prepara por tramos.
 5. Haz clic en el campo de destino (pasar el puntero por encima puede no darle el foco) y pulsa **Ctrl+Shift+Espacio** para terminar. GOSU selecciona la ventana enfocada en ese momento, espera los últimos fragmentos, copia todo el dictado al portapapeles e intenta insertarlo. Mantén el campo elegido durante el procesamiento.
 6. Pulsa de nuevo el atajo de dictado para otra grabación. El panel permanece disponible. **Ctrl+Shift+H** oculta GOSU; otra pulsación restaura la misma vista (editor o minimalista). Ocultar no cierra la aplicación ni altera una grabación o transcripción en curso.
 
-En macOS se usa **Cmd** en lugar de **Ctrl** para ambos valores iniciales. Los tres atajos están activos desde el primer inicio si el sistema permite registrarlos y están libres.
+En macOS se usa **Cmd** en lugar de **Ctrl** para los tres valores iniciales. Los tres atajos están activos desde el primer inicio si el sistema permite registrarlos y están libres.
 
 **Preferencias** y **Configurar** en la pantalla principal ofrecen tres selectores: **Iniciar o detener dictado**, **Alternar editor y modo minimalista** y **Mostrar u ocultar GOSU**. En cada uno pulsa **Elegir combinación**, introduce las teclas y pulsa **Guardar atajo**. Cada combinación se guarda por separado, con su propio valor predeterminado. No se permite usar la misma combinación para acciones diferentes. Las preferencias anteriores conservan los atajos existentes; el de visibilidad se añade con Ctrl/Cmd+Shift+H, o una alternativa libre entre las preferencias de GOSU; al cargar se añade el del panel (Ctrl/Cmd+Alt+M si Ctrl/Cmd+Shift+M ya era el de dictado).
 

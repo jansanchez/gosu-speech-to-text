@@ -105,6 +105,9 @@ Los paquetes de escritorio deben incluir el motor Python. Sus usuarios no instal
 
 | Documento | Uso |
 |---|---|
+| [ESTADO-DEL-PROYECTO.md](ESTADO-DEL-PROYECTO.md) | Avance guardado, commit publicado, evidencia y pendientes para retomar |
+| [MINIMAL-MODE.md](MINIMAL-MODE.md) | Tres atajos, foco, portapapeles y límites por sistema |
+| [VALIDACION.md](VALIDACION.md) | Historial de pruebas y alcance real por plataforma |
 | [AGENTS.md](AGENTS.md) | Reglas de trabajo para Codex y otros agentes |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Desarrollo, comprobaciones y mantenimiento |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Responsabilidades e invariantes de datos/audio |
