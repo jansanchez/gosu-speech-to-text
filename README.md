@@ -119,3 +119,7 @@ Los paquetes de escritorio deben incluir el motor Python. Sus usuarios no instal
 | [PRIVACY.md](PRIVACY.md) / [THIRD-PARTY.md](THIRD-PARTY.md) | Datos, dependencias y licencias |
 
 `brand.json` es la fuente del nombre y versión. Usa `npm run brand:sync` al cambiarla y `npm run brand:check` para verificar sus metadatos. Se conserva el identificador `org.voz.prototype` y las claves heredadas de almacenamiento para mantener los datos existentes.
+
+## Versiones
+
+La versión se mantiene en `brand.json` siguiendo SemVer. Consulta el [historial de cambios](CHANGELOG.md) y el [procedimiento de versiones y releases](BUILD-AND-RELEASE.md). Las etiquetas `vX.Y.Z` identifican código; la validación de instaladores se registra por separado.

@@ -100,6 +100,8 @@ Usa `npm.cmd` en PowerShell. `-- --locked` después de los argumentos de Tauri s
 
 `desktop:build` prepara y empaqueta automáticamente el motor, ejecuta Tauri con `tauri.release.conf.json` y coloca además el runtime junto al binario de release. No hace falta ejecutar `build-engine.py` antes del build completo. Para desarrollo aislado del motor sí puedes ejecutar `.venv/bin/python scripts/build-engine.py`.
 
+En Linux, este coordinador añade las carpetas de bibliotecas del motor a `LD_LIBRARY_PATH` únicamente para el proceso de compilación. Esto permite que linuxdeploy encuentre las dependencias privadas de los wheels de Python, como `av.libs/libswresample-*.so.*`. Si aparece `Could not find dependency: libswresample-…`, utiliza `make appimage` o `npm run desktop:build` con el código actualizado; invocar `tauri build` directamente omite esta preparación. Conserva los nombres originales de esas bibliotecas.
+
 El recurso incluido es la carpeta completa `engine-dist/gosu-engine/`, no solo su ejecutable. No distribuyas únicamente `target/release/gosu-speech-to-text` o `.exe`. El instalador debe funcionar en un equipo sin Python/Node/Rust, con los componentes de sistema aplicables.
 
 ## Motor empaquetado y hashes
@@ -156,3 +158,25 @@ Antes de marcar una plataforma como validada o un paquete como estable:
 5. Revisa licencias y dependencias. Para distribución firmada, configura y verifica [firma Windows](https://v2.tauri.app/distribute/sign/windows/) o [firma/notarización macOS](https://v2.tauri.app/distribute/sign/macos/), incluido el motor y sus bibliotecas. El workflow actual no las configura.
 
 Publicar una release es una acción separada. Generar artefactos o editar esta documentación no los publica, no firma el producto y no convierte las plataformas pendientes en verificadas.
+
+## Política de versiones y etiquetas
+
+GOSU adopta [SemVer 2.0.0](https://semver.org/lang/es/), con `brand.json` como fuente de versión. El contrato de compatibilidad incluye preferencias y respaldos, recuperación de audio, comandos documentados e integración del motor. Mientras se mantenga `0.x`, el producto está en desarrollo inicial; una versión numerada no declara todas las plataformas validadas.
+
+- Correcciones compatibles: incrementar PARCHE, por ejemplo `0.4.0` → `0.4.1`.
+- Funcionalidades compatibles: incrementar MENOR y reiniciar PARCHE, por ejemplo `0.4.1` → `0.5.0`.
+- Durante `0.x`, cambios incompatibles requieren una nueva MENOR, migración probada y nota explícita. La decisión de `1.0.0` requiere declarar estable el contrato y cumplir la aceptación para los destinos anunciados. A partir de 1.0, los cambios incompatibles incrementan MAYOR.
+- Documentación o refactorización sin cambio de comportamiento pueden acumularse sin incrementar versión. Una versión agrupa commits; no se etiqueta cada funcionalidad individual.
+
+La consolidación actual es `0.4.0`. Se emplea el subconjunto numérico `X.Y.Z` común a los manifiestos Tauri, Cargo, npm y Chrome; las etiquetas son `vX.Y.Z`. Los candidatos de CI conservan esa versión y se identifican por commit y ejecución, sin añadir sufijos que Chrome no admite en su campo `version`. No se sobrescribe una etiqueta, versión publicada ni artefacto entregado: cualquier cambio posterior necesita otra versión.
+
+Procedimiento para la próxima versión:
+
+1. Revisar los cambios desde la última etiqueta y elegir el incremento. Editar `brand.json` y añadir la entrada fechada en [CHANGELOG.md](CHANGELOG.md), incluyendo límites y migraciones.
+2. Ejecutar `npm run brand:sync`, que sincroniza manifiestos, `package-lock.json` y la entrada de la aplicación en `Cargo.lock`, sin actualizar dependencias.
+3. Ejecutar `make check` en Linux o las comprobaciones individuales de esta guía en el SO correspondiente. `npm run release:check` comprueba marca, entrada de changelog y coincidencia con la etiqueta si se ejecuta sobre una etiqueta en GitHub Actions.
+4. Revisar `git diff`, guardar el commit de versión y comprobar árbol limpio. Crear una etiqueta anotada sobre ese commit; para esta consolidación: `git tag -a v0.4.0 -m "GOSU Speech to Text 0.4.0"`. Antes de crear futuras etiquetas, comprobar las locales y remotas; no reutilizar versiones existentes.
+5. Subir el commit y la etiqueta cuando esté autorizada la generación remota. El push de la etiqueta dispara el workflow de candidatos, que rechaza una etiqueta distinta de la versión declarada. La ejecución manual también permite generar candidatos sin publicar.
+6. Descargar y validar los artefactos del mismo commit, registrar hashes y resultados por plataforma y preparar notas basadas en el changelog. Publicar la release es una acción explícita posterior a la revisión de esos resultados.
+
+Los commits pueden usar `feat:`, `fix:`, `docs:` y `chore:` para facilitar la revisión. Estos prefijos ayudan a decidir el incremento; no crean versiones automáticamente.

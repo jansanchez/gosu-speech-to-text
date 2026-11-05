@@ -1,3 +1,13 @@
+# Consolidación de versión — 2026-11-05
+
+Se prepara **0.4.0** sobre la base `26fe01a`, incluyendo las funcionalidades recientes de dictado mínimo y tres atajos y la corrección de búsqueda de bibliotecas PyAV al generar AppImage. Consultar [CHANGELOG.md](CHANGELOG.md) y la política SemVer en [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md). `brand.json` es la fuente de versión; `brand:sync` incluye ahora la entrada propia de `Cargo.lock`. `release:check` valida coherencia, changelog y etiqueta en CI. Las etiquetas son anotadas, `vX.Y.Z`, por versión agrupada; no por commit.
+
+La consulta `git ls-remote --tags origin` fuera del sandbox no devolvió etiquetas al consolidar. La etiqueta local `v0.4.0` identifica el commit de consolidación; comprobar su existencia con Git. No se ha subido ni publicado una release en esta tarea. Los candidatos 0.4.0 necesitan recompilarse desde esa etiqueta; la AppImage local de diagnóstico sigue siendo 0.3.2 y no debe renombrarse como 0.4.0.
+
+La corrección de AppImage está en el código fuente: el coordinador `desktop:build` pasa las carpetas de bibliotecas del motor mediante `LD_LIBRARY_PATH` solo a su proceso de compilación en Linux. La generación completa 0.3.2 fue aprobada fuera del sandbox; hash y límites en [VALIDACION.md](VALIDACION.md). Permanecen pendientes instalación limpia y validación por SO; no se declaró 1.0 estable ni se certificaron plataformas nuevas.
+
+El siguiente registro conserva el contexto funcional anterior; sus referencias a HEAD y origin describen el estado del 4 de noviembre, no el commit de consolidación actual.
+
 # Estado para retomar — 2026-11-04
 
 ## Punto de partida guardado

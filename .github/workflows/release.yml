@@ -40,6 +40,7 @@ jobs:
       - name: Linux dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential pkg-config libdbus-1-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
+      - run: npm run release:check
       - run: npm ci
       - run: python scripts/test-engine-paths.py
       - run: npm run check
@@ -64,6 +65,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - run: npm run release:check
       - run: npm ci
       - run: npm run extension:build
       - run: python3 scripts/package-extension.py

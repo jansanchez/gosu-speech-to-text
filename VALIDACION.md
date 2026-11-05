@@ -133,3 +133,23 @@ Prueba gráfica real: `python3 /tmp/gosu-validate-window.py`, script temporal de
 La implementación de las tres acciones y sus validaciones quedó publicada en `d970f81bc7f662662050dec40cffdc9e78fc1f7c` (`feat: separar atajos de vista, visibilidad y dictado`), rama `main`, con push confirmado a `origin/main`. Los registros anteriores con base `8fba04b` y cambios sin commit describen las etapas previas de esa misma implementación, no el estado actual de Git. Sus recuentos intermedios y las semánticas de uno/dos atajos son históricos; el alcance final es el de tres acciones y 60 pruebas TypeScript, 21 Python y 11 Rust aprobadas.
 
 El usuario probó la aplicación iniciada con `make dev` en Linux/Hyprland, expresó satisfacción y solicitó commit/push. Esta confirmación general no acredita por sí sola micrófono, reconocimiento o todas las aplicaciones de destino. Resultados de CI y validación real en otros sistemas pendientes. El estado consolidado para retomar está en [ESTADO-DEL-PROYECTO.md](ESTADO-DEL-PROYECTO.md).
+
+## 2026-11-05 — Dependencias PyAV al generar AppImage
+
+Base `26fe01a`, con cambios locales en el coordinador de build y su prueba de regresión. Entorno CachyOS Linux x86_64, kernel 7.3.0-5-cachyos, glibc 2.44; Node v26.12.1 (distinto de la referencia Node 22 de CI), Python 3.12.15, Rust 1.99.1; PyInstaller 6.22.3.
+
+- Confirmado: `libswresample-14658403.so.6.1.100` existe en el runtime, pero `ldd` sobre `av.libs/libavcodec-*.so.*` no la encontraba. El coordinador pasa las carpetas de bibliotecas del motor a `LD_LIBRARY_PATH` del proceso Tauri en Linux, conservando el entorno del llamador. Con ese entorno, `ldd` resolvió todas las dependencias de esa biblioteca.
+- `make check`: aprobado; incluye regresión del entorno Linux y conservación del entorno Windows/macOS, suites Python y comprobaciones Rust. La prueba gráfica Rust permanece excluida por requerir ventana aislada.
+- `npm run desktop:build -- --bundles appimage -- --locked` en sandbox: falló con mensaje genérico `failed to run linuxdeploy`.
+- Repetición autorizada fuera del sandbox: `npm run desktop:build -- --bundles appimage --verbose -- --locked`, aprobada. linuxdeploy procesó las bibliotecas de PyAV y produjo `src-tauri/target/release/bundle/appimage/GOSU Speech to Text_0.3.2_amd64.AppImage` (334.48 MiB). `python3 scripts/checksums.py` genera el manifiesto junto a los paquetes.
+- Pendiente: instalación limpia, inicio del motor desde la AppImage, micrófono, reconocimiento, permisos y pegado. Este build local no acredita compatibilidad con distribuciones de glibc anterior ni otros SO/arquitecturas. No se instaló, firmó ni publicó el paquete.
+- SHA256 de la AppImage: `b16fff7f9e9270d7ba745b36b9cd21513e0ac912eed7c280782f830c087f47b7`.
+
+## 2026-11-05 — Consolidación SemVer 0.4.0
+
+Base `26fe01a`, cambios guardados en el commit de consolidación identificado por la etiqueta local anotada `v0.4.0`. Mismo entorno CachyOS Linux x86_64 y herramientas del registro anterior. Sin etiquetas locales ni remotas antes de consolidar (`git ls-remote --tags origin`, aprobado fuera del sandbox, salida vacía).
+
+- `npm run brand:sync`: aprobado; sincroniza npm, Tauri, Chrome, Cargo y sus lockfiles sin actualizar dependencias.
+- `make check` en sandbox: frontend aprobado; TestClient superó los 60 segundos. Repetición `make check` autorizada fuera del sandbox: aprobada, incluyendo regresiones del entorno AppImage y del control de etiquetas, compilación web/Chrome, 21 pruebas Python, formato y comprobaciones Rust (11 aprobadas y 1 gráfica excluida).
+- CI de candidatos comprueba que la etiqueta `vX.Y.Z` coincide con `brand.json`, los metadatos generados y la entrada del changelog antes de empaquetar. Las pruebas rechazan etiquetas discordantes y versiones numéricas inválidas. El workflow aún no se ejecutó para esta versión.
+- No se recompilaron instaladores 0.4.0 ni se subió la etiqueta. La AppImage 0.3.2 del registro anterior acredita la corrección de empaquetado de su código, no un instalador de la nueva versión. Pendientes candidatos desde la etiqueta, instalación limpia y pruebas reales por plataforma; sin firma ni publicación.

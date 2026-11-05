@@ -1,7 +1,7 @@
 {
   "name": "gosu-speech-to-text",
   "private": true,
-  "version": "0.3.2",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
@@ -14,8 +14,9 @@
     "brand:check": "node scripts/sync-brand.mjs --check",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/*.ts\" \"extension/**/*.{js,html,css,json}\" \"scripts/*.mjs\" \"public/*.js\" \".github/workflows/*.yml\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/*.ts\" \"extension/**/*.{js,html,css,json}\" \"scripts/*.mjs\" \"public/*.js\" \".github/workflows/*.yml\"",
-    "check": "npm run docs:check && npm run format:check && npm test && npm run build && npm run extension:build",
-    "docs:check": "node scripts/check-docs.mjs"
+    "check": "npm run release:check && npm run docs:check && npm run format:check && npm test && npm run build && npm run extension:build",
+    "docs:check": "node scripts/check-docs.mjs",
+    "release:check": "node scripts/sync-brand.mjs --check && node scripts/check-release.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",

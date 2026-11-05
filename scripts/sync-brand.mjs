@@ -6,7 +6,7 @@ const brand = JSON.parse(
 );
 if (
   !/^[a-z][a-z0-9-]+$/.test(brand.slug) ||
-  !/^\d+\.\d+\.\d+$/.test(brand.version) ||
+  !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(brand.version) ||
   brand.fullName.length > 75 ||
   /[\r\n]/.test(brand.fullName + brand.name)
 )
@@ -61,6 +61,17 @@ await update(
   cargo
     .replace(/^name = ".*"/m, `name = "${brand.slug}"`)
     .replace(/^version = ".*"/m, `version = "${brand.version}"`),
+);
+const cargoLock = await readFile(new URL('src-tauri/Cargo.lock', root), 'utf8');
+const ownPackage =
+  /(\[\[package\]\]\r?\nname = "gosu-speech-to-text"\r?\nversion = ")[^"]+(")/;
+if (!ownPackage.test(cargoLock)) throw Error('Application missing from Cargo.lock');
+await update(
+  'src-tauri/Cargo.lock',
+  cargoLock.replace(
+    ownPackage,
+    (_match, prefix, suffix) => prefix + brand.version + suffix,
+  ),
 );
 const html = String(brand.fullName)
   .replaceAll('&', '&amp;')

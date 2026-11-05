@@ -19,3 +19,9 @@
 - Conserva el atajo configurable desde el primer uso y el texto ante fallos de inserción. Nunca añadas Enter automático al dictado. Trata permisos y conflictos como estados recuperables.
 - Registra commit, SO/arquitectura, comando, resultado y pendientes. No conviertas una prueba simulada o una matriz CI configurada en evidencia de instalación real.
 - No publiques ni firmes versiones ni modifiques atajos del escritorio del usuario por el solo hecho de actualizar documentación o generar paquetes.
+
+## Versionamiento
+
+- Sigue la política SemVer y el procedimiento de [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md). Registra funcionalidades y correcciones en [CHANGELOG.md](CHANGELOG.md).
+- Agrupa funcionalidades en una versión menor y correcciones en una versión parche; no crees una etiqueta por cada commit. Actualiza `brand.json`, ejecuta `npm run brand:sync` y conserva los lockfiles sincronizados.
+- Antes de etiquetar, ejecuta las comprobaciones y `npm run release:check`; usa etiquetas anotadas `vX.Y.Z` sobre el commit de versión con árbol limpio. Nunca muevas ni sobrescribas etiquetas existentes. Distingue etiqueta local, push de etiqueta, candidato y release publicada.

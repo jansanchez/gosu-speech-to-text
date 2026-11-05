@@ -113,12 +113,13 @@ test('an incomplete environment is backed up rather than deleted', () => {
 });
 import * as requireFs from 'node:fs';
 // @ts-ignore Executable JavaScript build coordinator.
-import { buildDesktop } from '../scripts/build-desktop.mjs';
+import { buildDesktop, bundleEnvironment } from '../scripts/build-desktop.mjs';
 test('packaging forwards bundle arguments to Tauri and stages runtime after success', async () => {
   let prepared = false,
     staged = false;
   await buildDesktop({
     root: '/project',
+    platform: 'win32',
     args: ['--bundles', 'nsis'],
     prepare: (o: any) => {
       assert.equal(o.bundle, true);
@@ -158,6 +159,25 @@ test('missing Python packages are installed once and checked before the GUI star
     });
     assert.equal(probes, 2);
     assert.ok(installed);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('Linux packaging resolves bundled wheel libraries and preserves the caller environment', () => {
+  const root = fixture();
+  try {
+    const libs = join(root, 'engine-dist', 'gosu-engine', '_internal', 'av.libs');
+    requireFs.mkdirSync(libs, { recursive: true });
+    requireFs.writeFileSync(join(libs, 'libswresample-14658403.so.6.1.100'), 'fixture');
+    const env = { LD_LIBRARY_PATH: '/existing', CUSTOM: 'preserved' };
+    const result = bundleEnvironment(root, 'linux', env);
+    assert.equal(result.LD_LIBRARY_PATH, libs + ':/existing');
+    assert.equal(result.CUSTOM, 'preserved');
+    assert.equal(env.LD_LIBRARY_PATH, '/existing');
+    assert.equal(bundleEnvironment(root, 'linux', {}).LD_LIBRARY_PATH, libs);
+    assert.deepEqual(bundleEnvironment('/unused', 'darwin', env), env);
+    assert.deepEqual(bundleEnvironment('/unused', 'win32', env), env);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

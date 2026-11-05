@@ -1,15 +1,39 @@
 import { spawnSync } from 'node:child_process';
+import { readdirSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { prepareDesktop } from './prepare-desktop.mjs';
 import { stageEngine } from './stage-engine.mjs';
 const project = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// PyInstaller removes wheel RPATHs. linuxdeploy still inspects these ELF files
+// independently of the Python bootloader, so expose their bundled dependencies.
+export function bundleEnvironment(root, platform, env) {
+  if (platform !== 'linux') return { ...env };
+  const directories = [];
+  const visit = (directory) => {
+    const entries = readdirSync(directory, { withFileTypes: true });
+    if (entries.some((entry) => !entry.isDirectory() && entry.name.includes('.so')))
+      directories.push(directory);
+    for (const entry of entries)
+      if (entry.isDirectory()) visit(join(directory, entry.name));
+  };
+  visit(join(root, 'engine-dist', 'gosu-engine'));
+  return {
+    ...env,
+    LD_LIBRARY_PATH: [
+      ...directories,
+      ...(env.LD_LIBRARY_PATH ? [env.LD_LIBRARY_PATH] : []),
+    ].join(':'),
+  };
+}
 export async function buildDesktop({
   root = project,
   args = process.argv.slice(2),
   spawn = spawnSync,
   prepare = prepareDesktop,
   stage = stageEngine,
+  platform = process.platform,
+  env = process.env,
 } = {}) {
   prepare({ root, bundle: true });
   // Forward all npm arguments to Tauri, not to the staging helper.
@@ -22,7 +46,7 @@ export async function buildDesktop({
       'src-tauri/tauri.release.conf.json',
       ...args,
     ],
-    { cwd: root, stdio: 'inherit' },
+    { cwd: root, stdio: 'inherit', env: bundleEnvironment(root, platform, env) },
   );
   if (result.status !== 0)
     throw Error(
