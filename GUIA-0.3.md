@@ -1,10 +1,12 @@
+> Para compilación actual por SO y arquitectura, consulta [README.md](README.md) y [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md). Las cifras antiguas de pruebas de esta guía no acreditan la versión actual; consulta [VALIDACION.md](VALIDACION.md). El dictado mínimo y los permisos actuales están en [MINIMAL-MODE.md](MINIMAL-MODE.md).
+
 > Linux tiene ahora un Makefile completo. Consulta **LINUX-MAKE.md** para la instalación y compilación con make.
 
 # GOSU Speech to Text 0.3.2 · instalación, actualización y uso
 
 El código fuente incluye escritorio Windows/Linux/macOS, extensión Chrome, motor de transcripción local y workflows de compilación. Incorpora el parche de arranque que el usuario confirmó funcionando en Windows y conserva Ctrl+Alt+C y Ctrl+Alt+V.
 
-Esta versión amplía el producto con funciones reales. FEATURES.md distingue lo implementado, lo que necesita un modelo local opcional y las capacidades aún pendientes. No se afirma haber completado toda la visión de producto ni validado todos los sistemas. Se aprobaron 35 pruebas automatizadas y cargo check de toda la aplicación para Windows GNU; consulta VALIDACION.md para el alcance exacto.
+Esta versión amplía el producto con funciones reales. FEATURES.md distingue lo implementado, lo que necesita un modelo local opcional y las capacidades aún pendientes. No se afirma haber completado toda la visión de producto ni validado todos los sistemas. Consulta VALIDACION.md para las comprobaciones y el alcance de la evidencia actual.
 
 ## 1. Actualizar tu Windows que ya funciona
 
@@ -188,9 +190,9 @@ Herramientas incluye alto contraste, tamaño del editor, umbral ajustable para v
 
 El flujo Windows dictado/copia/pegado fue confirmado por el usuario en 0.2.1 + hotfix. La ampliación 0.3 requiere repetir esa prueba de aceptación.
 
-Linux X11: instala xdotool (`sudo pacman -S xdotool` en Arch; `sudo apt install xdotool` en Debian/Ubuntu). El adaptador recuerda la ventana externa, activa el destino si corresponde, comprueba que siga activo y solicita Ctrl+V. Si falta la herramienta o cambia el foco, conserva el texto copiado y explica el fallo.
+Linux X11: instala xdotool y xprop según LINUX-MAKE.md. El adaptador recuerda la ventana externa, activa el destino si corresponde, comprueba que siga activo y solicita el pegado apropiado al destino (Ctrl+Shift+V en terminales detectadas). Si falta la herramienta o cambia el foco, conserva el texto copiado y explica el fallo.
 
-Wayland: se conserva el portapapeles y el uso de la ventana; el pegado automático y atajos entre aplicaciones dependen del compositor. Esta versión utiliza copia/pegado manual como alternativa. No instala un inyector privilegiado ni pretende compatibilidad universal con Wayland.
+Wayland: Hyprland dispone de integración propia; otros compositores pueden usar los portales GlobalShortcuts/RemoteDesktop compatibles y sus permisos. El portal genérico no identifica la aplicación y utiliza el campo enfocado. Si la inserción falla, conserva el texto para copiar. Consulta MINIMAL-MODE.md.
 
 macOS: utiliza System Events/osascript y el portapapeles. Puede requerir permisos de Accesibilidad y Automatización para GOSU Speech to Text. Comprueba el destino antes de solicitar Cmd+V. El adaptador está incluido pero no ha sido ejecutado en un Mac real en esta entrega.
 
@@ -208,7 +210,7 @@ En Windows usa `py -3.12 scripts\package-extension.py` en el último paso.
 
 - Para instalar localmente: chrome://extensions > Modo desarrollador > Cargar descomprimida > extension-dist.
 - Para la tienda: gosu-speech-to-text-chrome.zip contiene manifest.json en la raíz. Necesitas cuenta de desarrollador, ficha, política de privacidad y revisión de Chrome Web Store.
-- El ZIP de fuente incluye una copia compilada de la extensión en ready/gosu-speech-to-text-chrome.zip. Extráela a una carpeta estable antes de cargarla. La carpeta ready está excluida de git.
+- La extensión compilada no se mantiene en Git. Genera el ZIP con los comandos anteriores o descárgalo del workflow del mismo commit.
 - Coloca el cursor en una página y abre GOSU Speech to Text desde el icono. En su pestaña carga el modelo, dicta y revisa antes de insertar.
 - La extensión conserva audio pendiente en IndexedDB, permite reintentar, reglas manuales, plantillas, sesión privada y respaldos cifrados. El respaldo exportado puede abrirse en el escritorio. Al restaurar un respaldo de escritorio, la extensión importa el borrador activo y preferencias, no toda su bandeja.
 - Usa input/textarea y algunos contenteditable. Rechaza destinos cambiados, contraseñas y ciertos editores estructurados. Google Docs y editores no compatibles requieren Copiar.
@@ -219,6 +221,6 @@ En Windows usa `py -3.12 scripts\package-extension.py` en el último paso.
 
 Publica este árbol de código en tu repositorio. No subas .venv, node_modules, motores generados, target ni ready. Conserva la licencia y notices de dependencias.
 
-El workflow .github/workflows/release.yml genera Windows, Ubuntu Linux, macOS ARM64, macOS Intel y el ZIP Chrome mediante ejecución manual o tag v*. Consulta BUILD-AND-RELEASE.md para crear el repositorio, descargar artefactos y adjuntarlos a una release. Utiliza v0.3.2 como tag de esta versión. Los builds de escritorio generan también SHA256SUMS.txt.
+El workflow .github/workflows/release.yml genera Windows, Ubuntu Linux, macOS ARM64, macOS Intel y el ZIP Chrome mediante ejecución manual o tag v*. Consulta BUILD-AND-RELEASE.md para preparar la compilación y revisar los artefactos. Publicar y firmar requiere un paso separado. Los builds de escritorio generan también SHA256SUMS.txt.
 
 Prueba paquetes en cada SO antes de marcarlos estables. No se incluyen credenciales, certificados de firma ni publicación automática a la tienda.

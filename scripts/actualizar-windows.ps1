@@ -5,13 +5,13 @@ $projectRoot = (Resolve-Path -LiteralPath $ProjectPath).Path
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'src-tauri\Cargo.toml'))) { throw 'La carpeta elegida no contiene el proyecto GOSU Speech to Text.' }
 if ($sourceRoot -eq $projectRoot) { throw 'Ejecuta este actualizador desde el ZIP nuevo, como indica GUIA-0.3.md.' }
 $backup = Join-Path $projectRoot ('.voz-backups\0.3-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
-$files = @('brand.json','REPARAR-MOTOR.md','ACTUALIZAR-GOSU.md','INSTALAR-WINDOWS.md','CORREGIR-WINDOWS.md','Makefile','LINUX-MAKE.md','NOMBRES.md','package.json','package-lock.json','tsconfig.json','index.html','README.md','BUILD-AND-RELEASE.md','GUIA-0.3.md','FEATURES.md','VALIDACION.md','ROADMAP.md','PRIVACY.md','THIRD-PARTY.md','LICENSE')
+$files = @('AGENTS.md','ARCHITECTURE.md','CONTRIBUTING.md','CRITERIOS-DE-EXITO.md','MINIMAL-MODE.md','INSTALAR-MACOS.md','.editorconfig','.prettierignore','.prettierrc.json','brand.json','REPARAR-MOTOR.md','ACTUALIZAR-GOSU.md','INSTALAR-WINDOWS.md','CORREGIR-WINDOWS.md','Makefile','LINUX-MAKE.md','NOMBRES.md','package.json','package-lock.json','tsconfig.json','index.html','README.md','BUILD-AND-RELEASE.md','GUIA-0.3.md','FEATURES.md','VALIDACION.md','ROADMAP.md','PRIVACY.md','THIRD-PARTY.md','LICENSE')
 foreach ($folder in @('src','server','src-tauri','scripts','extension','public','tests','.github','vendor-notices')) {
     $base = Join-Path $sourceRoot $folder
     if (Test-Path -LiteralPath $base) {
         Get-ChildItem -LiteralPath $base -Recurse -File | ForEach-Object {
             $relative = $_.FullName.Substring($sourceRoot.Length + 1)
-            if ($relative -notmatch '(^|[\\/])(target|__pycache__|node_modules)([\\/]|$)' -and $_.Extension -notin @('.log','.pyc')) { $files += $relative }
+            if ($relative -notmatch '(^|[\\/])(target|gen|__pycache__|node_modules)([\\/]|$)' -and $_.Extension -notin @('.log','.pyc')) { $files += $relative }
         }
     }
 }

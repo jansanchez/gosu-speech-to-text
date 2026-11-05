@@ -1,0 +1,11 @@
+node_modules/
+dist/
+extension-dist/
+engine-dist/
+build-engine/
+.venv/
+src-tauri/target/
+src-tauri/gen/
+src/brand.ts
+package-lock.json
+extension/manifest.json

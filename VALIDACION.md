@@ -1,3 +1,36 @@
+## Actualización de instrucciones multiplataforma — 2026-11-04
+
+README, guías por SO, reglas de contribución y criterios de éxito alineados con preparación y compilación nativas. CI configurada para Windows x64/MSVC, Ubuntu x64, macOS ARM64 e Intel; esta edición no ejecuta GitHub Actions ni acredita instaladores en esos destinos.
+
+Verificación local Linux: `make check` completado fuera del sandbox: documentación (20 archivos), formato, 52 pruebas TypeScript, builds web/extensión, 21 pruebas Python y 10 pruebas Rust aprobadas; una prueba gráfica Rust permanece excluida por requerir una ventana aislada. Dentro del sandbox, TestClient se bloqueó; el mismo comando fuera del sandbox pasó. Los resultados históricos y la validación manual previa se conservan debajo. La nueva suite de preparación comprueba que un entorno Python incorrecto se conserva y que un fallo de comprobaciones impide empaquetar. Windows/macOS y la instalación limpia de sus artefactos permanecen pendientes según [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md).
+
+## Modo mínimo · 2026-11-04
+
+- `make check`: 52 pruebas TypeScript, 19 Python y 10 Rust; formato y compilaciones de web/extensión correctos. La prueba gráfica Rust queda excluida de la ejecución automática.
+- Prueba real aislada en Hyprland 0.57: el adaptador nativo detectó una ventana GTK de prueba e insertó exactamente `GOSU: inserción áéíóú ñ 你好`. La prueba exige la identidad de esa ventana antes de escribir y no toca documentos ni terminales del usuario.
+- Comprobación visual de la ventana flotante de 460 × 220 unidades lógicas, con el micrófono apagado. El atajo principal quedó registrado directamente en Hyprland.
+- Configuración del atajo: captura de teclas, suspensión temporal de registros durante la selección, persistencia tras reiniciar la interfaz y restauración del atajo anterior ante un conflicto.
+- Casos de interfaz: dictado independiente del borrador anterior, inserción solo al terminar, espera del último fragmento en curso, bloqueo de inserción tras abrir el editor, denegación de permisos, fallo de destino y recuperación de atajos registrados por la propia aplicación.
+
+Se implementaron adaptadores para Windows, X11, Hyprland, portales Wayland GNOME/KDE y macOS. Solo Linux/Hyprland se probó en un escritorio real en esta sesión. No se afirma validación real del modo mínimo en Windows, Ubuntu/GNOME/KDE ni macOS. El usuario confirmó el funcionamiento del modo mínimo en Linux; la prueba aislada nueva valida inserción de texto, no precisión de reconocimiento.
+
+---
+
+## Preparación de mantenibilidad · 2026-11-04
+
+`make check` ejecutado correctamente en Linux:
+
+- 41 pruebas TypeScript: lógica, respaldos, persistencia, captura y UI de navegador/escritorio, más ejecución del controlador Chrome con dispositivo y reconocedor sustituidos.
+- 14 pruebas Python de API, edición y búsqueda, y 5 pruebas de herramientas Make.
+- 6 pruebas Rust: rutas, política de micrófono, conexión inicial y aislamiento entre generaciones del motor.
+- Comprobación de formato, TypeScript estricto, compilación web y extensión, `cargo check --locked` y `cargo test --locked`.
+
+Los casos nuevos incluyen rechazo de almacenamiento corrupto sin sobrescritura, fallos al guardar o eliminar audio, reintento sin duplicados, arranque simultáneo de micrófono, cancelación durante permisos y conservación de datos al reiniciar el motor. Las pruebas Python se ejecutaron fuera del sandbox: dentro de este entorno restringido, TestClient se bloquea incluso con una API vacía.
+
+Esta evidencia no incluye micrófono e inferencia reales, instalación de paquetes ni pegado en otras aplicaciones. La CI para Linux, Windows y macOS quedó configurada; su ejecución remota no se ha verificado en esta sesión. Los dos avisos altos de dependencias npm y la actualización mayor pendiente de Transformers se documentan en CONTRIBUTING.md. Starlette también emite un aviso de deprecación del cliente de pruebas httpx; las pruebas pasan.
+
+---
+
 # Validación de GOSU Speech to Text 0.3.0
 
 Fecha: 26 de octubre de 2026.

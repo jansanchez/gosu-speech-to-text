@@ -1,8 +1,8 @@
 class VoiceCapture extends AudioWorkletProcessor {
   process(inputs) {
-    const input=inputs[0];
-    if(input && input[0]) this.port.postMessage(input[0].slice());
+    const input = inputs[0];
+    if (input && input[0]) this.port.postMessage(input[0].slice());
     return true;
   }
 }
-registerProcessor('voice-capture',VoiceCapture);
+registerProcessor('voice-capture', VoiceCapture);

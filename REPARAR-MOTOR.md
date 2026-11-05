@@ -1,3 +1,5 @@
+> Referencia de diagnóstico histórico. Para preparar o compilar el código actual, utiliza [README.md](README.md), [Windows](INSTALAR-WINDOWS.md) y [compilación](BUILD-AND-RELEASE.md). Las cifras y comprobaciones de esta guía corresponden a su diagnóstico original.
+
 # Arranque del motor · GOSU Speech to Text 0.3.2
 
 El error Windows `The system cannot find the path specified (os error 3)` aparece antes de que el reconocedor procese audio. Puede corresponder al Python del proyecto, al directorio de trabajo o al ejecutable empaquetado. El mensaje anterior no mostraba la ruta concreta, por lo que no permite atribuir con certeza el fallo a uno de esos casos.

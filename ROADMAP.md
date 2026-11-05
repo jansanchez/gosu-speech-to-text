@@ -1,26 +1,11 @@
-# Evolución de GOSU Speech to Text
+# Prioridades de mantenimiento
 
-La matriz vigente está en FEATURES.md. La guía de uso y compilación es GUIA-0.3.md.
+La arquitectura y las reglas actuales se describen en [ARCHITECTURE.md](ARCHITECTURE.md), [AGENTS.md](AGENTS.md) y [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Base confirmada por el usuario
+1. Obtener evidencia de los cuatro destinos nativos de CI y probar instalación limpia de cada artefacto. La matriz configurada no acredita un resultado exitoso.
+2. Completar dictado real en Windows, macOS Intel/ARM y Linux X11/portales GNOME-KDE. Hyprland cuenta con validación local; otros escritorios requieren evidencia propia.
+3. Verificar atajo inicial/configurable, conflictos, permisos, foco, Unicode y recuperación en terminal, WhatsApp y Google Docs.
+4. Preparar firma y notarización antes de distribución pública, incluyendo motor y dependencias.
+5. Revisar dependencias vulnerables y evaluar migraciones mayores con pruebas de WASM/extensión.
 
-En Windows, versión 0.2.1 con parche de arranque: dictado local, copia global Ctrl+Alt+C y pegado global Ctrl+Alt+V. El parche está integrado en server/engine.py.
-
-## Ampliación 0.3
-
-Edición local opcional con vista previa, deshacer/rehacer, selección y opciones numeradas, aprendizaje explícito de reemplazos, plantillas, organización, búsqueda semántica opcional, importación de audio, sesión privada, respaldos cifrados, accesibilidad adicional y recuperación de audio en extensión. Adaptadores X11/macOS incluidos para probar.
-
-## Validación para distribución
-
-- Ejecutar el workflow y probar instaladores en Windows limpio, Arch/X11, Arch/Wayland y macOS por arquitectura.
-- Repetir dictado/copia/pegado después de la ampliación. Probar fallos de foco y versiones tardías.
-- Probar micrófono, WASM, caché y recuperación en Chrome real.
-- Instalar los modelos Ollama y evaluar calidad, latencia y preservación de cifras/negaciones en voz humana.
-- Auditar accesibilidad con lectores de pantalla y hablantes de distintos idiomas.
-- Revisar notices de los binarios finales y configurar firma/notarización antes de publicar como estable.
-
-## Capacidades posteriores
-
-FEATURES.md mantiene la lista de pendientes: streaming provisional, edición dentro del destino, sincronización OAuth, teléfono como micrófono, cifrado del historial interno, actualizaciones firmadas, paridad de órdenes multilingües y adaptación a Wayland.
-
-El criterio principal sigue siendo reducir el tiempo total hasta tener un texto correcto y revisado, sin perder cambios manuales ni información recuperable.
+La aceptación se rige por [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md). Registra resultados, fallos y pendientes en [VALIDACION.md](VALIDACION.md).

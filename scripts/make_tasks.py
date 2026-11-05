@@ -14,7 +14,7 @@ HELP = '''GOSU Speech to Text · comandos GNU Make para Linux
   make setup        Crea .venv Python 3.12 e instala dependencias
   make dev / run    Abre el escritorio; motor automático
   make test         Pruebas de interfaz/lógica y API
-  make check        Pruebas, frontend de producción y cargo check --locked
+  make check        Documentación, formato, pruebas, web/extensión y comprobaciones Rust
   make frontend     Compila solo React/TypeScript
   make engine       Empaqueta el motor Python para este SO/arquitectura
   make appimage     Pruebas + motor + AppImage + SHA256SUMS
@@ -77,8 +77,7 @@ def ensure():
 def tests():
     ensure()
     run(tool('npm.cmd' if os.name == 'nt' else 'npm'), 'test')
-    run(venv_python(), '-m', 'unittest', 'discover', '-s', 'server', '-p', 'test_*.py', '-v')
-    run(venv_python(), '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py', '-v')
+    run(venv_python(), 'scripts/test-python.py')
 
 def frontend():
     if not (ROOT / 'node_modules').is_dir():
@@ -100,9 +99,9 @@ def build(bundles):
     if sys.platform != 'linux':
         raise RuntimeError('Los paquetes Linux se generan en Linux. Para macOS/Windows consulta GUIA-0.3.md.')
     native_requirements()
-    tests()
-    run(tool('npm'), 'run', 'desktop:build', '--', '--bundles', bundles)
-    run(sys.executable, 'scripts/checksums.py')
+    run(sys.executable, 'scripts/make_tasks.py', 'check')
+    run(tool('npm'), 'run', 'desktop:build', '--', '--bundles', bundles, '--', '--locked')
+    run(sys.executable, 'scripts/checksums.py', Path(os.environ.get('CARGO_TARGET_DIR', 'src-tauri/target')) / 'release/bundle')
     print('Paquetes: src-tauri/target/release/bundle/')
 
 def install_paths(prefix):
@@ -206,7 +205,7 @@ def doctor():
         if result.returncode:missing.append('WebKitGTK 4.1')
     session = os.environ.get('XDG_SESSION_TYPE','desconocida')
     print('Sesión gráfica:',session)
-    print('Pegado X11 opcional:',shutil.which('xdotool') or 'instala xdotool; en Wayland usa copiar/pegar manual')
+    print('Pegado X11 opcional:',shutil.which('xdotool') or 'instala xdotool y xprop para X11; Wayland requiere Hyprland o portales compatibles')
     if missing:raise RuntimeError('Pendiente: '+', '.join(missing)+'. Las dependencias del sistema se instalan según LINUX-MAKE.md.')
 
 def main():
@@ -219,7 +218,14 @@ def main():
     elif args.task=='setup':setup()
     elif args.task=='dev':native_requirements();ensure();run(tool('npm'),'run','desktop')
     elif args.task=='test':tests()
-    elif args.task=='check':tests();frontend();native_requirements();run(tool('cargo'),'check','--locked','--manifest-path','src-tauri/Cargo.toml')
+    elif args.task=='check':
+        ensure()
+        run(tool('npm'), 'run', 'check')
+        run(venv_python(), 'scripts/test-python.py')
+        native_requirements()
+        run(tool('cargo'), 'fmt', '--manifest-path', 'src-tauri/Cargo.toml', '--', '--check')
+        run(tool('cargo'), 'check', '--locked', '--manifest-path', 'src-tauri/Cargo.toml')
+        run(tool('cargo'), 'test', '--locked', '--manifest-path', 'src-tauri/Cargo.toml')
     elif args.task=='frontend':frontend()
     elif args.task=='engine':engine()
     elif args.task in {'appimage','deb','bundle'}:build('appimage,deb' if args.task=='bundle' else args.task)

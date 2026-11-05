@@ -1,53 +1,118 @@
-> **Corrección de arranque 0.3.2:** si aparece os error 3, consulta [REPARAR-MOTOR.md](REPARAR-MOTOR.md). La preparación del entorno y empaquetado del motor son automáticos desde los comandos npm.
+# GOSU Speech to Text
 
-# GOSU Speech to Text — Dictation & Voice Typing
+Dictado y transcripción local con editor completo y un modo mínimo para escribir con tu voz en otra aplicación. **Versión del código: 0.3.2 · licencia MIT.**
 
-Dicta, transcribe grabaciones y corrige con tu voz. Procesamiento local, varios idiomas e inserción de texto en aplicaciones compatibles. Código MIT para Windows, Linux y macOS, más extensión Chrome independiente.
+## Dictado mínimo
 
-**Versión 0.3.2 · [Cómo actualizar tu instalación anterior](ACTUALIZAR-GOSU.md).**
+Con GOSU abierto y el motor listo, enfoca el campo de destino y pulsa **Ctrl+Shift+Espacio** en Linux/Windows o **Cmd+Shift+Espacio** en macOS. Habla y pulsa el mismo atajo para terminar: GOSU espera el audio pendiente e inserta el dictado de esa sesión. La ventana pequeña muestra el nivel real del micrófono. No se añaden pulsaciones de Enter.
 
-- [LINUX-MAKE.md](LINUX-MAKE.md): make setup/dev/appimage/deb/install y requisitos Arch/Ubuntu.
-- [GUIA-0.3.md](GUIA-0.3.md): uso, Ollama opcional, respaldos y empaquetado por sistema.
-- [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md): herramientas de compilación, instaladores y GitHub Actions.
-- [FEATURES.md](FEATURES.md): funciones reales y pendientes por plataforma.
-- [VALIDACION.md](VALIDACION.md): comprobaciones realizadas y límites de la evidencia.
-- [NOMBRES.md](NOMBRES.md): identidad aprobada y compatibilidad.
-- [PRIVACY.md](PRIVACY.md) / [THIRD-PARTY.md](THIRD-PARTY.md): datos y dependencias.
+El atajo está disponible desde el primer inicio si el sistema permite registrarlo. Se cambia pulsando la combinación mostrada en la ventana mínima o en **Preferencias → Atajo de dictado mínimo → Elegir combinación → Guardar atajo**. Se conserva al reiniciar; si una nueva combinación no está disponible, se recupera la anterior. [Uso, permisos y límites por escritorio](MINIMAL-MODE.md).
 
-## Linux
+## Estado y plataformas
 
-Con los requisitos nativos instalados:
+| Destino de compilación | Paquetes | Integración de dictado mínimo |
+|---|---|---|
+| Windows x64, toolchain MSVC | Instalador NSIS `.exe` | Ventana/proceso y teclado Win32 |
+| Linux x64, base Ubuntu 22.04 | `.deb` y `.AppImage` | X11; Hyprland; portales compatibles en GNOME/KDE Wayland |
+| macOS Apple Silicon, compilación nativa ARM64 | `.app` y `.dmg` | Automatización del sistema con sus permisos |
+| macOS Intel, compilación nativa x64 | `.app` y `.dmg` | Misma interfaz, binario y motor propios de Intel |
+| Chrome, independiente del escritorio | ZIP de extensión | Inferencia WASM e inserción en campos compatibles |
+
+El modo mínimo se ha comprobado en Linux/Hyprland. Los adaptadores de los demás sistemas están implementados y tienen trabajos de CI; su validación funcional en equipos reales sigue pendiente. Ubuntu puede usar Xorg o Wayland: las capacidades dependen de la sesión, los portales y los permisos. [Evidencia actual e histórica](VALIDACION.md) · [Funciones y pendientes](FEATURES.md).
+
+## Compilar desde código
+
+Ejecuta los comandos desde la carpeta que contiene `package.json`. Requisitos comunes: **Node 22.x actualizado con npm, Python 3.12 y Rust estable con rustfmt**, además de las herramientas nativas de tu sistema. No copies `.venv`, `node_modules` ni motores compilados entre sistemas o arquitecturas.
+
+### Linux
+
+Instala primero las [dependencias de Ubuntu/Debian o Arch/CachyOS](LINUX-MAKE.md).
 
 ```bash
+make doctor
 make setup
+make check
 make dev
 ```
 
-Para crear un AppImage e instalarlo en tu usuario:
+Después de cerrar el desarrollo, genera el paquete que necesites:
 
 ```bash
 make appimage
-make install
+# O bien:
+make deb
+# O ambos:
+make bundle
 ```
 
-El comando instalado es `gosu-speech-to-text`. `make help` muestra todas las opciones.
+`make install` instala el AppImage en tu usuario y crea el comando `gosu-speech-to-text`. `make help` muestra las opciones. Para distribución, la referencia de build Linux es Ubuntu 22.04; un paquete generado en una rolling release no garantiza compatibilidad con sistemas más antiguos.
 
-## Windows y macOS
+### Windows x64 — PowerShell
 
-Desde el código descomprimido, con Node 22, Rust y Python 3.12 instalados:
+Instala [MSVC/C++ Build Tools, Windows SDK y WebView2](INSTALAR-WINDOWS.md), además de las herramientas comunes.
 
-Windows: `py -3.12 scripts/configurar.py --dev`.
+```powershell
+py -3.12 scripts/configurar.py --dev
+```
 
-macOS: `python3.12 scripts/configurar.py --dev`.
+Para generar el instalador, tras cerrar la aplicación de desarrollo:
 
-Sustituye --dev por --build para empaquetar el motor y generar el instalador nativo. Los usuarios finales de los instaladores no necesitan Python, Node ni Rust. Ollama es opcional para edición libre y búsqueda semántica.
+```powershell
+py -3.12 scripts/configurar.py --build
+```
 
-## Extensión
+El asistente prepara las dependencias, ejecuta las comprobaciones y genera `src-tauri\target\release\bundle\nsis\*.exe`. En arranques posteriores basta `npm.cmd run desktop`.
 
-`make extension` o `npm run extension:build` y `python3 scripts/package-extension.py` generan **gosu-speech-to-text-chrome.zip**. Una copia compilada se incluye en ready/.
+### macOS — Apple Silicon o Intel
 
-## Marca y datos
+Prepara [Xcode Command Line Tools y las herramientas de tu arquitectura](INSTALAR-MACOS.md).
 
-brand.json define el nombre, descriptor y versión. `npm run brand:sync` actualiza los metadatos; `npm run brand:check` verifica su consistencia. La identidad técnica anterior y los formatos de datos permanecen compatibles para conservar tu historial al actualizar.
+```bash
+python3.12 scripts/configurar.py --dev
+```
 
-Las nuevas distribuciones requieren pruebas en los sistemas correspondientes antes de publicarse como estables. FEATURES.md identifica la visión aún pendiente; esta entrega no declara completadas todas sus capacidades.
+Para generar `.app` y `.dmg`, tras cerrar el desarrollo:
+
+```bash
+python3.12 scripts/configurar.py --build
+```
+
+Los resultados quedan en `src-tauri/target/release/bundle/`. Compila ARM64 en un entorno ARM64 e Intel en un entorno x64. No se genera una aplicación universal mezclando motores de ambas arquitecturas.
+
+### Extensión Chrome
+
+```bash
+npm ci
+npm run extension:build
+python3 scripts/package-extension.py
+```
+
+En Windows, sustituye el último comando por `py -3.12 scripts/package-extension.py`. Carga `extension-dist/` desde `chrome://extensions` en modo desarrollador o utiliza el ZIP generado `gosu-speech-to-text-chrome.zip`. La copia compilada no se mantiene en Git; debe generarse o descargarse de una ejecución de CI.
+
+## Distribución y pruebas
+
+[BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) es la guía central de preparación, comprobación, empaquetado y artefactos. [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md) define cuándo un cambio, un instalador y una plataforma pueden darse por aprobados.
+
+- `npm run check`: enlaces locales de documentación, formato, pruebas TypeScript, build web y extensión.
+- `make check`: lo anterior, suites Python, formato y comprobaciones/pruebas Rust, con el entorno preparado.
+- Windows/macOS: el asistente `scripts/configurar.py` ejecuta el mismo conjunto de comprobaciones antes de abrir o empaquetar; la guía central incluye los comandos individuales.
+- `.github/workflows/ci.yml`: comprobaciones de cada push/PR en los cuatro destinos de escritorio.
+- `.github/workflows/release.yml`: candidatos de instalador y extensión por ejecución manual o etiqueta `v*`. Genera artefactos; no publica ni firma automáticamente.
+
+Los paquetes de escritorio deben incluir el motor Python. Sus usuarios no instalan Node, Python ni Rust, pero sí necesitan los componentes de sistema aplicables. Los pesos de Whisper se descargan al preparar el modelo y se reutilizan después. Ollama es opcional y no se incluye en el instalador básico.
+
+## Documentación del proyecto
+
+| Documento | Uso |
+|---|---|
+| [AGENTS.md](AGENTS.md) | Reglas de trabajo para Codex y otros agentes |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Desarrollo, comprobaciones y mantenimiento |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Responsabilidades e invariantes de datos/audio |
+| [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md) | Aceptación y registro de evidencia por plataforma |
+| [GUIA-0.3.md](GUIA-0.3.md) | Uso del editor, herramientas y modelos opcionales |
+| [ACTUALIZAR-GOSU.md](ACTUALIZAR-GOSU.md) | Actualización de una instalación anterior |
+| [REPARAR-MOTOR.md](REPARAR-MOTOR.md) | Diagnóstico de arranque |
+| [NOMBRES.md](NOMBRES.md) | Identidad y compatibilidad de datos |
+| [PRIVACY.md](PRIVACY.md) / [THIRD-PARTY.md](THIRD-PARTY.md) | Datos, dependencias y licencias |
+
+`brand.json` es la fuente del nombre y versión. Usa `npm run brand:sync` al cambiarla y `npm run brand:check` para verificar sus metadatos. Se conserva el identificador `org.voz.prototype` y las claves heredadas de almacenamiento para mantener los datos existentes.

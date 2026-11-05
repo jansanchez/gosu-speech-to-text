@@ -33,8 +33,10 @@ Los estados describen el código entregado; no equivalen a una certificación mu
 | Portapapeles | Sí | Sí |
 | Pegado externo Windows | Adaptador confirmado en versión anterior; repetir pruebas 0.3 | Campos compatibles |
 | Pegado X11 / macOS | Adaptadores incluidos, requieren herramientas/permisos y pruebas | Campos compatibles |
-| Wayland | Copiar/pegar manual; atajos dependen del compositor | Dentro del navegador |
+| Wayland | Modo mínimo con Hyprland o portales autorizados compatibles; copiar/pegar manual disponible | Dentro del navegador |
 | Instaladores y workflow | Fuente y automatización de builds | Fuente y ZIP generado |
+
+Consulta [MINIMAL-MODE.md](MINIMAL-MODE.md) para el flujo de un solo atajo y los requisitos por sistema. Las rutas Windows, X11, GNOME/KDE y macOS requieren validación en sus escritorios reales.
 
 ## Capacidades de la visión aún no implementadas
 

@@ -1,3 +1,5 @@
+> Referencia de diagnóstico histórico. Para preparar o compilar el código actual, utiliza [README.md](README.md), [Windows](INSTALAR-WINDOWS.md) y [compilación](BUILD-AND-RELEASE.md). Las cifras y comprobaciones de esta guía corresponden a su diagnóstico original.
+
 > Documento histórico de la actualización 0.2.1. La guía vigente es GUIA-0.3.md; el parche posterior de arranque está incorporado en 0.3.
 
 # Actualización 0.2.1: comunicación del motor en Windows
