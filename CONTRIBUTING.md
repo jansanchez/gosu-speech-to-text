@@ -30,7 +30,7 @@ La CI ejecuta comprobaciones en cada push y pull request. Python y Rust tienen u
 
 Los cambios de almacenamiento, colas o privacidad deben cubrir el fallo que corrigen: cuota de disco, interrupción, escritura o eliminación fallida, reintento y recarga. Comprobar tanto el texto como la existencia del audio y del ID procesado. Las pruebas de interfaz usan React e IndexedDB simulada; las de extensión ejecutan su controlador compilado.
 
-El runner TypeScript tiene un plazo de 15 segundos por archivo. El runner Python termina una suite bloqueada tras 60 segundos. En un entorno restringido, `TestClient` puede bloquearse incluso con una API vacía; comprobar el mismo comando fuera del sandbox antes de atribuirlo a la aplicación. No eliminar pruebas ni desactivar validación para ocultar ese bloqueo.
+El runner TypeScript tiene un plazo de 30 segundos por archivo (la suite de interfaz completa superó 15 segundos en el runner macOS Intel). El runner Python termina una suite bloqueada tras 60 segundos. En un entorno restringido, `TestClient` puede bloquearse incluso con una API vacía; comprobar el mismo comando fuera del sandbox antes de atribuirlo a la aplicación. No eliminar pruebas ni desactivar validación para ocultar ese bloqueo.
 
 ## Compatibilidad
 

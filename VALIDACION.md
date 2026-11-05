@@ -153,3 +153,13 @@ Base `26fe01a`, cambios guardados en el commit de consolidación identificado po
 - `make check` en sandbox: frontend aprobado; TestClient superó los 60 segundos. Repetición `make check` autorizada fuera del sandbox: aprobada, incluyendo regresiones del entorno AppImage y del control de etiquetas, compilación web/Chrome, 21 pruebas Python, formato y comprobaciones Rust (11 aprobadas y 1 gráfica excluida).
 - CI de candidatos comprueba que la etiqueta `vX.Y.Z` coincide con `brand.json`, los metadatos generados y la entrada del changelog antes de empaquetar. Las pruebas rechazan etiquetas discordantes y versiones numéricas inválidas. El workflow aún no se ejecutó para esta versión.
 - No se recompilaron instaladores 0.4.0 ni se subió la etiqueta. La AppImage 0.3.2 del registro anterior acredita la corrección de empaquetado de su código, no un instalador de la nueva versión. Pendientes candidatos desde la etiqueta, instalación limpia y pruebas reales por plataforma; sin firma ni publicación.
+
+## 2026-11-05 — Corrección de comprobaciones macOS, 0.4.1
+
+Base `0b32242` (`v0.4.0`). El push de main y `v0.4.0` se completó; ejecución de candidatos: https://github.com/jansanchez/gosu-speech-to-text/actions/runs/42127492551. Chrome aprobado; macOS ARM64 e Intel fallidos antes del empaquetado; Linux y Windows aún en curso al registrar este diagnóstico.
+
+Logs aportados por el usuario: `job-logs.txt` (ARM64) y `job-logs-2.txt` (Intel). Ambos fallan en las pruebas de migración de atajos de `tests/storage.test.ts`: asumían que `Control` equivale a `CommandOrControl` también en macOS, donde equivale a Cmd/Super. Intel además agotó el plazo de 15000 ms del archivo `ui-native.test.ts`, tras completar sucesivamente pruebas de interfaz.
+
+Corrección 0.4.1: escenarios explícitos de plataforma Linux y MacIntel con restauración de navigator; comprobar colisión con el modificador correspondiente y distinción Control/Cmd en macOS. No cambia lógica de aplicación ni persistencia. Plazo de pruebas TypeScript de 30 s por archivo, con todas las pruebas conservadas. Marca y lockfiles sincronizados; etiqueta anterior inmutable.
+
+`make check` autorizado fuera del sandbox: aprobado en CachyOS Linux x86_64 con las herramientas del registro anterior; incluye formato, frontend/extensión, escenarios simulados de plataforma, 21 pruebas Python y 11 Rust (1 gráfica excluida). Esto no equivale a ejecución real en macOS. Pendiente repetir CI desde v0.4.1 y validar instaladores, motor, micrófono, permisos y pegado por SO. No se publicó ni firmó una release.

@@ -4,6 +4,6 @@ export const BRAND = {
   "fullName": "GOSU Speech to Text — Dictation & Voice Typing",
   "descriptor": "Dictation & Voice Typing",
   "slug": "gosu-speech-to-text",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Dictate, transcribe audio, and edit with your voice. Local processing, multilingual support, and text insertion across apps."
 } as const;

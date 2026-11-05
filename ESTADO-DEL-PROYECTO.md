@@ -1,3 +1,11 @@
+# Corrección de candidatos — 2026-11-05
+
+Versión vigente **0.4.1**, corrección de pruebas multiplataforma sobre `0b32242` (`v0.4.0`). `v0.4.0` se subió a GitHub y se conserva inmutable. Los candidatos de esa etiqueta fallaron en macOS por dos aserciones de atajos que confundían Control con Cmd y, en Intel, por el límite de 15 s del archivo completo de interfaz. Logs del usuario revisados; evidencia en [VALIDACION.md](VALIDACION.md).
+
+0.4.1 cubre explícitamente Linux y macOS con escenarios simulados, conserva la distinción Control/Cmd y usa un plazo finito de 30 s por archivo. No cambia la lógica de producto. `make check` fuera del sandbox aprobado en Linux. Se prepara su commit y etiqueta anotada para repetir candidatos; consultar Git y Actions para el resultado efectivo. La aprobación local no valida macOS ni los instaladores. Sigue pendiente instalación limpia y pruebas reales antes de publicar.
+
+Los registros siguientes son históricos; sus estados de publicación y versión corresponden a cada momento.
+
 # Consolidación de versión — 2026-11-05
 
 Se prepara **0.4.0** sobre la base `26fe01a`, incluyendo las funcionalidades recientes de dictado mínimo y tres atajos y la corrección de búsqueda de bibliotecas PyAV al generar AppImage. Consultar [CHANGELOG.md](CHANGELOG.md) y la política SemVer en [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md). `brand.json` es la fuente de versión; `brand:sync` incluye ahora la entrada propia de `Cargo.lock`. `release:check` valida coherencia, changelog y etiqueta en CI. Las etiquetas son anotadas, `vX.Y.Z`, por versión agrupada; no por commit.

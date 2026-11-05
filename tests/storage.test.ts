@@ -137,31 +137,60 @@ test('extension legacy workspaces migrate and corrupt state or audio fails close
   assert.throws(() => validateExtensionJobs([{ mode: 'execute' }]));
 });
 
-test('old settings migrate a distinct panel shortcut without replacing recording preferences', () => {
-  const { minimalShortcut: _, ...old } = defaults;
-  assert.equal(validateSettings(old).minimalShortcut, defaults.minimalShortcut);
-  const migrated = validateSettings({ ...old, shortcut: 'Control+Shift+M' });
-  assert.equal(migrated.shortcut, 'Control+Shift+M');
-  assert.notEqual(migrated.minimalShortcut, defaults.minimalShortcut);
-  assert.throws(
-    () => validateSettings({ ...defaults, minimalShortcut: 'Control+Shift+Space' }),
-    /Preferencias/,
-  );
-  assert.throws(
-    () => validateSettings({ ...defaults, minimalShortcut: 42 }),
-    /Preferencias/,
-  );
-});
+function onPlatform(platform: string, check: (modifier: string) => void) {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: { platform },
+  });
+  try {
+    check(platform === 'MacIntel' ? 'Super' : 'Control');
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'navigator', original);
+    else Reflect.deleteProperty(globalThis, 'navigator');
+  }
+}
 
-test('visibility shortcut migrates without colliding with existing shortcuts', () => {
-  const { visibilityShortcut: _, ...old } = defaults;
-  assert.equal(validateSettings(old).visibilityShortcut, 'CommandOrControl+Shift+H');
-  assert.equal(
-    validateSettings({ ...old, shortcut: 'Control+Shift+H' }).visibilityShortcut,
-    'CommandOrControl+Alt+H',
-  );
-  assert.throws(
-    () => validateSettings({ ...defaults, visibilityShortcut: 'Control+Shift+M' }),
-    /Preferencias/,
-  );
-});
+for (const platform of ['Linux', 'MacIntel']) {
+  test(`old settings migrate distinct shortcuts on ${platform}`, () => {
+    onPlatform(platform, (modifier) => {
+      const { minimalShortcut: _, ...old } = defaults;
+      assert.equal(validateSettings(old).minimalShortcut, defaults.minimalShortcut);
+      const shortcut = `${modifier}+Shift+M`;
+      const migrated = validateSettings({ ...old, shortcut });
+      assert.equal(migrated.shortcut, shortcut);
+      assert.equal(migrated.minimalShortcut, 'CommandOrControl+Alt+M');
+      assert.throws(
+        () =>
+          validateSettings({ ...defaults, minimalShortcut: `${modifier}+Shift+Space` }),
+        /Preferencias/,
+      );
+      assert.throws(
+        () => validateSettings({ ...defaults, minimalShortcut: 42 }),
+        /Preferencias/,
+      );
+      if (platform === 'MacIntel') {
+        assert.equal(
+          validateSettings({ ...old, shortcut: 'Control+Shift+M' }).minimalShortcut,
+          defaults.minimalShortcut,
+        );
+      }
+    });
+  });
+
+  test(`visibility shortcut migrates without collisions on ${platform}`, () => {
+    onPlatform(platform, (modifier) => {
+      const { visibilityShortcut: _, ...old } = defaults;
+      assert.equal(validateSettings(old).visibilityShortcut, 'CommandOrControl+Shift+H');
+      assert.equal(
+        validateSettings({ ...old, shortcut: `${modifier}+Shift+H` }).visibilityShortcut,
+        'CommandOrControl+Alt+H',
+      );
+      assert.throws(
+        () =>
+          validateSettings({ ...defaults, visibilityShortcut: `${modifier}+Shift+M` }),
+        /Preferencias/,
+      );
+    });
+  });
+}

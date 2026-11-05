@@ -2,6 +2,14 @@
 
 Se utiliza [SemVer 2.0.0](https://semver.org/lang/es/). Cada entrada agrupa los cambios de una versión; la etiqueta Git identifica su código exacto. Una etiqueta no certifica instalación ni compatibilidad en plataformas pendientes.
 
+## [0.4.1] — 2026-11-05
+
+### Correcciones de validación multiplataforma
+
+- Pruebas de migración de atajos con escenarios explícitos Linux y macOS: `CommandOrControl` equivale a Control en Linux y a Cmd/Super en macOS. Se comprueba que Control y Cmd sigan siendo distintos en macOS.
+- Plazo global de pruebas TypeScript de 30 segundos por archivo: la suite de interfaz completa alcanzó el límite anterior de 15 segundos en macOS Intel. Se conservan todas las pruebas y un límite finito.
+- No cambia la lógica de la aplicación. La etiqueta `v0.4.0` se conserva; los candidatos 0.4.1 requieren su propia compilación y validación.
+
 ## [0.4.0] — 2026-11-05
 
 ### Funcionalidades
