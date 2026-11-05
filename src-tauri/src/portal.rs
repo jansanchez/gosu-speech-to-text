@@ -18,6 +18,8 @@ struct Input {
     session: Session<RemoteDesktop>,
 }
 static SHORTCUTS: Mutex<Option<Shortcuts>> = Mutex::const_new(None);
+static VISIBILITY_SHORTCUTS: Mutex<Option<Shortcuts>> = Mutex::const_new(None);
+static PANEL_SHORTCUTS: Mutex<Option<Shortcuts>> = Mutex::const_new(None);
 static INPUT: Mutex<Option<Input>> = Mutex::const_new(None);
 pub fn wayland() -> bool {
     std::env::var_os("WAYLAND_DISPLAY").is_some()
@@ -44,8 +46,18 @@ fn accelerator(value: &str) -> Result<String, String> {
     }
     Ok(parts.join("+"))
 }
-pub async fn configure(app: tauri::AppHandle, shortcut: Option<String>) -> Result<bool, String> {
-    let mut state = SHORTCUTS.lock().await;
+pub async fn configure(
+    app: tauri::AppHandle,
+    shortcut: Option<String>,
+    action: &'static str,
+) -> Result<bool, String> {
+    let state = match action {
+        "dictation" => &SHORTCUTS,
+        "panel" => &PANEL_SHORTCUTS,
+        "visibility" => &VISIBILITY_SHORTCUTS,
+        _ => return Err("Acción de atajo inválida".into()),
+    };
+    let mut state = state.lock().await;
     if let Some(previous) = state.take() {
         previous.task.abort();
         let _ = previous.session.close().await;
@@ -59,8 +71,13 @@ pub async fn configure(app: tauri::AppHandle, shortcut: Option<String>) -> Resul
         .await
         .map_err(error)?;
     let trigger = accelerator(&shortcut)?;
-    let binding = NewShortcut::new("dictation", "GOSU: iniciar o terminar dictado")
-        .preferred_trigger(Some(trigger.as_str()));
+    let id = action;
+    let description = match action {
+        "visibility" => "GOSU: mostrar u ocultar aplicación",
+        "panel" => "GOSU: alternar editor y modo minimalista",
+        _ => "GOSU: iniciar o terminar dictado",
+    };
+    let binding = NewShortcut::new(id, description).preferred_trigger(Some(trigger.as_str()));
     let response = proxy
         .bind_shortcuts(&session, &[binding], None, Default::default())
         .await;
@@ -69,7 +86,7 @@ pub async fn configure(app: tauri::AppHandle, shortcut: Option<String>) -> Resul
             if response
                 .shortcuts()
                 .iter()
-                .any(|shortcut| shortcut.id() == "dictation") => {}
+                .any(|shortcut| shortcut.id() == id) => {}
         Ok(_) => {
             let _ = session.close().await;
             return Err("El portal no registró el atajo de dictado.".into());
@@ -82,8 +99,15 @@ pub async fn configure(app: tauri::AppHandle, shortcut: Option<String>) -> Resul
     let mut events = proxy.receive_deactivated().await.map_err(error)?;
     let task = tauri::async_runtime::spawn(async move {
         while let Some(event) = events.next().await {
-            if event.shortcut_id() == "dictation" {
-                let _ = app.emit("dictation-toggle", ());
+            if event.shortcut_id() == id {
+                let _ = app.emit(
+                    match action {
+                        "visibility" => "app-toggle-visibility",
+                        "panel" => "dictation-show",
+                        _ => "dictation-toggle",
+                    },
+                    (),
+                );
             }
         }
     });

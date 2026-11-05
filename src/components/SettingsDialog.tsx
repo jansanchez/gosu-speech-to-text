@@ -6,6 +6,8 @@ type Props = {
   config: Settings;
   shortcutStatus: string;
   setShortcut: (value: string) => void;
+  setMinimalShortcut: (value: string) => void;
+  setVisibilityShortcut: (value: string) => void;
   captureShortcut: (active: boolean) => Promise<void>;
   disabled: boolean;
   token: string;
@@ -22,6 +24,8 @@ export default function SettingsDialog({
   config,
   shortcutStatus,
   setShortcut,
+  setMinimalShortcut,
+  setVisibilityShortcut,
   captureShortcut,
   disabled,
   token,
@@ -81,10 +85,29 @@ export default function SettingsDialog({
         </p>
         <ShortcutPicker
           value={config.shortcut}
+          otherShortcuts={[config.minimalShortcut, config.visibilityShortcut]}
           disabled={disabled}
           status={shortcutStatus}
           onCapture={captureShortcut}
           onChange={setShortcut}
+        />
+        <ShortcutPicker
+          panel
+          value={config.minimalShortcut}
+          otherShortcuts={[config.shortcut, config.visibilityShortcut]}
+          disabled={disabled}
+          status={shortcutStatus}
+          onCapture={captureShortcut}
+          onChange={setMinimalShortcut}
+        />
+        <ShortcutPicker
+          visibility
+          value={config.visibilityShortcut}
+          otherShortcuts={[config.shortcut, config.minimalShortcut]}
+          disabled={disabled}
+          status={shortcutStatus}
+          onCapture={captureShortcut}
+          onChange={setVisibilityShortcut}
         />
         {!isTauri() ? (
           <>

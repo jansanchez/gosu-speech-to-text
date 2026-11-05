@@ -5,7 +5,10 @@ use std::sync::{Mutex, OnceLock};
 
 static DESTINATION: Mutex<Option<Destination>> = Mutex::new(None);
 static BIND: Mutex<Option<Binding>> = Mutex::new(None);
+static VISIBILITY_BIND: Mutex<Option<Binding>> = Mutex::new(None);
+static PANEL_BIND: Mutex<Option<Binding>> = Mutex::new(None);
 struct Binding {
+    slot: &'static str,
     spec: String,
     fingerprint: Value,
     modern: bool,
@@ -55,6 +58,9 @@ pub fn terminal(app: &str) -> bool {
     .iter()
     .any(|name| app.contains(name))
 }
+fn own_class(app: &str) -> bool {
+    matches!(app, "org.voz.prototype" | "gosu-speech-to-text")
+}
 fn destination(value: &Value) -> Result<Destination, String> {
     let id = value["address"].as_str().unwrap_or_default();
     let app = value["class"].as_str().unwrap_or_default();
@@ -68,7 +74,7 @@ fn destination(value: &Value) -> Result<Destination, String> {
             "No se detectó una ventana de destino. Enfoca el campo y pulsa el atajo.".into(),
         );
     }
-    if pid == u64::from(std::process::id()) || app == "org.voz.prototype" {
+    if pid == u64::from(std::process::id()) || own_class(app) {
         return Err("Enfoca el campo de otra aplicación y pulsa el atajo para dictar allí.".into());
     }
     Ok(Destination {
@@ -189,8 +195,9 @@ fn matches(bind: &Value, mask: u64, key: &str) -> bool {
             .is_some_and(|v| v.eq_ignore_ascii_case(key))
 }
 fn remove_owned(binding: Binding) {
+    let slot = binding.slot;
     if binding.modern {
-        let _=command(&["eval",&format!("if _G.__gosu_dictation and _G.__gosu_dictation.pid=={} then _G.__gosu_dictation.binding:unbind(); _G.__gosu_dictation=nil end",std::process::id())]);
+        let _=command(&["eval",&format!("if _G.{slot} and _G.{slot}.pid=={} then _G.{slot}.binding:unbind(); _G.{slot}=nil end",std::process::id())]);
         return;
     }
     let Ok(binds) = json(&["-j", "binds"]) else {
@@ -212,11 +219,17 @@ fn remove_owned(binding: Binding) {
         let _ = command(&["keyword", "unbind", &format!("{mods},{key}")]);
     }
 }
-pub fn configure_shortcut(value: Option<&str>) -> Result<bool, String> {
+pub fn configure_shortcut(value: Option<&str>, action: &str) -> Result<bool, String> {
     if !available() {
         return Ok(false);
     }
-    let mut binding = BIND.lock().map_err(|e| e.to_string())?;
+    let (slot, state, flag) = match action {
+        "dictation" => ("__gosu_dictation", &BIND, "--toggle-minimal"),
+        "panel" => ("__gosu_panel", &PANEL_BIND, "--show-minimal"),
+        "visibility" => ("__gosu_visibility", &VISIBILITY_BIND, "--toggle-visibility"),
+        _ => return Err("Acción de atajo inválida".into()),
+    };
+    let mut binding = state.lock().map_err(|e| e.to_string())?;
     if let Some(previous) = binding.take() {
         remove_owned(previous);
     }
@@ -228,13 +241,22 @@ pub fn configure_shortcut(value: Option<&str>) -> Result<bool, String> {
         return Err("La ruta del ejecutable contiene caracteres no admitidos.".into());
     }
     if modern() {
-        let previous=command(&["repl",&format!("_G.__gosu_dictation and _G.__gosu_dictation.exe=={} and _G.__gosu_dictation.pid or 0",quote(&executable))])?;
+        let previous = command(&[
+            "repl",
+            &format!(
+                "_G.{slot} and _G.{slot}.exe=={} and _G.{slot}.pid or 0",
+                quote(&executable)
+            ),
+        ])?;
         if let Ok(pid) = previous.trim().parse::<u32>() {
             if pid != 0
                 && (pid == std::process::id()
                     || !std::path::Path::new(&format!("/proc/{pid}")).exists())
             {
-                command(&["eval","if _G.__gosu_dictation then _G.__gosu_dictation.binding:unbind();_G.__gosu_dictation=nil end"])?;
+                command(&[
+                    "eval",
+                    &format!("if _G.{slot} then _G.{slot}.binding:unbind();_G.{slot}=nil end"),
+                ])?;
             }
         }
     }
@@ -245,10 +267,10 @@ pub fn configure_shortcut(value: Option<&str>) -> Result<bool, String> {
     {
         return Err("El atajo ya está ocupado en Hyprland. Elige otro en Preferencias.".into());
     }
-    let shell = format!("'{}' --toggle-minimal", executable.replace('\'', "'\\''"));
+    let shell = format!("'{}' {flag}", executable.replace('\'', "'\\''"));
     let result = if modern() {
         let chord = format!("{} + {}", mods.replace(' ', " + "), key.to_uppercase());
-        command(&["eval",&format!("_G.__gosu_dictation={{pid={},exe={},binding=hl.bind({},hl.dsp.exec_cmd({}),{{release=true}})}}",std::process::id(),quote(&executable),quote(&chord),quote(&shell))])?
+        command(&["eval",&format!("_G.{slot}={{pid={},exe={},binding=hl.bind({},hl.dsp.exec_cmd({}),{{release=true}})}}",std::process::id(),quote(&executable),quote(&chord),quote(&shell))])?
     } else {
         command(&["keyword", "bindr", &format!("{mods},{key},exec,{shell}")])?
     };
@@ -264,6 +286,7 @@ pub fn configure_shortcut(value: Option<&str>) -> Result<bool, String> {
         .cloned()
         .ok_or("Hyprland no registró el atajo.")?;
     *binding = Some(Binding {
+        slot,
         spec: value.into(),
         fingerprint,
         modern: modern(),
@@ -271,16 +294,39 @@ pub fn configure_shortcut(value: Option<&str>) -> Result<bool, String> {
     Ok(true)
 }
 
-pub fn present_overlay() -> Result<(), String> {
-    let clients = json(&["-j", "clients"])?;
-    let window = clients
-        .as_array()
-        .and_then(|items| {
-            items
-                .iter()
-                .find(|item| item["pid"].as_u64() == Some(u64::from(std::process::id())))
-        })
-        .ok_or("No se encontró la ventana de GOSU.")?;
+fn overlay_window(clients: &Value) -> Result<Value, String> {
+    let items = clients.as_array().ok_or("Lista de ventanas inválida.")?;
+    if let Some(window) = items
+        .iter()
+        .find(|item| item["pid"].as_u64() == Some(u64::from(std::process::id())))
+    {
+        return Ok(window.clone());
+    }
+    let mut matches = items.iter().filter(|item| {
+        ["org.voz.prototype", "gosu-speech-to-text"]
+            .iter()
+            .any(|class| {
+                item["class"].as_str() == Some(*class)
+                    || item["initialClass"].as_str() == Some(*class)
+            })
+    });
+    let window = matches.next().ok_or("No se encontró la ventana de GOSU.")?;
+    if matches.next().is_some() {
+        return Err("Hay varias ventanas de GOSU; no se puede identificar el panel.".into());
+    }
+    Ok(window.clone())
+}
+pub fn present_window(overlay: bool) -> Result<(), String> {
+    let (width, height) = if overlay { (460, 220) } else { (1180, 820) };
+    let mut result = Err("No se encontró la ventana de GOSU.".to_owned());
+    for _ in 0..20 {
+        result = overlay_window(&json(&["-j", "clients"])?);
+        if result.is_ok() {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+    let window = result?;
     let address = window["address"]
         .as_str()
         .ok_or("Dirección de ventana inválida.")?;
@@ -312,9 +358,9 @@ pub fn present_overlay() -> Result<(), String> {
     }
     dispatch(
         "resizewindowpixel",
-        &format!("exact 460 220,{selector}"),
+        &format!("exact {width} {height},{selector}"),
         &format!(
-            "hl.dsp.window.resize({{window={},x=460,y=220,relative=false}})",
+            "hl.dsp.window.resize({{window={},x={width},y={height},relative=false}})",
             quote(&selector)
         ),
     )?;
@@ -326,10 +372,14 @@ pub fn present_overlay() -> Result<(), String> {
         let scale = monitor["scale"].as_f64().unwrap_or(1.0).max(0.1);
         let x = monitor["x"].as_i64().unwrap_or(0)
             + (monitor["width"].as_f64().unwrap_or(1920.) / scale) as i64 / 2
-            - 230;
+            - width / 2;
+        let logical_height = monitor["height"].as_f64().unwrap_or(1080.) / scale;
         let y = monitor["y"].as_i64().unwrap_or(0)
-            + (monitor["height"].as_f64().unwrap_or(1080.) / scale) as i64
-            - 260;
+            + if overlay {
+                (logical_height as i64 - height - (logical_height * 0.15) as i64).max(0)
+            } else {
+                ((logical_height as i64 - height) / 2).max(0)
+            };
         dispatch(
             "movewindowpixel",
             &format!("exact {x} {y},{selector}"),
@@ -338,7 +388,7 @@ pub fn present_overlay() -> Result<(), String> {
                 quote(&selector)
             ),
         )?;
-        if modern() {
+        if overlay && modern() {
             command(&[
                 "eval",
                 &format!(
@@ -371,10 +421,17 @@ mod tests {
     #[ignore = "Requires an isolated org.gosu.IntegrationTest window and GOSU_TEST_OUTPUT"]
     fn paste_into_isolated_test_window() {
         let target = capture().unwrap();
+        let terminal = std::env::var_os("GOSU_TEST_TERMINAL").is_some();
+        let expected = if terminal {
+            "org.gosu.IntegrationTest.wezterm"
+        } else {
+            "org.gosu.IntegrationTest"
+        };
         assert_eq!(
-            target.app, "org.gosu.IntegrationTest",
+            target.app, expected,
             "Refusing to write into a real user application"
         );
+        assert_eq!(target.terminal, terminal);
         let output = std::env::var("GOSU_TEST_OUTPUT").expect("Missing test output path");
         let text = "GOSU: inserción áéíóú ñ 你好";
         crate::copy_text(text.into()).unwrap();
@@ -388,9 +445,25 @@ mod tests {
         panic!("Test field did not receive the text");
     }
     #[test]
+    fn overlay_identifies_webkit_window_and_rejects_ambiguity() {
+        for class in ["org.voz.prototype", "gosu-speech-to-text"] {
+            let window = serde_json::json!({"pid":999999,"class":class,"address":"0xabc"});
+            assert_eq!(
+                overlay_window(&serde_json::json!([window.clone()])).unwrap()["address"],
+                "0xabc"
+            );
+            assert!(overlay_window(&serde_json::json!([window.clone(), window])).is_err());
+        }
+        assert!(overlay_window(&serde_json::json!([{"pid":999999,"class":"wezterm"}])).is_err());
+    }
+    #[test]
     fn empty_and_own_windows_are_not_destinations() {
         assert!(destination(&serde_json::json!({})).is_err());
         assert!(destination(&serde_json::json!({"address":"0x123","pid":std::process::id(),"class":"org.voz.prototype"})).is_err());
+        assert!(destination(
+            &serde_json::json!({"address":"0x123","pid":999999,"class":"gosu-speech-to-text"})
+        )
+        .is_err());
         let target =
             destination(&serde_json::json!({"address":"0xabc","pid":999999,"class":"firefox"}))
                 .unwrap();

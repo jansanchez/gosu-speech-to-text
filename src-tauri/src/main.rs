@@ -199,6 +199,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             minimal::minimal_window,
             minimal::dictation_target,
+            minimal::dictation_prepare,
             minimal::dictation_insert,
             minimal::dictation_shortcut,
             remember_target,

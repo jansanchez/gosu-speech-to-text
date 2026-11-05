@@ -72,8 +72,13 @@ const replies = ['Mañana revisaré el documento.', 'cambia Mañana por Hoy', 'O
 const events = new Map<number, (event: any) => void>();
 let nextEvent = 1;
 let dictationListener = 0;
+let panelListener = 0;
+let visibilityListener = 0;
+let focusedTarget = 'test-window';
 let insertionFailure = false,
   targetFailure = false;
+let preparationFailure = false;
+let clipboardFailure = false;
 let recognitionGate: Promise<void> | null = null;
 const nativeShortcuts = new Set<string>();
 const removedShortcuts: string[] = [];
@@ -92,6 +97,8 @@ const windowModes: string[] = [];
   invoke: async (cmd: string, args: any) => {
     if (cmd === 'plugin:event|listen') {
       if (args.event === 'dictation-toggle') dictationListener = args.handler;
+      if (args.event === 'dictation-show') panelListener = args.handler;
+      if (args.event === 'app-toggle-visibility') visibilityListener = args.handler;
       return args.handler;
     }
     if (cmd === 'plugin:global-shortcut|is_registered')
@@ -115,17 +122,24 @@ const windowModes: string[] = [];
       }
       return;
     }
+    if (cmd === 'dictation_prepare' && preparationFailure)
+      throw Error('Permiso del sistema denegado');
     if (cmd === 'dictation_target' && targetFailure)
       throw Error('Permiso del sistema denegado');
     if (cmd === 'dictation_target')
       return {
-        id: 'test-window',
+        id: focusedTarget,
         app: 'org.wezfurlong.wezterm',
         name: 'WezTerm',
         terminal: true,
         pid: 12345,
       };
     if (cmd === 'dictation_insert') {
+      assert.equal(
+        clipboard,
+        args.text,
+        'Copy the complete session before attempting paste',
+      );
       if (insertionFailure) throw Error('Destino cerrado');
       insertions.push(args);
       return;
@@ -158,7 +172,10 @@ const windowModes: string[] = [];
       assert.equal(args.model, 'qwen2.5:1.5b');
       return { text: rewriteResult };
     }
-    if (cmd === 'copy_text') clipboard = args.text;
+    if (cmd === 'copy_text') {
+      if (clipboardFailure) throw Error('Portapapeles no disponible');
+      clipboard = args.text;
+    }
     return null;
   },
 };
@@ -450,12 +467,23 @@ test('restarting the engine keeps the workspace and pending audio intact', async
   await step(() => root.unmount());
 });
 
+async function visibilityShortcut() {
+  const handler = events.get(visibilityListener);
+  assert.ok(handler);
+  await step(() => handler!({ event: 'app-toggle-visibility', payload: null }));
+}
 async function primaryShortcut() {
+  if (!container.querySelector('.minimal-dictation')) await panelShortcut();
   const handler = events.get(dictationListener);
   assert.ok(handler, 'Primary shortcut listener missing');
   await step(() => handler!({ event: 'dictation-toggle', payload: null }));
 }
-test('one shortcut records a fresh draft, shows microphone feedback and inserts only that dictation', async () => {
+async function panelShortcut() {
+  const handler = events.get(panelListener);
+  assert.ok(handler);
+  await step(() => handler!({ event: 'dictation-show', payload: null }));
+}
+test('independent shortcuts record a fresh draft, shows microphone feedback and inserts only that dictation', async () => {
   await clear();
   root = createRoot(container);
   await step(() => root.render(React.createElement(App)));
@@ -464,11 +492,14 @@ test('one shortcut records a fresh draft, shows microphone feedback and inserts 
   );
   const before = insertions.length;
   replies.push('Dictado para el agente.');
-  await primaryShortcut();
+  await panelShortcut();
   assert.ok(container.querySelector('.minimal-dictation'));
+  assert.match(container.textContent || '', /Listo para dictar/);
+  await primaryShortcut();
   assert.match(container.textContent || '', /Te estoy escuchando/);
-  assert.match(container.textContent || '', /WezTerm/);
+  assert.match(container.textContent || '', /Destino al terminar/);
   assert.equal(windowModes.at(-1), 'overlay');
+  focusedTarget = 'last-focused-window';
   await audio();
   assert.equal(insertions.length, before, 'No insertion while still listening');
   assert.ok(
@@ -479,16 +510,36 @@ test('one shortcut records a fresh draft, shows microphone feedback and inserts 
   await primaryShortcut();
   await step(() => {});
   assert.deepEqual(insertions.at(-1), {
-    targetId: 'test-window',
+    targetId: 'last-focused-window',
     text: 'Dictado para el agente.',
   });
   assert.match(container.textContent || '', /Texto insertado/);
+  assert.equal(clipboard, 'Dictado para el agente.');
+  assert.equal(windowModes.at(-1), 'overlay');
+  await visibilityShortcut();
+  assert.equal(windowModes.at(-1), 'hide');
+  const previousNode = node;
+  await visibilityShortcut();
+  assert.equal(windowModes.at(-1), 'overlay');
+  assert.equal(node, previousNode, 'Showing the panel never opens the microphone');
+  assert.match(container.textContent || '', /Texto insertado/);
+  replies.push('Segundo dictado.');
+  await primaryShortcut();
+  assert.match(container.textContent || '', /Te estoy escuchando/);
+  await visibilityShortcut();
+  assert.equal(windowModes.at(-1), 'hide');
+  await visibilityShortcut();
+  assert.match(container.textContent || '', /Te estoy escuchando/);
+  await audio();
+  await primaryShortcut();
+  assert.equal(insertions.at(-1)!.text, 'Segundo dictado.');
+  focusedTarget = 'test-window';
   await step(() => click('Editor'));
   assert.equal(
     (container.querySelector('#draft') as HTMLTextAreaElement).value,
-    'Dictado para el agente.',
+    'Segundo dictado.',
   );
-  assert.equal((await get<any>('voz-state')).sessions.length, 2);
+  assert.equal((await get<any>('voz-state')).sessions.length, 3);
   await step(() => root.unmount());
 });
 test('minimal mode preserves text when the target rejects insertion and never retries automatically', async () => {
@@ -504,6 +555,7 @@ test('minimal mode preserves text when the target rejects insertion and never re
     await primaryShortcut();
     await step(() => {});
     assert.match(container.textContent || '', /Destino cerrado/);
+    assert.equal(clipboard, 'Texto recuperable.');
     assert.equal(insertions.length, before);
     await step(() => click('Editor'));
     assert.equal(
@@ -549,6 +601,7 @@ test('minimal insertion waits for the final in-flight transcript and ignores rep
     await audio();
     await primaryShortcut();
     assert.match(container.textContent || '', /Terminando transcripción/);
+    focusedTarget = 'changed-during-processing';
     assert.equal(insertions.length, before);
     await primaryShortcut();
     assert.equal(insertions.length, before);
@@ -557,8 +610,10 @@ test('minimal insertion waits for the final in-flight transcript and ignores rep
     await step(() => {});
     assert.equal(insertions.length, before + 1);
     assert.equal(insertions.at(-1)!.text, 'Resultado completo.');
+    assert.equal(insertions.at(-1)!.targetId, 'test-window');
   } finally {
     recognitionGate = null;
+    focusedTarget = 'test-window';
     release();
     await step(() => root.unmount());
   }
@@ -569,14 +624,14 @@ test('denied system integration never opens a microphone or inserts text', async
   await step(() => root.render(React.createElement(App)));
   const previousNode = node,
     before = insertions.length;
-  targetFailure = true;
+  preparationFailure = true;
   try {
     await primaryShortcut();
     assert.match(container.textContent || '', /Permiso del sistema denegado/);
     assert.equal(node, previousNode);
     assert.equal(insertions.length, before);
   } finally {
-    targetFailure = false;
+    preparationFailure = false;
     await step(() => root.unmount());
   }
 });
@@ -587,7 +642,7 @@ test('stale shortcuts owned by GOSU are renewed and foreign shortcuts are never 
   root = createRoot(container);
   await step(() => root.render(React.createElement(App)));
   assert.doesNotMatch(container.textContent || '', /No se pudieron registrar/);
-  assert.equal(nativeShortcuts.size, 5);
+  assert.equal(nativeShortcuts.size, 7);
   await step(() => root.unmount());
   assert.equal(nativeShortcuts.size, 0);
   foreignShortcut = true;
@@ -603,18 +658,24 @@ test('stale shortcuts owned by GOSU are renewed and foreign shortcuts are never 
   }
 });
 
-function shortcutControl(text: string) {
-  const button = [...container.querySelectorAll('.settings button')].find(
-    (button) => button.textContent === text,
-  );
+function shortcutControl(text: string, panel: boolean | number = false) {
+  const button = [
+    ...container
+      .querySelectorAll('.settings .shortcut-picker')
+      [typeof panel === 'number' ? panel : panel ? 1 : 0].querySelectorAll('button'),
+  ].find((button) => button.textContent === text);
   assert.ok(button);
   return button as HTMLButtonElement;
 }
-async function chooseShortcut() {
+async function chooseShortcut(panel: boolean | number = false) {
   await step(() => click('Preferencias'));
-  await step(() => shortcutControl('Elegir combinación').click());
+  await step(() => shortcutControl('Elegir combinación', panel).click());
   const field = container.querySelector(
-    '.settings input[aria-label="Combinación del atajo de dictado"]',
+    panel === 2
+      ? '.settings input[aria-label="Combinación del atajo de visibilidad"]'
+      : panel
+        ? '.settings input[aria-label="Combinación del atajo del panel"]'
+        : '.settings input[aria-label="Combinación del atajo de dictado"]',
   ) as HTMLInputElement;
   assert.equal(field.getAttribute('data-shortcut-capture'), 'true');
   assert.equal(
@@ -635,7 +696,7 @@ async function chooseShortcut() {
     ),
   );
   assert.match(field.value, /Ctrl.*Alt.*K/);
-  await step(() => shortcutControl('Guardar atajo').click());
+  await step(() => shortcutControl('Guardar atajo', panel).click());
   await step(() => {});
 }
 test('the user can record a shortcut and it stays configured after restarting the interface', async () => {
@@ -670,6 +731,161 @@ test('an unavailable new shortcut restores the previous usable shortcut', async 
       container.querySelector('.settings')!.textContent || '',
       /Se conservó el atajo anterior/,
     );
+  } finally {
+    rejectedShortcut = '';
+    await step(() => root.unmount());
+  }
+});
+
+test('panel shortcut is configurable and persists independently of recording', async () => {
+  await clear();
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  await chooseShortcut(true);
+  assert.equal((await get<any>('voz-state')).settings.minimalShortcut, 'Control+Alt+K');
+  assert.equal(
+    (await get<any>('voz-state')).settings.shortcut,
+    'CommandOrControl+Shift+Space',
+  );
+  await step(() => root.unmount());
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  assert.ok(nativeShortcuts.has('Control+Alt+K'));
+  assert.ok(nativeShortcuts.has('CommandOrControl+Shift+Space'));
+  await step(() => root.unmount());
+});
+test('an unavailable panel shortcut restores the previous panel shortcut', async () => {
+  await clear();
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  rejectedShortcut = 'Control+Alt+K';
+  try {
+    await chooseShortcut(true);
+    assert.equal(
+      (await get<any>('voz-state')).settings.minimalShortcut,
+      'CommandOrControl+Shift+M',
+    );
+    assert.ok(nativeShortcuts.has('CommandOrControl+Shift+Space'));
+    assert.ok(nativeShortcuts.has('CommandOrControl+Shift+M'));
+  } finally {
+    rejectedShortcut = '';
+    await step(() => root.unmount());
+  }
+});
+
+test('recording starts while GOSU is focused and final text is copied even without a destination', async () => {
+  await clear();
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  const before = insertions.length;
+  targetFailure = true;
+  replies.push('Texto para pegar en WezTerm.');
+  try {
+    await panelShortcut();
+    await primaryShortcut();
+    assert.match(container.textContent || '', /Te estoy escuchando/);
+    await audio();
+    await primaryShortcut();
+    await step(() => {});
+    assert.equal(clipboard, 'Texto para pegar en WezTerm.');
+    assert.equal(insertions.length, before);
+    assert.match(container.textContent || '', /Texto en el portapapeles/);
+    assert.equal(windowModes.at(-1), 'overlay');
+    await visibilityShortcut();
+    assert.equal(windowModes.at(-1), 'hide');
+    await visibilityShortcut();
+    assert.equal(windowModes.at(-1), 'overlay');
+  } finally {
+    targetFailure = false;
+    await step(() => root.unmount());
+  }
+});
+
+test('clipboard failure preserves the draft without claiming a copy or sending keys', async () => {
+  await clear();
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  const before = insertions.length;
+  replies.push('Conservar ante fallo del portapapeles.');
+  try {
+    await primaryShortcut();
+    await audio();
+    clipboardFailure = true;
+    await primaryShortcut();
+    await step(() => {});
+    assert.equal(insertions.length, before);
+    assert.match(container.textContent || '', /Portapapeles no disponible/);
+    assert.doesNotMatch(
+      container.textContent || '',
+      /Texto en el portapapeles|Texto insertado y copiado/,
+    );
+    await step(() => click('Editor'));
+    assert.equal(
+      (container.querySelector('#draft') as HTMLTextAreaElement).value,
+      'Conservar ante fallo del portapapeles.',
+    );
+  } finally {
+    clipboardFailure = false;
+    await step(() => root.unmount());
+  }
+});
+
+test('visibility restores the selected editor or minimal view without recording', async () => {
+  await clear();
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  const previousNode = node;
+  assert.ok(container.querySelector('#draft'));
+  await visibilityShortcut();
+  assert.equal(windowModes.at(-1), 'hide');
+  await visibilityShortcut();
+  assert.equal(windowModes.at(-1), 'editor');
+  assert.ok(container.querySelector('#draft'));
+  await panelShortcut();
+  assert.equal(windowModes.at(-1), 'overlay');
+  await visibilityShortcut();
+  assert.equal(windowModes.at(-1), 'hide');
+  await visibilityShortcut();
+  assert.equal(windowModes.at(-1), 'overlay');
+  assert.ok(container.querySelector('.minimal-dictation'));
+  await panelShortcut();
+  assert.equal(windowModes.at(-1), 'editor');
+  assert.ok(container.querySelector('#draft'));
+  assert.equal(node, previousNode);
+  await step(() => {
+    const handler = events.get(visibilityListener)!;
+    handler({ event: 'app-toggle-visibility', payload: null });
+    handler({ event: 'app-toggle-visibility', payload: null });
+  });
+  assert.equal(windowModes.at(-1), 'editor', 'Rapid visibility toggles are serialized');
+  await step(() => root.unmount());
+});
+test('visibility shortcut persists and recovers independently on conflict', async () => {
+  await clear();
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  await chooseShortcut(2);
+  assert.equal(
+    (await get<any>('voz-state')).settings.visibilityShortcut,
+    'Control+Alt+K',
+  );
+  await step(() => root.unmount());
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  assert.ok(nativeShortcuts.has('Control+Alt+K'));
+  assert.ok(nativeShortcuts.has('CommandOrControl+Shift+M'));
+  await step(() => root.unmount());
+  await clear();
+  root = createRoot(container);
+  await step(() => root.render(React.createElement(App)));
+  rejectedShortcut = 'Control+Alt+K';
+  try {
+    await chooseShortcut(2);
+    assert.equal(
+      (await get<any>('voz-state')).settings.visibilityShortcut,
+      'CommandOrControl+Shift+H',
+    );
+    assert.ok(nativeShortcuts.has('CommandOrControl+Shift+H'));
   } finally {
     rejectedShortcut = '';
     await step(() => root.unmount());

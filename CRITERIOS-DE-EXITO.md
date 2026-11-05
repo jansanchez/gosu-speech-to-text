@@ -11,10 +11,10 @@ Estos criterios son la puerta de aceptación para cada cambio y cada candidato. 
 
 ## Dictado mínimo y accesibilidad
 
-- **M1 — Primer uso:** el atajo predeterminado abre el panel con el motor listo; la misma combinación detiene. Si hay conflicto o falta permiso, la interfaz explica cómo resolverlo y permite elegir otra combinación.
-- **M2 — Configuración:** capturar y guardar otra combinación, probarla, reiniciar y comprobar que persiste. Una combinación ocupada conserva o recupera la anterior; recargas no duplican registros ni eliminan atajos ajenos.
+- **M1 — Primer uso:** Ctrl/Cmd+Shift+M alterna editor/minimalista, Ctrl/Cmd+Shift+H oculta/restaura conservando esa vista; Ctrl/Cmd+Shift+Espacio inicia/termina e inserta sin ocultar. Verificar dos dictados consecutivos y ocultar/mostrar mientras se graba. Si hay conflicto o falta permiso, la interfaz explica cómo resolverlo y permite elegir otra combinación.
+- **M2 — Configuración:** capturar y guardar cada combinación por separado, probar las tres, reiniciar y comprobar que persisten. Rechazar combinaciones iguales entre las tres acciones. Una combinación ocupada conserva o recupera la anterior; recargas no duplican registros ni eliminan atajos ajenos.
 - **M3 — Audio:** mostrar actividad del micrófono real, estados de escucha/procesamiento/error y recuperación al denegar permisos o desconectar el dispositivo. No mostrar éxito mientras quede audio pendiente.
-- **M4 — Destino:** enfocar un campo antes de activar, dictar dos sesiones e insertar únicamente el texto nuevo una vez por sesión, con tildes, Unicode y varias líneas. No simular Enter ni ejecutar/enviar el texto automáticamente.
+- **M4 — Destino:** cambiar de aplicación/campo durante la grabación y comprobar que se selecciona el destino al terminar; dictar dos sesiones e insertar únicamente el texto nuevo una vez por sesión, con tildes, Unicode y varias líneas. Verificar también que el dictado completo queda en el portapapeles aunque no haya destino válido o falle el pegado; un fallo del portapapeles conserva el borrador y no comunica copia exitosa. Grabar con GOSU enfocado no debe exigir destino previo. No simular Enter ni ejecutar/enviar el texto automáticamente.
 - **M5 — Aplicaciones:** comprobar una terminal con agente, un campo de WhatsApp y Google Docs; registrar app, versión y resultado. Si el destino no admite inserción, conservar el texto y ofrecer copia sin fingir éxito.
 - **M6 — Escritorios:** repetir captura de foco e inserción en Windows, macOS, Linux X11, Hyprland y un portal Wayland compatible según los destinos anunciados. El portal genérico utiliza el campo enfocado y no identifica la aplicación: registrar esa limitación y los permisos concedidos.
 

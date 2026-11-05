@@ -5,6 +5,7 @@ import {
   type Session,
   type Snippet,
 } from './product';
+import { shortcutLabel } from './shortcuts';
 import { trimHistory } from './history';
 
 function object(value: unknown): value is Record<string, unknown> {
@@ -22,12 +23,41 @@ export function validateSettings(input: unknown, resetDevice = false): Settings 
     if (Object.hasOwn(input, key)) Object.assign(cfg, { [key]: input[key] });
   }
   if (
+    !Object.hasOwn(input, 'minimalShortcut') &&
+    typeof cfg.shortcut === 'string' &&
+    shortcutLabel(cfg.shortcut) === shortcutLabel(cfg.minimalShortcut)
+  ) {
+    cfg.minimalShortcut = 'CommandOrControl+Alt+M';
+  }
+  if (!Object.hasOwn(input, 'visibilityShortcut')) {
+    const used = [cfg.shortcut, cfg.minimalShortcut]
+      .filter((v): v is string => typeof v === 'string')
+      .map(shortcutLabel);
+    cfg.visibilityShortcut = [
+      'CommandOrControl+Shift+H',
+      'CommandOrControl+Alt+H',
+      'CommandOrControl+Alt+Shift+H',
+    ].find((v) => !used.includes(shortcutLabel(v)))!;
+  }
+  if (
     !['literal', 'clean'].includes(cfg.mode) ||
     typeof cfg.language !== 'string' ||
     !cfg.language ||
     cfg.language.length > 32 ||
     typeof cfg.device !== 'string' ||
     typeof cfg.shortcut !== 'string' ||
+    typeof cfg.minimalShortcut !== 'string' ||
+    typeof cfg.visibilityShortcut !== 'string' ||
+    !cfg.visibilityShortcut ||
+    cfg.visibilityShortcut.length > 100 ||
+    [cfg.shortcut, cfg.minimalShortcut].some(
+      (v) =>
+        typeof v === 'string' &&
+        shortcutLabel(v) === shortcutLabel(cfg.visibilityShortcut),
+    ) ||
+    !cfg.minimalShortcut ||
+    cfg.minimalShortcut.length > 100 ||
+    shortcutLabel(cfg.minimalShortcut) === shortcutLabel(cfg.shortcut) ||
     typeof cfg.dictionary !== 'string' ||
     typeof cfg.fillers !== 'string' ||
     !Number.isFinite(cfg.pause) ||

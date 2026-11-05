@@ -4,12 +4,21 @@ import { shortcutFromKey, shortcutLabel } from '../shortcuts';
 
 type Props = {
   value: string;
+  panel?: boolean;
+  visibility?: boolean;
+  otherShortcuts?: string[];
+  otherShortcut?: string;
   disabled: boolean;
   status?: string;
   onChange: (value: string) => void;
   onCapture: (active: boolean) => Promise<void>;
 };
 export default function ShortcutPicker(p: Props) {
+  const initial = p.visibility
+    ? defaults.visibilityShortcut
+    : p.panel
+      ? defaults.minimalShortcut
+      : defaults.shortcut;
   const [candidate, setCandidate] = useState(p.value);
   const [capturing, setCapturing] = useState(false);
   const [ready, setReady] = useState(false);
@@ -52,15 +61,30 @@ export default function ShortcutPicker(p: Props) {
   }
   return (
     <fieldset className="shortcut-picker">
-      <legend>Atajo de dictado mínimo</legend>
+      <legend>
+        {p.visibility
+          ? 'Mostrar u ocultar GOSU'
+          : p.panel
+            ? 'Alternar editor y modo minimalista'
+            : 'Iniciar o detener dictado'}
+      </legend>
       <p>
-        Disponible desde el primer inicio. Pulsa una vez para dictar y otra para terminar
-        e insertar.
+        {p.visibility
+          ? 'Oculta o restaura la aplicación conservando la vista elegida.'
+          : p.panel
+            ? 'Alterna entre la ventana grande y el panel minimalista.'
+            : 'Pulsa para grabar y otra vez para terminar e insertar. El panel permanece disponible.'}
       </p>
       <div className="shortcut-picker-controls">
         <input
           ref={input}
-          aria-label="Combinación del atajo de dictado"
+          aria-label={
+            p.visibility
+              ? 'Combinación del atajo de visibilidad'
+              : p.panel
+                ? 'Combinación del atajo del panel'
+                : 'Combinación del atajo de dictado'
+          }
           readOnly
           value={capturing && ready ? 'Pulsa las teclas…' : shortcutLabel(candidate)}
           disabled={p.disabled}
@@ -82,6 +106,12 @@ export default function ShortcutPicker(p: Props) {
             try {
               const value = shortcutFromKey(e.nativeEvent);
               if (value) {
+                if (
+                  [p.otherShortcut || '', ...(p.otherShortcuts || [])].some(
+                    (other) => shortcutLabel(value) === shortcutLabel(other),
+                  )
+                )
+                  throw Error('Cada acción debe tener un atajo diferente.');
                 setCandidate(value);
                 setMessage('Pulsa Guardar atajo para activarlo.');
                 void stop();
@@ -106,10 +136,10 @@ export default function ShortcutPicker(p: Props) {
         </button>
         <button
           type="button"
-          disabled={p.disabled || capturing || p.value === defaults.shortcut}
+          disabled={p.disabled || capturing || p.value === initial}
           onClick={() => {
-            setCandidate(defaults.shortcut);
-            p.onChange(defaults.shortcut);
+            setCandidate(initial);
+            p.onChange(initial);
             setMessage('Restaurando el atajo inicial…');
           }}
         >

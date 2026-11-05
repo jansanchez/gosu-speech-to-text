@@ -136,3 +136,32 @@ test('extension legacy workspaces migrate and corrupt state or audio fails close
   assert.throws(() => validateExtensionWorkspace({ draft: 42 }));
   assert.throws(() => validateExtensionJobs([{ mode: 'execute' }]));
 });
+
+test('old settings migrate a distinct panel shortcut without replacing recording preferences', () => {
+  const { minimalShortcut: _, ...old } = defaults;
+  assert.equal(validateSettings(old).minimalShortcut, defaults.minimalShortcut);
+  const migrated = validateSettings({ ...old, shortcut: 'Control+Shift+M' });
+  assert.equal(migrated.shortcut, 'Control+Shift+M');
+  assert.notEqual(migrated.minimalShortcut, defaults.minimalShortcut);
+  assert.throws(
+    () => validateSettings({ ...defaults, minimalShortcut: 'Control+Shift+Space' }),
+    /Preferencias/,
+  );
+  assert.throws(
+    () => validateSettings({ ...defaults, minimalShortcut: 42 }),
+    /Preferencias/,
+  );
+});
+
+test('visibility shortcut migrates without colliding with existing shortcuts', () => {
+  const { visibilityShortcut: _, ...old } = defaults;
+  assert.equal(validateSettings(old).visibilityShortcut, 'CommandOrControl+Shift+H');
+  assert.equal(
+    validateSettings({ ...old, shortcut: 'Control+Shift+H' }).visibilityShortcut,
+    'CommandOrControl+Alt+H',
+  );
+  assert.throws(
+    () => validateSettings({ ...defaults, visibilityShortcut: 'Control+Shift+M' }),
+    /Preferencias/,
+  );
+});

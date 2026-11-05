@@ -4,7 +4,7 @@ Dictado y transcripción local con editor completo y un modo mínimo para escrib
 
 ## Dictado mínimo
 
-Con GOSU abierto y el motor listo, enfoca el campo de destino y pulsa **Ctrl+Shift+Espacio** en Linux/Windows o **Cmd+Shift+Espacio** en macOS. Habla y pulsa el mismo atajo para terminar: GOSU espera el audio pendiente e inserta el dictado de esa sesión. La ventana pequeña muestra el nivel real del micrófono. No se añaden pulsaciones de Enter.
+Con GOSU abierto y el motor listo, **Ctrl+Shift+M** alterna editor/minimalista, **Ctrl+Shift+H** oculta o restaura la vista actual y **Ctrl+Shift+Espacio** inicia o termina el dictado (usa Cmd en macOS). Los tres son configurables por separado en Preferencias. Puedes cambiar de campo mientras hablas: el destino se selecciona al terminar. El panel permanece disponible para seguir dictando y deja libre un margen inferior. Al terminar, el dictado también queda en el portapapeles aunque falle el destino o el pegado; puedes pegar con Ctrl+Shift+V en la terminal. Ocultarlo no detiene la grabación. No se añaden pulsaciones de Enter. Consulta [el modo mínimo](MINIMAL-MODE.md).
 
 El atajo está disponible desde el primer inicio si el sistema permite registrarlo. Se cambia pulsando la combinación mostrada en la ventana mínima o en **Preferencias → Atajo de dictado mínimo → Elegir combinación → Guardar atajo**. Se conserva al reiniciar; si una nueva combinación no está disponible, se recupera la anterior. [Uso, permisos y límites por escritorio](MINIMAL-MODE.md).
 

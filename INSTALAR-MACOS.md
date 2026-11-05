@@ -38,6 +38,6 @@ Resultado predeterminado: `src-tauri/target/release/bundle/macos/*.app`, `dmg/*.
 
 Concede acceso al micrófono y los permisos de Accesibilidad/Automatización solicitados por macOS. El permiso puede depender de si ejecutas el desarrollo desde Terminal o la aplicación instalada; prueba ambos casos por separado.
 
-Con el motor listo, enfoca el destino y pulsa **Cmd+Shift+Espacio** para comenzar y terminar. Cambia la combinación desde el panel o Preferencias y comprueba su persistencia tras reiniciar. Prueba terminal, navegador y aplicaciones objetivo según [MINIMAL-MODE.md](MINIMAL-MODE.md).
+**Cmd+Shift+M** alterna editor/minimalista y **Cmd+Shift+H** oculta/restaura conservando la vista. Los tres atajos son configurables por separado en Preferencias. Con el motor listo, enfoca el destino y pulsa **Cmd+Shift+Espacio** para comenzar y terminar. Cambia la combinación desde el panel o Preferencias y comprueba su persistencia tras reiniciar. Prueba terminal, navegador y aplicaciones objetivo según [MINIMAL-MODE.md](MINIMAL-MODE.md).
 
 Los paquetes locales y el workflow actual no configuran firma ni notarización. Antes de distribuir, completa y valida la [firma de macOS](https://v2.tauri.app/distribute/sign/macos/) para aplicación y motor; generar un DMG no acredita esos pasos. Registra resultados reales en [VALIDACION.md](VALIDACION.md).

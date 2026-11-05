@@ -204,10 +204,28 @@ export default function App() {
       await waitForShortcutRegistration();
     }
   }
-  function setShortcut(shortcut: string) {
+  function setActionShortcut(
+    key: 'shortcut' | 'minimalShortcut' | 'visibilityShortcut',
+    value: string,
+  ) {
     setShortcutError('');
-    change((s) => ({ ...s, settings: { ...s.settings, shortcut } }));
+    if (
+      (['shortcut', 'minimalShortcut', 'visibilityShortcut'] as const).some(
+        (other) =>
+          other !== key &&
+          shortcutLabel(ref.current.settings[other]) === shortcutLabel(value),
+      )
+    ) {
+      setShortcutError('Cada acción debe tener un atajo diferente.');
+      return;
+    }
+    change((s) => ({ ...s, settings: { ...s.settings, [key]: value } }));
   }
+  const setShortcut = (value: string) => setActionShortcut('shortcut', value);
+  const setMinimalShortcut = (value: string) =>
+    setActionShortcut('minimalShortcut', value);
+  const setVisibilityShortcut = (value: string) =>
+    setActionShortcut('visibilityShortcut', value);
   const shortcutStatus = useGlobalShortcuts({
     capturing: shortcutCapturing,
     onPrimaryFailure: (requested, previous) => {
@@ -218,13 +236,32 @@ export default function App() {
         );
       }
     },
+    visibilityShortcut: config.visibilityShortcut,
+    toggleVisibility: minimal.toggleVisibility,
+    onVisibilityFailure: (requested, previous) => {
+      if (ref.current.settings.visibilityShortcut === requested) {
+        setVisibilityShortcut(previous);
+        setShortcutError(
+          'No se pudo activar el atajo de visibilidad. Se conservó el anterior.',
+        );
+      }
+    },
+    minimalShortcut: config.minimalShortcut,
+    onPanelFailure: (requested, previous) => {
+      if (ref.current.settings.minimalShortcut === requested) {
+        setMinimalShortcut(previous);
+        setShortcutError(
+          'No se pudo activar el atajo del panel. Se conservó el anterior.',
+        );
+      }
+    },
     shortcut: config.shortcut,
     loaded,
     recording,
     starting,
     toggle,
-    primary: minimal.toggle,
-    showMinimal: minimal.show,
+    primary: () => (minimal.visible ? minimal.toggle() : toggle()),
+    showMinimal: minimal.toggleMode,
     copy,
     paste: pasteHere,
     onError: setError,
@@ -1010,6 +1047,8 @@ export default function App() {
         error={minimal.error || error}
         level={level}
         shortcut={config.shortcut}
+        panelShortcut={config.visibilityShortcut}
+        viewShortcut={config.minimalShortcut}
         toggle={minimal.toggle}
         openEditor={minimal.openEditor}
         hide={minimal.hide}
@@ -1092,12 +1131,33 @@ export default function App() {
           {isTauri() && (
             <details className="initial-shortcut">
               <summary>
-                Tu atajo de dictado · {shortcutLabel(config.shortcut)} · Configurar
+                Dictado · {shortcutLabel(config.shortcut)} · Panel ·{' '}
+                {shortcutLabel(config.minimalShortcut)} · Mostrar/ocultar ·{' '}
+                {shortcutLabel(config.visibilityShortcut)} · Configurar
               </summary>
               <ShortcutPicker
                 value={config.shortcut}
+                otherShortcuts={[config.minimalShortcut, config.visibilityShortcut]}
                 disabled={disabled}
                 onChange={setShortcut}
+                onCapture={captureShortcut}
+                status={shortcutError || shortcutStatus}
+              />
+              <ShortcutPicker
+                panel
+                value={config.minimalShortcut}
+                otherShortcuts={[config.shortcut, config.visibilityShortcut]}
+                disabled={disabled}
+                onChange={setMinimalShortcut}
+                onCapture={captureShortcut}
+                status={shortcutError || shortcutStatus}
+              />
+              <ShortcutPicker
+                visibility
+                value={config.visibilityShortcut}
+                otherShortcuts={[config.shortcut, config.minimalShortcut]}
+                disabled={disabled}
+                onChange={setVisibilityShortcut}
                 onCapture={captureShortcut}
                 status={shortcutError || shortcutStatus}
               />
@@ -1348,6 +1408,8 @@ export default function App() {
           config={config}
           shortcutStatus={shortcutError || shortcutStatus}
           setShortcut={setShortcut}
+          setMinimalShortcut={setMinimalShortcut}
+          setVisibilityShortcut={setVisibilityShortcut}
           captureShortcut={captureShortcut}
           disabled={disabled}
           token={token}

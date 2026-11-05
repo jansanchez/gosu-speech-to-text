@@ -32,7 +32,11 @@ pub async fn minimal_window(window: tauri::WebviewWindow, mode: String) -> Resul
                     let height = (220. * scale) as i32;
                     let _ = window.set_position(tauri::PhysicalPosition::new(
                         area.position.x + (area.size.width as i32 - width) / 2,
-                        area.position.y + area.size.height as i32 - height - (32. * scale) as i32,
+                        area.position.y
+                            + (area.size.height as i32
+                                - height
+                                - (area.size.height as f64 * 0.15) as i32)
+                                .max(0),
                     ));
                 }
                 window.show()?;
@@ -56,10 +60,12 @@ pub async fn minimal_window(window: tauri::WebviewWindow, mode: String) -> Resul
     })();
     result.map_err(|e| e.to_string())?;
     #[cfg(target_os = "linux")]
-    if mode == "overlay" && crate::hyprland::available() {
-        if let Err(error) = tauri::async_runtime::spawn_blocking(crate::hyprland::present_overlay)
-            .await
-            .map_err(|e| e.to_string())?
+    if mode != "hide" && crate::hyprland::available() {
+        let overlay = mode == "overlay";
+        if let Err(error) =
+            tauri::async_runtime::spawn_blocking(move || crate::hyprland::present_window(overlay))
+                .await
+                .map_err(|e| e.to_string())?
         {
             eprintln!("Ventana mínima: {error}");
         }
@@ -70,26 +76,45 @@ pub async fn minimal_window(window: tauri::WebviewWindow, mode: String) -> Resul
 pub async fn dictation_shortcut(
     app: tauri::AppHandle,
     shortcut: Option<String>,
+    panel: Option<bool>,
+    action: Option<String>,
 ) -> Result<bool, String> {
+    let action = match action.as_deref() {
+        Some("visibility") => "visibility",
+        Some("panel") => "panel",
+        Some("dictation") => "dictation",
+        None if panel.unwrap_or(false) => "panel",
+        None => "dictation",
+        _ => return Err("Acción de atajo inválida".into()),
+    };
     #[cfg(target_os = "linux")]
     {
         if crate::hyprland::available() {
             return tauri::async_runtime::spawn_blocking(move || {
-                crate::hyprland::configure_shortcut(shortcut.as_deref())
+                crate::hyprland::configure_shortcut(shortcut.as_deref(), action)
             })
             .await
             .map_err(|e| e.to_string())?;
         }
         if crate::portal::wayland() {
-            return crate::portal::configure(app, shortcut).await;
+            return crate::portal::configure(app, shortcut, action).await;
         }
         Ok(false)
     }
     #[cfg(not(target_os = "linux"))]
     {
-        let _ = (app, shortcut);
+        let _ = (app, shortcut, action);
         Ok(false)
     }
+}
+// Recording can start from GOSU itself; only the portal needs prior authorization.
+#[tauri::command]
+pub async fn dictation_prepare() -> Result<(), String> {
+    #[cfg(target_os = "linux")]
+    if crate::portal::wayland() && !crate::hyprland::available() {
+        crate::portal::authorize().await?;
+    }
+    Ok(())
 }
 #[tauri::command]
 pub async fn dictation_target(window: tauri::WebviewWindow) -> Result<Destination, String> {
@@ -203,14 +228,14 @@ mod bridge {
             .join("gosu-speech-to-text")
             .join("control.sock"))
     }
-    pub fn send(show: bool) -> Result<(), String> {
+    pub fn send(command: &str) -> Result<(), String> {
         let mut stream = UnixStream::connect(path()?)
             .map_err(|_| "GOSU no está abierto. Inicia la aplicación primero.".to_owned())?;
         stream
             .set_write_timeout(Some(Duration::from_secs(2)))
             .map_err(|e| e.to_string())?;
         stream
-            .write_all(if show { b"show\n" } else { b"toggle\n" })
+            .write_all(command.as_bytes())
             .map_err(|e| e.to_string())
     }
     pub fn start(app: &tauri::AppHandle) -> Result<(), String> {
@@ -249,6 +274,9 @@ mod bridge {
                         if &data[..length] == b"toggle\n" {
                             let _ = app.emit("dictation-toggle", ());
                         }
+                        if &data[..length] == b"visibility\n" {
+                            let _ = app.emit("app-toggle-visibility", ());
+                        }
                         if &data[..length] == b"show\n" {
                             let _ = app.emit("dictation-show", ());
                         }
@@ -263,18 +291,27 @@ mod bridge {
     }
     pub fn stop() {
         RUNNING.store(false, Ordering::SeqCst);
-        let _ = crate::hyprland::configure_shortcut(None);
+        let _ = crate::hyprland::configure_shortcut(None, "dictation");
+        let _ = crate::hyprland::configure_shortcut(None, "panel");
+        let _ = crate::hyprland::configure_shortcut(None, "visibility");
     }
 }
 pub fn handle_cli() -> bool {
-    let show = std::env::args().any(|arg| arg == "--show-minimal");
-    if !show && !std::env::args().any(|arg| arg == "--toggle-minimal") {
+    let command = if std::env::args().any(|arg| arg == "--toggle-visibility") {
+        "visibility\n"
+    } else if std::env::args().any(|arg| arg == "--show-minimal") {
+        "show\n"
+    } else if std::env::args().any(|arg| arg == "--toggle-minimal") {
+        "toggle\n"
+    } else {
         return false;
-    }
+    };
     #[cfg(target_os = "linux")]
-    if let Err(error) = bridge::send(show) {
+    if let Err(error) = bridge::send(command) {
         eprintln!("{error}");
     }
+    #[cfg(not(target_os = "linux"))]
+    let _ = command;
     true
 }
 pub fn start(app: &tauri::AppHandle) {

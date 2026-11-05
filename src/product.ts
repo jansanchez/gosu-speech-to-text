@@ -19,6 +19,8 @@ export type Settings = {
   pause: number;
   device: string;
   shortcut: string;
+  minimalShortcut: string;
+  visibilityShortcut: string;
   fillers: string;
   dictionary: string;
   punctuation: boolean;
@@ -43,6 +45,8 @@ export const defaults: Settings = {
   pause: 1.2,
   device: '',
   shortcut: 'CommandOrControl+Shift+Space',
+  minimalShortcut: 'CommandOrControl+Shift+M',
+  visibilityShortcut: 'CommandOrControl+Shift+H',
   fillers: '',
   dictionary: '{}',
   punctuation: false,

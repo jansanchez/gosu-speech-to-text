@@ -31,7 +31,7 @@ py -3.12 scripts/configurar.py --build
 
 Ejecuta los comandos por separado; el modo desarrollo permanece abierto. El instalador queda en `src-tauri\target\release\bundle\nsis\`; los hashes, en `bundle\SHA256SUMS.txt`. El paquete incluye el motor Python completo. La primera descarga del modelo necesita red y espacio; comprueba su estado en la interfaz.
 
-Con el motor listo, enfoca el campo de destino y usa **Ctrl+Shift+Espacio** para iniciar y detener. El panel muestra la actividad del micrófono y permite cambiar el atajo. Verifica terminal, WhatsApp y Google Docs, permisos de micrófono y cierre del motor tras salir. El texto no debe enviarse automáticamente con Enter. [Funcionamiento y límites](MINIMAL-MODE.md).
+**Ctrl+Shift+M** alterna editor/minimalista y **Ctrl+Shift+H** oculta/restaura conservando la vista. Los tres atajos son configurables por separado en Preferencias. Con el motor listo, enfoca el campo de destino y usa **Ctrl+Shift+Espacio** para iniciar y detener. El panel muestra la actividad del micrófono y permite cambiar el atajo. Verifica terminal, WhatsApp y Google Docs, permisos de micrófono y cierre del motor tras salir. El texto no debe enviarse automáticamente con Enter. [Funcionamiento y límites](MINIMAL-MODE.md).
 
 ## Diagnóstico
 

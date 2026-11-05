@@ -9,6 +9,8 @@ type Props = {
   text: string;
   error: string;
   shortcut: string;
+  panelShortcut: string;
+  viewShortcut: string;
   toggle: () => Promise<void>;
   openEditor: () => Promise<void>;
   hide: () => Promise<void>;
@@ -23,7 +25,8 @@ export default function MinimalDictation(p: Props) {
     starting: 'Preparando micrófono…',
     listening: 'Te estoy escuchando',
     processing: 'Terminando transcripción…',
-    sent: 'Texto insertado',
+    sent: 'Texto insertado y copiado',
+    copied: 'Texto en el portapapeles',
     error: 'Tu dictado está a salvo',
   }[p.phase];
   const targetName = p.target?.app.includes('wezterm') ? 'WezTerm' : p.target?.name;
@@ -43,7 +46,7 @@ export default function MinimalDictation(p: Props) {
           <kbd>{shortcutLabel(p.shortcut)}</kbd>
         </button>
         <button
-          title="Ocultar"
+          title={'Ocultar · ' + shortcutLabel(p.panelShortcut)}
           aria-label="Ocultar dictado mínimo"
           disabled={p.phase === 'starting'}
           onClick={() => void p.hide()}
@@ -92,15 +95,19 @@ export default function MinimalDictation(p: Props) {
       >
         {p.error ||
           p.text.slice(-170) ||
-          (p.target?.app === 'Portal Wayland'
-            ? 'Mantén el foco en el campo donde quieres escribir.'
-            : 'Enfoca el campo de destino y pulsa el atajo.')}
+          (listening
+            ? 'Puedes cambiar de campo. Al terminar, el texto irá al destino enfocado.'
+            : p.phase === 'sent'
+              ? 'Pulsa el atajo de dictado para seguir grabando.'
+              : 'Pulsa el atajo para grabar. Elige el destino antes de terminar.')}
       </p>
       <footer className="minimal-footer">
-        <span title={p.target?.app}>
+        <span title={'Mostrar/ocultar: ' + shortcutLabel(p.panelShortcut)}>
           {targetName
-            ? `${p.target?.terminal ? 'Terminal' : 'Destino'} · ${targetName}`
-            : 'Tu voz, donde escribes'}
+            ? `${listening ? 'Destino al terminar' : p.target?.terminal ? 'Terminal' : 'Destino'} · ${listening ? 'campo enfocado' : targetName}`
+            : listening
+              ? 'Destino al terminar · campo enfocado'
+              : 'Tu voz, donde escribes'}
         </span>
         <div>
           {p.text && (
@@ -113,7 +120,11 @@ export default function MinimalDictation(p: Props) {
               <Copy size={14} />
             </button>
           )}
-          <button disabled={p.phase === 'starting'} onClick={() => void p.openEditor()}>
+          <button
+            title={'Editor · ' + shortcutLabel(p.viewShortcut)}
+            disabled={p.phase === 'starting'}
+            onClick={() => void p.openEditor()}
+          >
             <ChevronUp size={14} /> Editor
           </button>
         </div>
