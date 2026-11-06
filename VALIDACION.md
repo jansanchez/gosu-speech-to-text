@@ -163,3 +163,12 @@ Logs aportados por el usuario: `job-logs.txt` (ARM64) y `job-logs-2.txt` (Intel)
 Corrección 0.4.1: escenarios explícitos de plataforma Linux y MacIntel con restauración de navigator; comprobar colisión con el modificador correspondiente y distinción Control/Cmd en macOS. No cambia lógica de aplicación ni persistencia. Plazo de pruebas TypeScript de 30 s por archivo, con todas las pruebas conservadas. Marca y lockfiles sincronizados; etiqueta anterior inmutable.
 
 `make check` autorizado fuera del sandbox: aprobado en CachyOS Linux x86_64 con las herramientas del registro anterior; incluye formato, frontend/extensión, escenarios simulados de plataforma, 21 pruebas Python y 11 Rust (1 gráfica excluida). Esto no equivale a ejecución real en macOS. Pendiente repetir CI desde v0.4.1 y validar instaladores, motor, micrófono, permisos y pegado por SO. No se publicó ni firmó una release.
+
+## 2026-11-05 — Automatización de releases con aprobación, 0.5.0
+
+Base `fedf95e`; entorno local Linux/CachyOS x86_64 y herramientas del registro anterior. Versión 0.5.0 sincronizada mediante `npm run brand:sync`. El usuario eligió aprobación manual desde Actions seguida de etiqueta y publicación automáticas.
+
+- `make check` fuera del sandbox: aprobado, incluyendo suites web/extensión, 23 pruebas Python y 11 Rust (1 gráfica excluida). Comprobación de formato y manifiestos aprobada.
+- Pruebas de aprobación explícita, ref main y versión exacta; extracción de notas de una única versión; paquetes por plataforma, hashes alterados, artefactos inesperados/incompletos y exclusión de ZIP internos. Nueva prueba focalizada de secuencia create-draft → upload → publish y de interrupción sin publicar cuando upload falla, aprobada tras el ajuste final del coordinador.
+- YAML parseado localmente con PyYAML y dependencias de jobs revisadas. No es ejecución real de GitHub Actions ni validación con actionlint.
+- Publicación real pendiente: no se invocó publish, no se creó tag 0.5.0 y no se firmaron ni publicaron paquetes. Antes de aprobar, revisar resultados de candidatos, aceptación real por plataforma y permisos efectivos de GITHUB_TOKEN.

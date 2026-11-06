@@ -1,12 +1,40 @@
 name: GOSU Speech to Text release candidates
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publicar: versión probada y aprobada según CRITERIOS-DE-EXITO.md'
+        type: boolean
+        default: false
+      version:
+        description: 'Versión exacta de brand.json (obligatoria para publicar)'
+        type: string
+        default: ''
   push:
     tags: ['v*']
 permissions:
   contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
+  approval:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run release:check
+      - name: Check publication approval
+        env:
+          PUBLISH: ${{ inputs.publish }}
+          VERSION: ${{ inputs.version }}
+        run: node scripts/approve-release.mjs
   desktop:
+    needs: approval
     strategy:
       fail-fast: false
       matrix:
@@ -58,6 +86,7 @@ jobs:
           retention-days: 14
           if-no-files-found: error
   extension:
+    needs: approval
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -74,3 +103,33 @@ jobs:
           name: gosu-speech-to-text-chrome
           path: gosu-speech-to-text-chrome.zip
           if-no-files-found: error
+
+  publish:
+    needs: [approval, desktop, extension]
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          pattern: gosu-speech-to-text-*
+      - name: Assemble and verify release assets
+        run: python scripts/release-assets.py release-artifacts release-assets
+      - name: Publish approved version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PUBLISH: ${{ inputs.publish }}
+          VERSION: ${{ inputs.version }}
+        run: node scripts/approve-release.mjs --publish

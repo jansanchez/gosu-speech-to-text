@@ -139,7 +139,7 @@ En Windows utiliza `npm.cmd` y `py -3.12` para comprimir. El resultado es `gosu-
 | Workflow | Disparador | Destinos y resultado |
 |---|---|---|
 | `Checks` — `.github/workflows/ci.yml` | Push de rama, pull request o manual | Comprobaciones en Windows x64, Ubuntu x64, macOS ARM64 y macOS Intel |
-| `GOSU Speech to Text release candidates` — `.github/workflows/release.yml` | Manual o etiqueta `v*` | Instaladores por destino, hashes y ZIP Chrome; sin publicación automática |
+| `GOSU Speech to Text release candidates` — `.github/workflows/release.yml` | Manual o etiqueta `v*` | Candidatos por etiqueta/manual; etiqueta y publicación automáticas tras aprobación manual explícita |
 
 La matriz usa `windows-2022`, `ubuntu-22.04`, `macos-15` ARM64 y `macos-15-intel`. Son las imágenes configuradas, no una lista de todos los sistemas finales compatibles. Los [runners oficiales de GitHub](https://docs.github.com/en/actions/reference/runners/github-hosted-runners) pueden cambiar: comprueba su disponibilidad al actualizar la matriz y conserva el SO/arquitectura explícitos.
 
@@ -157,7 +157,7 @@ Antes de marcar una plataforma como validada o un paquete como estable:
 4. Conserva commit, herramientas, arquitectura, logs, artefactos y hashes. Registra pendientes o fallos en `VALIDACION.md`.
 5. Revisa licencias y dependencias. Para distribución firmada, configura y verifica [firma Windows](https://v2.tauri.app/distribute/sign/windows/) o [firma/notarización macOS](https://v2.tauri.app/distribute/sign/macos/), incluido el motor y sus bibliotecas. El workflow actual no las configura.
 
-Publicar una release es una acción separada. Generar artefactos o editar esta documentación no los publica, no firma el producto y no convierte las plataformas pendientes en verificadas.
+La publicación requiere la aprobación explícita descrita a continuación. Generar candidatos o editar documentación no publica ni firma el producto, y no convierte las plataformas pendientes en verificadas.
 
 ## Política de versiones y etiquetas
 
@@ -168,15 +168,32 @@ GOSU adopta [SemVer 2.0.0](https://semver.org/lang/es/), con `brand.json` como f
 - Durante `0.x`, cambios incompatibles requieren una nueva MENOR, migración probada y nota explícita. La decisión de `1.0.0` requiere declarar estable el contrato y cumplir la aceptación para los destinos anunciados. A partir de 1.0, los cambios incompatibles incrementan MAYOR.
 - Documentación o refactorización sin cambio de comportamiento pueden acumularse sin incrementar versión. Una versión agrupa commits; no se etiqueta cada funcionalidad individual.
 
-La consolidación actual es `0.4.0`. Se emplea el subconjunto numérico `X.Y.Z` común a los manifiestos Tauri, Cargo, npm y Chrome; las etiquetas son `vX.Y.Z`. Los candidatos de CI conservan esa versión y se identifican por commit y ejecución, sin añadir sufijos que Chrome no admite en su campo `version`. No se sobrescribe una etiqueta, versión publicada ni artefacto entregado: cualquier cambio posterior necesita otra versión.
+La versión vigente se consulta en `brand.json`. Se emplea el subconjunto numérico `X.Y.Z` común a los manifiestos Tauri, Cargo, npm y Chrome; las etiquetas son `vX.Y.Z`. Los candidatos de CI conservan esa versión y se identifican por commit y ejecución, sin añadir sufijos que Chrome no admite en su campo `version`. No se sobrescribe una etiqueta, versión publicada ni artefacto entregado: cualquier cambio posterior necesita otra versión.
 
 Procedimiento para la próxima versión:
 
 1. Revisar los cambios desde la última etiqueta y elegir el incremento. Editar `brand.json` y añadir la entrada fechada en [CHANGELOG.md](CHANGELOG.md), incluyendo límites y migraciones.
 2. Ejecutar `npm run brand:sync`, que sincroniza manifiestos, `package-lock.json` y la entrada de la aplicación en `Cargo.lock`, sin actualizar dependencias.
 3. Ejecutar `make check` en Linux o las comprobaciones individuales de esta guía en el SO correspondiente. `npm run release:check` comprueba marca, entrada de changelog y coincidencia con la etiqueta si se ejecuta sobre una etiqueta en GitHub Actions.
-4. Revisar `git diff`, guardar el commit de versión y comprobar árbol limpio. Crear una etiqueta anotada sobre ese commit; para esta consolidación: `git tag -a v0.4.0 -m "GOSU Speech to Text 0.4.0"`. Antes de crear futuras etiquetas, comprobar las locales y remotas; no reutilizar versiones existentes.
-5. Subir el commit y la etiqueta cuando esté autorizada la generación remota. El push de la etiqueta dispara el workflow de candidatos, que rechaza una etiqueta distinta de la versión declarada. La ejecución manual también permite generar candidatos sin publicar.
-6. Descargar y validar los artefactos del mismo commit, registrar hashes y resultados por plataforma y preparar notas basadas en el changelog. Publicar la release es una acción explícita posterior a la revisión de esos resultados.
+4. Revisar `git diff`, guardar el commit de versión con árbol limpio y subirlo a main. No crear la etiqueta manualmente cuando se use la publicación automatizada.
+5. Generar candidatos ejecutando el workflow manual sin marcar `publish`. Descargar y validar los artefactos del mismo commit, registrar hashes y resultados por plataforma. Si el código cambia después, volver a comprobarlo.
+6. Aprobar la publicación desde Actions para ese commit/versión siguiendo el procedimiento siguiente. El workflow comprueba, reconstruye, crea la etiqueta y publica automáticamente; no requiere push manual de etiqueta.
 
 Los commits pueden usar `feat:`, `fix:`, `docs:` y `chore:` para facilitar la revisión. Estos prefijos ayudan a decidir el incremento; no crean versiones automáticamente.
+
+
+## Publicación automatizada con aprobación en Actions
+
+Configuración del repositorio: permitir GitHub Actions y el permiso `contents: write` solicitado únicamente por el job `publish`. Se utiliza el `GITHUB_TOKEN` del propio workflow; no hace falta un PAT. Si la organización limita esos permisos, el job fallará y deberá revisarse la política del repositorio, sin sortearla.
+
+1. Con la funcionalidad probada y aprobada, preparar la nueva versión SemVer en `brand.json`, sincronizar y guardar el changelog y la evidencia. Subir el commit a `main`.
+2. En **Actions → GOSU Speech to Text release candidates → Run workflow**, elegir **main**. Para candidatos, dejar `publish` desmarcado. Para publicar, marcar **publish** e introducir la versión exacta, por ejemplo `0.5.0`. Esa marca es la aprobación explícita de los criterios de aceptación para esta entrega; no se infiere de que las pruebas simuladas pasen.
+3. El workflow fija el commit al iniciarse; cambios posteriores en main no alteran la versión aprobada. Ejecuta todas las comprobaciones y construye Windows x64, Linux x64, macOS ARM64/Intel y Chrome. Si un job falla, no se ejecuta la publicación.
+4. Verifica los hashes de los instaladores descargados de esta misma ejecución. Copia solo EXE, DEB, AppImage, DMG ARM64, DMG Intel y ZIP Chrome, con prefijos por plataforma, y genera un manifiesto SHA256 común. No sube carpetas AppDir, runtimes sueltos ni ZIP internos de Python.
+5. Crea `vX.Y.Z` anotada en ese commit y un borrador de release, sube los seis paquetes y `SHA256SUMS.txt`, y hace pública la release al terminar la subida. Las notas proceden únicamente de la entrada de esa versión en `CHANGELOG.md`.
+
+No se sobrescriben versiones: una etiqueta existente solo se acepta si es anotada y apunta al commit exacto aprobado. Cualquier release existente, incluso borrador, detiene la publicación. Si la subida se interrumpe, la etiqueta o un borrador pueden quedar creados: revisar ese estado y los archivos en GitHub antes de recuperar la entrega; nunca mover etiquetas ni reemplazar una release publicada. Se puede reintentar si solo quedó la etiqueta en el mismo commit y no existe release.
+
+La etiqueta creada con `GITHUB_TOKEN` no dispara otro build: la publicación usa los paquetes ya construidos en la misma ejecución. No depende de que un push del bot active otro workflow. No se configuran firmas ni notarización; su ausencia debe constar en las notas y en la aceptación de la distribución.
+
+Mientras los paquetes de todas las plataformas no estén aprobados para distribuir, utilizar candidatos sin `publish`. Activar el workflow no constituye evidencia de instalación ni aprobación de plataformas pendientes.

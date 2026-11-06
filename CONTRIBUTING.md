@@ -53,3 +53,7 @@ La guía central es [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md); las instruccio
 Aplica los [criterios de éxito](CRITERIOS-DE-EXITO.md) afectados. La CI separa Windows x64/MSVC, Ubuntu x64, macOS ARM64 e Intel. Los instaladores se generan nativamente e incluyen la carpeta completa del motor; no reutilices entornos de otra plataforma. La versión de Rust estable debe registrarse cuando se valida un candidato.
 
 `npm run docs:check` comprueba que los enlaces relativos de los Markdown de la raíz existen; forma parte de `npm run check`. No verifica enlaces externos, anclas ni exactitud de instrucciones: revisa manualmente comandos, rutas y permisos. Actualiza documentación, scripts y workflows juntos. Conserva el historial de validación y añade evidencia nueva sin presentar resultados anteriores como actuales.
+
+## Aprobar y publicar versiones
+
+Después de preparar versión y changelog, subir el commit y validar los candidatos, la aprobación se da desde Actions con `publish` y versión exacta en `main`. El workflow crea la etiqueta y publica la release tras todos los checks y builds. Las pruebas de publicación usan órdenes simuladas y paquetes de fixture; no crean releases reales. Seguir [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) para permisos, aceptación, etiquetas existentes y recuperación de un borrador incompleto.

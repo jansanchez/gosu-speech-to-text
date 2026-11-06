@@ -25,3 +25,5 @@
 - Sigue la política SemVer y el procedimiento de [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md). Registra funcionalidades y correcciones en [CHANGELOG.md](CHANGELOG.md).
 - Agrupa funcionalidades en una versión menor y correcciones en una versión parche; no crees una etiqueta por cada commit. Actualiza `brand.json`, ejecuta `npm run brand:sync` y conserva los lockfiles sincronizados.
 - Antes de etiquetar, ejecuta las comprobaciones y `npm run release:check`; usa etiquetas anotadas `vX.Y.Z` sobre el commit de versión con árbol limpio. Nunca muevas ni sobrescribas etiquetas existentes. Distingue etiqueta local, push de etiqueta, candidato y release publicada.
+
+- Para publicar una versión aprobada, usa el workflow de Actions con `publish` y versión exacta desde main; ese flujo crea la etiqueta y la release después de comprobar y empaquetar todos los destinos. Sin aprobación explícita genera solo candidatos. No confundir ejecución de CI con aceptación real de instaladores; seguir BUILD-AND-RELEASE.md.

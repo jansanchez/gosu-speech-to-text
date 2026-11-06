@@ -1,3 +1,13 @@
+# Automatización preparada — 2026-11-05
+
+Versión preparada **0.5.0**, sobre `fedf95e`. El usuario pidió automatizar etiquetas y publicación tras aprobar una funcionalidad y eligió explícitamente **aprobar desde Actions**. No publicar por cada push o commit.
+
+El workflow de candidatos ahora admite `publish` (false por defecto) y versión exacta. Con aprobación manual desde main y todos los checks/builds aprobados, reúne seis paquetes del mismo run, verifica hashes de instaladores, genera SHA256 común, crea etiqueta anotada y borrador, sube archivos y publica. Solo el job publicador tiene `contents: write`; utiliza GITHUB_TOKEN, sin PAT y sin depender de otro workflow por el push del bot. Conserva candidatos por tag o ejecución sin publish. Rechaza etiquetas de otro commit y releases existentes, incluidos borradores. Documentación y recuperación en [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md).
+
+Validación local: `make check` fuera del sandbox aprobado en Linux x86_64; pruebas de aprobación, selección de notas y paquetes, hashes incorrectos/incompletos y secuencia de publicación simulada. YAML parseado y dependencias de jobs revisadas. No se ejecutó aún este flujo completo en GitHub ni se publicaron releases. No hay nueva evidencia de instalación, firma ni micrófono por SO. No crear etiqueta local para 0.5.0: la creará el workflow tras aprobación. Primero subir el código y revisar candidatos sin marcar publish; comprobar resultados reales de CI.
+
+Pendientes principales: subir esta automatización a main, revisar los candidatos de 0.4.1 y los de la nueva versión, validar instaladores por plataforma, y solo entonces aprobar publicación. Conservar el historial siguiente como evidencia de sesiones anteriores.
+
 # Estado al cerrar la sesión — 2026-11-05
 
 ## Punto de reanudación

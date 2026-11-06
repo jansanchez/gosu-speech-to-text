@@ -123,3 +123,5 @@ Los paquetes de escritorio deben incluir el motor Python. Sus usuarios no instal
 ## Versiones
 
 La versión se mantiene en `brand.json` siguiendo SemVer. Consulta el [historial de cambios](CHANGELOG.md) y el [procedimiento de versiones y releases](BUILD-AND-RELEASE.md). Las etiquetas `vX.Y.Z` identifican código; la validación de instaladores se registra por separado.
+
+Para publicar una versión aprobada: en **Actions → GOSU Speech to Text release candidates → Run workflow**, elige `main`, marca `publish` e introduce la versión exacta de `brand.json`. El workflow comprueba y compila todos los destinos, crea la etiqueta anotada y publica paquetes y hashes automáticamente. Sin marcar `publish`, solo genera candidatos. Consulta los requisitos y la recuperación de fallos en [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md).

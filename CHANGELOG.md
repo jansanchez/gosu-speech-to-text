@@ -2,6 +2,15 @@
 
 Se utiliza [SemVer 2.0.0](https://semver.org/lang/es/). Cada entrada agrupa los cambios de una versión; la etiqueta Git identifica su código exacto. Una etiqueta no certifica instalación ni compatibilidad en plataformas pendientes.
 
+## [0.5.0] — 2026-11-05
+
+### Automatización de releases
+
+- Aprobación de una versión desde Actions; después de todas las comprobaciones y builds, creación automática de etiqueta anotada y publicación de release con seis paquetes y manifiesto SHA256.
+- Verificación de hashes de los instaladores, nombres separados por plataforma/arquitectura y exclusión de archivos internos del runtime.
+- Rechazo de versiones discordantes, etiquetas de otro commit, releases existentes y artefactos incompletos. Publicación mediante borrador para evitar mostrar una entrega con archivos parcialmente subidos.
+- Los pushes de etiquetas y las ejecuciones sin aprobación siguen generando candidatos sin publicar. La automatización no acredita por sí sola instalación, micrófono, permisos ni firma.
+
 ## [0.4.1] — 2026-11-05
 
 ### Correcciones de validación multiplataforma
