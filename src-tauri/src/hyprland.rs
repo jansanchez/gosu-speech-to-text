@@ -21,8 +21,7 @@ fn command(args: &[&str]) -> Result<String, String> {
     crate::platform::run("hyprctl", args)
 }
 fn json(args: &[&str]) -> Result<Value, String> {
-    serde_json::from_str(&command(args)?)
-        .map_err(|e| format!("Respuesta de Hyprland inválida: {e}"))
+    serde_json::from_str(&command(args)?).map_err(|e| format!("Invalid Hyprland response: {e}"))
 }
 fn modern() -> bool {
     static MODERN: OnceLock<bool> = OnceLock::new();
@@ -71,11 +70,13 @@ fn destination(value: &Value) -> Result<Destination, String> {
         || pid == 0
     {
         return Err(
-            "No se detectó una ventana de destino. Enfoca el campo y pulsa el atajo.".into(),
+            "No destination window detected. Focus the field and press the shortcut.".into(),
         );
     }
     if pid == u64::from(std::process::id()) || own_class(app) {
-        return Err("Enfoca el campo de otra aplicación y pulsa el atajo para dictar allí.".into());
+        return Err(
+            "Focus a field in another application and press the shortcut to dictate there.".into(),
+        );
     }
     Ok(Destination {
         id: id.into(),
@@ -97,12 +98,12 @@ pub fn paste(expected: Option<&str>, activate: bool) -> Result<(), String> {
             .lock()
             .map_err(|e| e.to_string())?
             .clone()
-            .ok_or("No hay un destino recordado.")?
+            .ok_or("No remembered destination.")?
     } else {
         destination(&json(&["-j", "activewindow"])?)?
     };
     if expected.is_some_and(|id| id != target.id) {
-        return Err("El destino cambió. El texto se conserva en GOSU.".into());
+        return Err("The destination changed. The text is preserved in GOSU.".into());
     }
     let clients = json(&["-j", "clients"])?;
     let exists = clients.as_array().is_some_and(|items| {
@@ -113,7 +114,9 @@ pub fn paste(expected: Option<&str>, activate: bool) -> Result<(), String> {
         })
     });
     if !exists {
-        return Err("La ventana de destino ya no existe. El texto se conserva en GOSU.".into());
+        return Err(
+            "The destination window no longer exists. The text is preserved in GOSU.".into(),
+        );
     }
     if activate {
         let selector = format!("address:{}", target.id);
@@ -126,7 +129,7 @@ pub fn paste(expected: Option<&str>, activate: bool) -> Result<(), String> {
     std::thread::sleep(std::time::Duration::from_millis(120));
     let active = destination(&json(&["-j", "activewindow"])?)?;
     if active.id != target.id || active.pid != target.pid {
-        return Err("Cambió el foco. No se insertó el texto.".into());
+        return Err("Focus changed. Text was not inserted.".into());
     }
     let mods = if target.terminal {
         "CTRL SHIFT"
@@ -144,7 +147,7 @@ pub fn paste(expected: Option<&str>, activate: bool) -> Result<(), String> {
         ),
     )?;
     if result.trim() != "ok" {
-        return Err(format!("Hyprland no confirmó la inserción: {result}"));
+        return Err(format!("Hyprland did not confirm insertion: {result}"));
     }
     Ok(())
 }
@@ -177,14 +180,14 @@ fn shortcut(value: &str) -> Result<(String, u64, String), String> {
                 key = Some(part.to_string())
             }
             _ => return Err(
-                "El atajo debe usar modificadores y una tecla, por ejemplo Control+Shift+Space."
+                "The shortcut must include modifiers and a key, for example Control+Shift+Space."
                     .into(),
             ),
         }
     }
-    let key = key.ok_or("Falta la tecla del atajo.")?;
+    let key = key.ok_or("The shortcut key is missing.")?;
     if mask == 0 {
-        return Err("Usa al menos un modificador para el atajo global.".into());
+        return Err("Use at least one modifier for the global shortcut.".into());
     }
     Ok((mods.join(" "), mask, key))
 }
@@ -227,7 +230,7 @@ pub fn configure_shortcut(value: Option<&str>, action: &str) -> Result<bool, Str
         "dictation" => ("__gosu_dictation", &BIND, "--toggle-minimal"),
         "panel" => ("__gosu_panel", &PANEL_BIND, "--show-minimal"),
         "visibility" => ("__gosu_visibility", &VISIBILITY_BIND, "--toggle-visibility"),
-        _ => return Err("Acción de atajo inválida".into()),
+        _ => return Err("Invalid shortcut action".into()),
     };
     let mut binding = state.lock().map_err(|e| e.to_string())?;
     if let Some(previous) = binding.take() {
@@ -238,7 +241,7 @@ pub fn configure_shortcut(value: Option<&str>, action: &str) -> Result<bool, Str
     let executable = std::env::current_exe().map_err(|e| e.to_string())?;
     let executable = executable.to_string_lossy().into_owned();
     if executable.chars().any(|c| c.is_control()) {
-        return Err("La ruta del ejecutable contiene caracteres no admitidos.".into());
+        return Err("The executable path contains unsupported characters.".into());
     }
     if modern() {
         let previous = command(&[
@@ -265,7 +268,9 @@ pub fn configure_shortcut(value: Option<&str>, action: &str) -> Result<bool, Str
         .as_array()
         .is_some_and(|items| items.iter().any(|bind| matches(bind, mask, &key)))
     {
-        return Err("El atajo ya está ocupado en Hyprland. Elige otro en Preferencias.".into());
+        return Err(
+            "The shortcut is already in use in Hyprland. Choose another in Settings.".into(),
+        );
     }
     let shell = format!("'{}' {flag}", executable.replace('\'', "'\\''"));
     let result = if modern() {
@@ -276,7 +281,7 @@ pub fn configure_shortcut(value: Option<&str>, action: &str) -> Result<bool, Str
     };
     if result.trim() != "ok" {
         return Err(format!(
-            "No se pudo registrar el atajo en Hyprland: {result}"
+            "Could not register the shortcut in Hyprland: {result}"
         ));
     }
     let binds = json(&["-j", "binds"])?;
@@ -284,7 +289,7 @@ pub fn configure_shortcut(value: Option<&str>, action: &str) -> Result<bool, Str
         .as_array()
         .and_then(|items| items.iter().find(|bind| matches(bind, mask, &key)))
         .cloned()
-        .ok_or("Hyprland no registró el atajo.")?;
+        .ok_or("Hyprland did not register the shortcut.")?;
     *binding = Some(Binding {
         slot,
         spec: value.into(),
@@ -295,7 +300,7 @@ pub fn configure_shortcut(value: Option<&str>, action: &str) -> Result<bool, Str
 }
 
 fn overlay_window(clients: &Value) -> Result<Value, String> {
-    let items = clients.as_array().ok_or("Lista de ventanas inválida.")?;
+    let items = clients.as_array().ok_or("Invalid window list.")?;
     if let Some(window) = items
         .iter()
         .find(|item| item["pid"].as_u64() == Some(u64::from(std::process::id())))
@@ -310,15 +315,15 @@ fn overlay_window(clients: &Value) -> Result<Value, String> {
                     || item["initialClass"].as_str() == Some(*class)
             })
     });
-    let window = matches.next().ok_or("No se encontró la ventana de GOSU.")?;
+    let window = matches.next().ok_or("The GOSU window was not found.")?;
     if matches.next().is_some() {
-        return Err("Hay varias ventanas de GOSU; no se puede identificar el panel.".into());
+        return Err("Multiple GOSU windows found; the panel cannot be identified.".into());
     }
     Ok(window.clone())
 }
 pub fn present_window(overlay: bool) -> Result<(), String> {
     let (width, height) = if overlay { (460, 220) } else { (1180, 820) };
-    let mut result = Err("No se encontró la ventana de GOSU.".to_owned());
+    let mut result = Err("The GOSU window was not found.".to_owned());
     for _ in 0..20 {
         result = overlay_window(&json(&["-j", "clients"])?);
         if result.is_ok() {
@@ -329,9 +334,9 @@ pub fn present_window(overlay: bool) -> Result<(), String> {
     let window = result?;
     let address = window["address"]
         .as_str()
-        .ok_or("Dirección de ventana inválida.")?;
+        .ok_or("Invalid window address.")?;
     if !address.starts_with("0x") || !address[2..].chars().all(|c| c.is_ascii_hexdigit()) {
-        return Err("Dirección de ventana inválida.".into());
+        return Err("Invalid window address.".into());
     }
     let selector = format!("address:{address}");
     dispatch(

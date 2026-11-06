@@ -1,65 +1,68 @@
-# Arquitectura de GOSU Speech to Text
+# GOSU Speech to Text architecture
 
-## Recorrido del dictado
+## Dictation flow
 
-1. `Capture` (`src/audio.ts`) captura audio mediante un AudioWorklet y emite WAV por pausas o al llegar a 18 segundos.
-2. `useAudioQueue` guarda cada fragmento en IndexedDB antes de enviarlo al motor.
-3. `transport.ts` usa IPC en escritorio y HTTP en desarrollo web. El escritorio comunica Rust con FastAPI por loopback.
-4. El motor Python valida el WAV y ejecuta Faster Whisper bajo un bloqueo de inferencia.
-5. La interfaz aplica el resultado, guarda el texto junto con el ID del fragmento procesado y después elimina ese audio.
+1. `Capture` in `src/audio.ts` uses an AudioWorklet and emits WAV chunks at pauses or after 18 seconds.
+2. `useAudioQueue` saves each chunk to IndexedDB before sending it to the engine.
+3. `transport.ts` uses IPC on desktop and HTTP in web development; Rust talks to FastAPI over loopback.
+4. Python validates WAV input and runs Faster Whisper under an inference lock.
+5. The UI commits text with the processed chunk ID, then deletes the corresponding audio.
 
-Los cambios de esta preparación mantienen los identificadores históricos `org.voz.prototype`, `voz-state` y `voz-jobs`. No cambiar esos nombres sin una migración explícita.
+Preserve `org.voz.prototype`, `voz-state`, and `voz-jobs`. Renaming product text must not rename persistent identities or protocols.
 
-## Responsabilidades
+## Responsibilities
 
-| Módulo | Responsabilidad |
+| Module | Responsibility |
 |---|---|
-| `src/App.tsx` | Coordina las operaciones del editor y compone la pantalla. |
-| `src/components/` | Editor, bandeja y diálogo de preferencias. |
-| `src/hooks/useWorkspace.ts` | Carga validada, estado local y guardado automático. |
-| `src/hooks/useAudioQueue.ts` | Orden, persistencia y recuperación del audio. |
-| `src/hooks/useEngine.ts` | Conexión, estado, diagnóstico y reinicio del motor. |
-| `src/hooks/useGlobalShortcuts.ts` | Registro y retirada ordenados de atajos. |
-| `src/hooks/useMinimalDictation.ts` | Sesión de dictado mínimo, destino capturado, finalización e inserción. |
-| `src-tauri/src/minimal.rs` | Ventana mínima y selección del adaptador del sistema. |
-| `src-tauri/src/hyprland.rs` | Destinos y atajos del compositor Hyprland. |
-| `src-tauri/src/portal.rs` | Atajos y teclado Wayland autorizados mediante portales estándar. |
-| `src/validation.ts` | Validación común de historial, preferencias y respaldos. |
-| `src/persistence.ts` | Escrituras serializadas y estado de guardado. |
-| `src/history.ts` | Límites del historial y agrupación de escritura manual. |
-| `src/jobs.ts` | Contrato y validación de audio recuperado. |
-| `src/product.ts` | Tipos, valores iniciales, órdenes de control y respaldos. |
-| `src/core.ts` | Limpieza, edición determinista y codificación WAV. |
-| `src/extension-state.ts` | Validación y migración del borrador de Chrome. |
-| `src-tauri/src/engine.rs` | Proceso Python, conexión inicial, vigilancia y reinicio. |
-| `server/` | Reconocimiento y funciones opcionales de Ollama. |
+| `src/App.tsx` | Editor coordination and screen composition |
+| `src/components/` | Editor, workspace, and settings dialog |
+| `src/hooks/useWorkspace.ts` | Validated loading, local state, and autosave |
+| `src/hooks/useAudioQueue.ts` | Audio ordering, persistence, and recovery |
+| `src/hooks/useEngine.ts` | Connection, diagnostics, and restart |
+| `src/hooks/useGlobalShortcuts.ts` | Ordered shortcut registration and removal |
+| `src/hooks/useMinimalDictation.ts` | Independent minimal sessions, target capture, completion, and insertion |
+| `src-tauri/src/minimal.rs` | Minimal window and platform adapter selection |
+| `src-tauri/src/hyprland.rs` | Hyprland targets and shortcuts |
+| `src-tauri/src/portal.rs` | Authorized Wayland shortcuts and keyboard input |
+| `src/validation.ts` | Shared workspace, preference, and backup validation |
+| `src/persistence.ts` | Serialized immutable writes and saved status |
+| `src/history.ts` | History limits and grouped manual typing |
+| `src/jobs.ts` | Recoverable audio contracts and validation |
+| `src/product.ts` | Shared settings, language selection, and backups |
+| `src/speech.ts` | Multilingual speech phrases, control aliases, and punctuation |
+| `src/core.ts` | Deterministic editing, cleanup, and WAV encoding |
+| `src/extension-state.ts` | Chrome draft validation and migration |
+| `src-tauri/src/engine.rs` | Python process, handshake, monitoring, and restart |
+| `server/` | Recognition and optional local Ollama functions |
 
-Chrome comparte captura, edición, preferencias, historial y respaldos, pero ejecuta su propio reconocedor WASM. No depende del servidor Python. Su controlador permanece en `extension/recorder.js`; las pruebas de ejecución sustituyen únicamente dispositivo y reconocedor.
+Chrome shares capture, deterministic editing, preferences, history, and backups but runs its own WASM recognizer without Python. Its controller is `extension/recorder.js`; runtime tests replace only devices and recognition. Interface language is English independently of recognition language. Existing saved recognition languages and user text are retained.
 
-## Invariantes de almacenamiento
+## Storage invariants
 
-- Un dato inválido al cargar bloquea el guardado automático. No reemplazar silenciosamente datos corruptos por un historial vacío.
-- Las escrituras usan instantáneas inmutables y mantienen su orden. Una escritura anterior no puede marcar como guardado un cambio posterior pendiente.
-- El guardado automático agrupa cambios durante 20 ms. Los commits de la cola y las transiciones de privacidad guardan inmediatamente y esperan su resultado.
-- Primero guardar audio; después reconocer. Primero guardar texto e ID procesado; después eliminar audio.
-- Si falla eliminar el audio, conservar su ID procesado. Reintentar no debe volver a aplicar la transcripción.
-- Limpiar los IDs procesados solo cuando su audio ya no pueda recuperarse del almacenamiento. No truncarlos por una cantidad arbitraria.
-- Si falla guardar un fragmento, conservarlo en memoria y detener la captura de escritorio. Los fragmentos sin guardar se pierden si el proceso termina.
-- La sesión privada evita la persistencia automática de su contenido. No cifra el historial existente.
-- El historial conserva hasta 50 entradas y aproximadamente dos millones de caracteres por pila de deshacer/rehacer. Siempre conserva la última entrada, incluso si esta supera el presupuesto.
+- Invalid loaded data blocks autosave; never silently replace corrupted history with empty state.
+- Writes use immutable snapshots and retain ordering. An old write cannot mark a newer pending change as saved.
+- Autosave groups changes over 20 ms; queue commits and privacy transitions save immediately and await completion.
+- Save audio before recognition. Save text with the processed ID before deleting audio.
+- If audio deletion fails, retain the processed ID so retries do not duplicate text.
+- Remove processed IDs only when their audio is no longer recoverable; never arbitrarily truncate receipts.
+- Failed audio writes retain the chunk in memory and stop desktop capture. Unsaved memory-only chunks are lost if the process exits.
+- Private session content avoids automatic persistence; private mode does not encrypt previous history.
+- Undo/redo history keeps up to 50 entries and about two million characters per stack. Always retain the latest entry, even when oversized.
 
-El estado completo sigue guardándose en una sola clave; la cola usa otra. Si el volumen real exige almacenamiento por borrador o por fragmento, implementar una migración versionada y repetir las pruebas de recuperación antes de sustituir este protocolo.
+The complete workspace remains under one key; audio jobs use another. A future per-draft/per-chunk schema requires a versioned migration and renewed recovery tests.
 
-## Ciclo de vida del motor
+## Engine lifecycle
 
-Rust inicia Python con entrada y salida por tuberías. Python devuelve una conexión JSON con puerto dinámico y token. Rust acepta una respuesta acotada, HTTP y `127.0.0.1`; el plazo inicial es de 90 segundos. Este plazo no limita la descarga posterior del modelo.
+Rust starts Python with piped input/output. Python returns a JSON connection with a dynamic port and token. Rust accepts a bounded response using HTTP on `127.0.0.1`; startup has a 90-second deadline, independent of the later model download.
 
-Ante salida, protocolo inválido o vencimiento, Rust limpia el proceso y expone el error. El usuario puede usar **Reiniciar motor**; los textos y audios pendientes se conservan y su reintento es explícito. Cada proceso tiene una generación: un supervisor antiguo no puede modificar el estado de su reemplazo.
+On exit, invalid protocol, or timeout, Rust cleans up and exposes the error. Restart engine preserves text and audio; retries are explicit. Each process has a generation, so an old supervisor cannot mutate its replacement's state.
 
-## Límites de la evidencia
+## Integration and evidence limits
 
-Tres atajos independientes y configurables controlan la vista editor/minimalista, la visibilidad de la aplicación y el inicio/fin del dictado. La vista elegida se mantiene en memoria al ocultar/restaurar; al iniciar la aplicación aparece el editor. Mostrar u ocultar no altera la captura ni cancela la inserción; abrir el editor sí cancela la inserción automática. Terminar deja el panel disponible para otro dictado. Mostrar no abre el micrófono. Cada dictado crea un borrador independiente y captura el destino enfocado al solicitar terminar, antes de esperar el cierre del micrófono y el vaciado de su cola. No consulta el foco periódicamente. Solo después guarda el texto y lo copia al portapapeles antes de intentar insertarlo. Un fallo al capturar el destino no interrumpe el vaciado de la cola ni la copia. La preparación de captura solicita permisos del portal cuando corresponde, sin exigir una ventana externa enfocada. Abrir el editor invalida la finalización automática mediante una generación de sesión. Los errores de inserción no se reintentan automáticamente.
+Three independently configurable shortcuts switch editor/panel, hide/restore, and start/stop dictation. The selected view is remembered in memory while hidden; startup opens the editor. Showing/hiding does not change capture or cancel insertion. Opening the editor cancels automatic insertion and preserves recoverable work. Stopping leaves the panel available for another recording.
 
-Los atajos consultan la propiedad del registro antes de renovarlo; la cadena de registro vive en el contexto global del WebView para sobrevivir a las recargas de módulos. Hyprland tiene un puente de control Unix limitado al usuario; espera el registro de la ventana al mostrarla y admite la identidad de aplicación cuando WebKit reporta un PID diferente; GNOME/KDE usan los portales del sistema. `MINIMAL-MODE.md` detalla las capacidades y límites por sistema.
+Each minimal dictation has an independent draft. It captures the focused target when stopping, before waiting for final capture/queue completion. It does not poll focus. Confirmed text is saved and copied before insertion. Target-capture failure does not prevent queue completion or copying. Starting while GOSU is focused is supported; a destination is needed only at completion. Opening the editor invalidates pending automatic completion through a session generation. Insertion errors are not automatically retried.
 
-Las pruebas automatizadas sustituyen la inferencia y los dispositivos. Compilar y probar los adaptadores no demuestra precisión del reconocimiento ni garantiza permisos, foco o pegado en un escritorio real. Antes de distribuir, repetir las pruebas manuales de `VALIDACION.md` en cada sistema y arquitectura.
+Shortcut registration ownership and the registration chain survive UI reloads in the global WebView context. Hyprland uses a same-user Unix control bridge and waits for window mapping, accepting the historical application identity when WebKit reports another PID. GNOME/KDE use system portals. Generic portals type into the focused field without identifying its application; see [MINIMAL-MODE.md](MINIMAL-MODE.md).
+
+Automated tests substitute inference and devices. Language phrase tests establish deterministic text behavior, not recognition accuracy or fluency. Compiling adapters does not establish permissions, focus, or successful insertion on a real desktop. Repeat manual validation in [VALIDACION.md](VALIDACION.md) before distributing a platform as validated.

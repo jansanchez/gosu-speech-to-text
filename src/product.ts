@@ -1,3 +1,4 @@
+import { priorityLanguages, speechControl, spokenPunctuation } from './speech';
 import { validateWorkspace } from './validation';
 /** Pure product operations shared by the desktop UI and tests. */
 export type Snippet = { id: string; name: string; text: string };
@@ -40,7 +41,7 @@ export type State = {
   snippets?: Snippet[];
 };
 export const defaults: Settings = {
-  language: 'es',
+  language: 'en',
   mode: 'clean',
   pause: 1.2,
   device: '',
@@ -60,104 +61,32 @@ export const defaults: Settings = {
   embeddingModel: 'bge-m3',
 };
 export const languages = [
-  ['es', 'Español'],
-  ['en', 'English'],
-  ['auto', 'Automático'],
-  ['pt', 'Português'],
-  ['fr', 'Français'],
-  ['de', 'Deutsch'],
-  ['it', 'Italiano'],
-  ['zh', '中文'],
-  ['ja', '日本語'],
-  ['ko', '한국어'],
-  ['ar', 'العربية'],
-  ['hi', 'हिन्दी'],
-  ['bn', 'বাংলা'],
-  ['ru', 'Русский'],
-  ['id', 'Bahasa Indonesia'],
-  ['ur', 'اردو'],
-  ['tr', 'Türkçe'],
-  ['vi', 'Tiếng Việt'],
-  ['ta', 'தமிழ்'],
-  ['te', 'తెలుగు'],
-  ['mr', 'मराठी'],
-  ['fa', 'فارسی'],
-  ['sw', 'Kiswahili'],
-  ['pl', 'Polski'],
-  ['uk', 'Українська'],
-  ['nl', 'Nederlands'],
-  ['th', 'ไทย'],
+  ['auto', 'Detect automatically'],
+  ...priorityLanguages,
+  ['de', 'German'],
+  ['it', 'Italian'],
+  ['ja', 'Japanese'],
+  ['ko', 'Korean'],
+  ['id', 'Indonesian'],
+  ['tr', 'Turkish'],
+  ['vi', 'Vietnamese'],
+  ['ta', 'Tamil'],
+  ['te', 'Telugu'],
+  ['mr', 'Marathi'],
+  ['fa', 'Persian'],
+  ['sw', 'Swahili'],
+  ['pl', 'Polish'],
+  ['uk', 'Ukrainian'],
+  ['nl', 'Dutch'],
+  ['th', 'Thai'],
   ['tl', 'Filipino'],
-  ['gu', 'ગુજરાતી'],
-  ['pa', 'ਪੰਜਾਬੀ'],
-  ['ro', 'Română'],
-  ['sv', 'Svenska'],
+  ['gu', 'Gujarati'],
+  ['pa', 'Punjabi'],
+  ['ro', 'Romanian'],
+  ['sv', 'Swedish'],
 ];
-export function punctuation(text: string, language: string) {
-  const rules =
-    language === 'es'
-      ? [
-          [/\bpunto y aparte\b/gi, '\n\n'],
-          [/\bnuevo p[aá]rrafo\b/gi, '\n\n'],
-          [/\bsalto de l[ií]nea\b/gi, '\n'],
-          [/\babre interrogaci[oó]n\b/gi, '¿'],
-          [/\bcierra interrogaci[oó]n\b/gi, '?'],
-          [/\bdos puntos\b/gi, ':'],
-          [/\bpunto y coma\b/gi, ';'],
-          [/\bcoma\b/gi, ','],
-          [/\bpunto final\b/gi, '.'],
-        ]
-      : language === 'en'
-        ? [
-            [/\bnew paragraph\b/gi, '\n\n'],
-            [/\bnew line\b/gi, '\n'],
-            [/\bfull stop\b/gi, '.'],
-            [/\bcomma\b/gi, ','],
-            [/\bquestion mark\b/gi, '?'],
-          ]
-        : [];
-  let output = text;
-  for (const [re, to] of rules) output = output.replace(re as RegExp, to as string);
-  return output.replace(/[ \t]+([,.;:!?])/g, '$1').replace(/[ \t]*\n[ \t]*/g, '\n');
-}
-export function control(command: string) {
-  const c = command
-    .trim()
-    .replace(/[.!?]+$/, '')
-    .toLocaleLowerCase();
-  const commands: Record<string, string> = {
-    deshacer: 'undo',
-    'deshaz eso': 'undo',
-    'déjalo como estaba': 'undo',
-    undo: 'undo',
-    rehacer: 'redo',
-    redo: 'redo',
-    copiar: 'copy',
-    'copia el texto': 'copy',
-    'copy text': 'copy',
-    pegar: 'paste',
-    'pega el texto': 'paste',
-    'paste text': 'paste',
-    'nuevo dictado': 'new',
-    'new draft': 'new',
-    'confirmar cambio': 'confirm',
-    'aplicar cambio': 'confirm',
-    'confirm change': 'confirm',
-    'cancelar cambio': 'cancel',
-    'cancel change': 'cancel',
-    'leer texto': 'read',
-    'read text': 'read',
-    'detener lectura': 'stopRead',
-    'stop reading': 'stopRead',
-    'recordar corrección': 'learn',
-    'guardar corrección': 'learn',
-    'modo dictado': 'dictate',
-    'modo corrección': 'edit',
-    'marcar favorito': 'favorite',
-    'quitar favorito': 'unfavorite',
-  };
-  return commands[c] || '';
-}
+export const punctuation = spokenPunctuation;
+export const control = speechControl;
 export function dictionaryOf(value: string): Record<string, string> {
   try {
     const x = JSON.parse(value);
@@ -179,7 +108,7 @@ export function validateBackup(input: unknown): State {
     input.schema !== 2 ||
     !('state' in input)
   )
-    throw Error('Respaldo no válido.');
+    throw Error('Invalid backup.');
   return validateWorkspace(input.state, true);
 }
 
@@ -214,11 +143,9 @@ export async function encodeBackup(state: State, password: string) {
     state,
   });
   if (new TextEncoder().encode(plain).byteLength > 20_000_000)
-    throw Error(
-      'El respaldo supera 20 MB. Exporta o limpia versiones antes de respaldarlo.',
-    );
+    throw Error('The backup exceeds 20 MB. Export or clear history before backing up.');
   if (!password) return plain;
-  if (password.length < 10) throw Error('Usa una contraseña de al menos 10 caracteres.');
+  if (password.length < 10) throw Error('Use a password with at least 10 characters.');
   const salt = crypto.getRandomValues(new Uint8Array(16)),
     iv = crypto.getRandomValues(new Uint8Array(12)),
     iterations = 600000;
@@ -236,7 +163,7 @@ export async function encodeBackup(state: State, password: string) {
   });
 }
 export async function decodeBackup(text: string, password: string) {
-  if (text.length > 30_000_000) throw Error('Respaldo demasiado grande (máximo 30 MB).');
+  if (text.length > 30_000_000) throw Error('Backup too large (maximum 30 MB).');
   let x = JSON.parse(text);
   if (x?.format === 'voz-aes-gcm-v1') {
     if (
@@ -245,7 +172,7 @@ export async function decodeBackup(text: string, password: string) {
       x.iterations > 2000000 ||
       typeof x.data !== 'string'
     )
-      throw Error('Formato cifrado inválido.');
+      throw Error('Invalid encrypted format.');
     try {
       const salt = un64(x.salt),
         iv = un64(x.iv);
@@ -257,7 +184,7 @@ export async function decodeBackup(text: string, password: string) {
       );
       x = JSON.parse(new TextDecoder().decode(raw));
     } catch {
-      throw Error('Contraseña incorrecta o respaldo dañado.');
+      throw Error('Incorrect password or damaged backup.');
     }
   }
   return validateBackup(x);

@@ -50,8 +50,7 @@ export async function buildDesktop({
   );
   if (result.status !== 0)
     throw Error(
-      'Falló la compilación Tauri: ' +
-        (result.error?.message || 'revisa la salida anterior'),
+      'Tauri build failed: ' + (result.error?.message || 'review the output above'),
     );
   await stage({ root, args });
 }

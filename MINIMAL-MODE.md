@@ -1,54 +1,48 @@
-# Dictado mínimo
+# Minimal dictation
 
-El modo mínimo usa una ventana pequeña con el nivel real del micrófono y tres atajos independientes para dictado, cambio de vista y visibilidad. El editor completo sigue disponible para preferencias, historial y recuperación.
+A small panel displays the real microphone level and provides three independent shortcuts for dictation, views, and visibility. The full editor remains available for settings, history, and recovery.
 
-## Uso
+## Use
 
-1. Mantén GOSU abierto y espera a que el motor esté listo.
-2. Pulsa **Ctrl+Shift+M** para alternar entre el editor y el panel minimalista. Si GOSU estaba oculto, alterna a la otra vista y la muestra; para restaurar la misma vista utiliza Ctrl+Shift+H.
-3. Pulsa **Ctrl+Shift+Espacio** para comenzar a grabar. En el editor conserva el flujo de grabación del editor; en el panel controla la sesión de dictado mínimo.
-4. Habla. Puedes cambiar de aplicación o campo mientras grabas. Las barras responden al sonido y el texto se prepara por tramos.
-5. Haz clic en el campo de destino (pasar el puntero por encima puede no darle el foco) y pulsa **Ctrl+Shift+Espacio** para terminar. GOSU selecciona la ventana enfocada en ese momento, espera los últimos fragmentos, copia todo el dictado al portapapeles e intenta insertarlo. Mantén el campo elegido durante el procesamiento.
-6. Pulsa de nuevo el atajo de dictado para otra grabación. El panel permanece disponible. **Ctrl+Shift+H** oculta GOSU; otra pulsación restaura la misma vista (editor o minimalista). Ocultar no cierra la aplicación ni altera una grabación o transcripción en curso.
+1. Keep GOSU open and wait for the engine.
+2. Ctrl+Shift+M switches editor/panel. If hidden, it switches to the other view and shows it. Ctrl+Shift+H restores the same view.
+3. Ctrl+Shift+Space starts recording in the selected editor/panel flow.
+4. Speak and pause between ideas. You can switch fields or applications while recording.
+5. Click the destination field (hovering may not focus it), then press Ctrl+Shift+Space to stop. GOSU captures the focused window, waits for final chunks, copies the complete dictation, and attempts insertion. Keep the field focused during processing.
+6. Press the dictation shortcut again for another recording. The panel stays available. Ctrl+Shift+H hides/restores without stopping capture or transcription.
 
-En macOS se usa **Cmd** en lugar de **Ctrl** para los tres valores iniciales. Los tres atajos están activos desde el primer inicio si el sistema permite registrarlos y están libres.
+On macOS use Cmd for the three default shortcuts. They are available from first use when permitted and unoccupied.
 
-**Preferencias** y **Configurar** en la pantalla principal ofrecen tres selectores: **Iniciar o detener dictado**, **Alternar editor y modo minimalista** y **Mostrar u ocultar GOSU**. En cada uno pulsa **Elegir combinación**, introduce las teclas y pulsa **Guardar atajo**. Cada combinación se guarda por separado, con su propio valor predeterminado. No se permite usar la misma combinación para acciones diferentes. Las preferencias anteriores conservan los atajos existentes; el de visibilidad se añade con Ctrl/Cmd+Shift+H, o una alternativa libre entre las preferencias de GOSU; al cargar se añade el del panel (Ctrl/Cmd+Alt+M si Ctrl/Cmd+Shift+M ya era el de dictado).
+Settings and Configure offer Start or stop dictation, Switch between editor and minimal panel, and Show or hide GOSU. Choose combination, enter keys, then Save shortcut. Combinations persist independently and cannot collide. Old preferences preserve existing shortcuts: visibility defaults to Ctrl/Cmd+Shift+H or a free internal alternative; the panel falls back to Ctrl/Cmd+Alt+M if the M default was already used for dictation.
 
-Ocultar el panel durante la captura mantiene el micrófono activo: usa el atajo de dictado para terminar. **Editor** durante captura o procesamiento cancela la inserción automática y conserva el trabajo.
+Hiding during capture leaves the microphone active; use the dictation shortcut to finish. Opening Editor during capture/processing cancels automatic insertion and preserves work. GOSU temporarily suspends its shortcuts during capture of a new combination; failure restores the last valid shortcut and reports the error. It does not replace another application's shortcuts.
 
-Mientras eliges las teclas se suspenden temporalmente los atajos de GOSU. Si la nueva combinación no se puede registrar, se vuelve al último atajo válido y se muestra el error. No se sustituyen combinaciones de otras aplicaciones.
+GOSU never presses Enter to send/execute text. Destination applications can change paste behavior; review before submitting.
 
-GOSU no pulsa Enter para enviar mensajes o ejecutar órdenes. Una aplicación puede cambiar el comportamiento del pegado; revisa el campo antes de enviar o ejecutar lo escrito.
+## Platform integrations
 
-## Integración según el sistema
-
-| Sistema | Mecanismo implementado | Requisitos y alcance |
+| Platform | Mechanism | Requirements and scope |
 |---|---|---|
-| Windows | Ventana activa y teclado Win32 | Captura HWND y proceso, comprueba el destino y usa el pegado nativo. Los destinos con privilegios superiores pueden bloquear la entrada. |
-| Linux X11, incluido Ubuntu en sesión Xorg | Identificación de ventana y pegado X11 | Requiere `xdotool` y `xprop`. Distingue terminales para usar Ctrl+Shift+V. |
-| Hyprland Wayland | Integración del compositor | Usa `hyprctl`, valida ventana/proceso y registra un atajo temporal propio sin reemplazar combinaciones ocupadas. |
-| GNOME/KDE Wayland, incluido Ubuntu con portales compatibles | GlobalShortcuts y RemoteDesktop de XDG Desktop Portal | El sistema debe implementar ambos portales y autorizar la integración. No se solicita captura de pantalla; se pide teclado. |
-| macOS | Aplicación activa y automatización del sistema | Requiere los permisos de accesibilidad/automatización que solicite macOS. |
+| Windows | Win32 window/process and keyboard | Captures HWND/PID and verifies target; elevated targets may reject input |
+| Linux X11, including Ubuntu Xorg | X11 window identification/paste | `xdotool`, `xprop`; Ctrl+Shift+V for detected terminals |
+| Hyprland Wayland | Compositor integration | `hyprctl`, window/process verification, temporary unoccupied bindings |
+| GNOME/KDE Wayland | XDG GlobalShortcuts and RemoteDesktop | Both portals must be implemented and authorized; keyboard requested, not screen capture |
+| macOS | Active application and system automation | Accessibility/Automation permissions |
 
-En Wayland genérico no existe una API universal para leer la ventana activa o mover el foco a una aplicación arbitraria. El backend de portales escribe en el campo que conserva el foco y muestra **Campo activo**; selecciona ese campo antes de terminar y mantenlo seleccionado durante el procesamiento. Envía caracteres Unicode mediante la sesión autorizada y convierte los caracteres de control en espacios para no simular Enter ni Tab. Las otras integraciones recuerdan la ventana seleccionada al terminar, pero no pueden garantizar que el usuario no haya cambiado el campo o la pestaña dentro de esa misma ventana.
+Generic Wayland has no universal active-window/focus API. The portal types into the focused field, displayed as Active field. Select it before stopping and retain focus during processing. Unicode input replaces control characters with spaces to avoid simulating Enter/Tab. Other integrations remember the chosen window but cannot guarantee the user has not switched fields/tabs inside it.
 
-Que un sistema sea Ubuntu no determina sus capacidades: importan la sesión Xorg/Wayland, la versión del escritorio, sus portales y los permisos concedidos. Si una capacidad no está disponible o se deniega, GOSU informa el error y conserva el texto; no declara que se haya insertado.
+Ubuntu alone does not determine behavior: Xorg/Wayland session, desktop version, portals, and permission matter. Unsupported/denied integration reports failure and preserves text instead of claiming insertion.
 
-## Atajos ya registrados
+## Registration and recovery
 
-Durante una recarga de desarrollo, los registros nativos pueden sobrevivir al reinicio de la interfaz. GOSU consulta cuáles pertenecen a su propia instancia y los renueva. No elimina atajos de otras aplicaciones. Si otra aplicación o el compositor ya usa la combinación, selecciona otra en Preferencias.
+Native registrations can survive a development UI reload. GOSU renews its own registrations without deleting another application's. Choose another shortcut if a compositor/app owns the combination.
 
-En Hyprland, el registro es temporal y se retira al cerrar normalmente GOSU. Recargar la configuración de Hyprland puede eliminarlo: vuelve a abrir GOSU o cambia y restaura el atajo. Con GOSU en ejecución también puedes alternar editor/panel con `gosu-speech-to-text --show-minimal`, o activar su dictado mediante `--toggle-minimal`, o mostrar/ocultar la vista actual con `--toggle-visibility` (puente local Linux).
+Hyprland bindings are temporary and removed on normal shutdown. Reloading compositor configuration may remove them: restart GOSU or change/restore the shortcut. Linux's same-user bridge also supports `gosu-speech-to-text --show-minimal`, `--toggle-minimal`, and `--toggle-visibility` for view switching, dictation, and visibility respectively. It does not edit persistent desktop configuration.
 
-## Recuperación y validación
+Each minimal dictation has an independent draft and follows the audio recovery protocol. Recognition failure never inserts a partial result. Target/insertion failure is not automatically retried: complete text remains copied, and the panel explains manual paste. Use Ctrl+V/Cmd+V, or Ctrl+Shift+V in WezTerm and similar terminals; Ctrl+Shift+B is not the usual paste shortcut. Clipboard failure preserves the editor draft. A transport failure after keys were sent may leave partial insertion: inspect the target before pasting again.
 
-Cada dictado mínimo tiene un borrador independiente. El audio y el texto siguen el protocolo de recuperación habitual. Si falla la transcripción, no se inserta un resultado parcial. Si falla identificar el destino o insertar, no hay reintento automático: el texto completo ya queda en el portapapeles y el panel lo indica. Haz clic en el campo y pega con Ctrl+V (Cmd+V en macOS), o Ctrl+Shift+V en WezTerm y otras terminales. Ctrl+Shift+B no es el pegado habitual de terminal. Si falla el propio portapapeles, se comunica el error y se conserva el borrador en el editor. Un fallo de transporte después de enviar teclas puede dejar una inserción parcial; comprueba el destino antes de volver a pegar.
+Tests cover lifecycle, draft isolation, final-recognition waiting, insertion cancellation, permissions, and registration ownership. Linux evidence does not certify Windows, GNOME/KDE, or macOS; build and test their real desktops before claiming validation.
 
-Las pruebas automatizadas cubren el ciclo del atajo, aislamiento del borrador, espera de la última transcripción, cancelación de inserción, denegación de permisos y renovación de registros propios. Las pruebas locales de Linux no certifican Windows, GNOME/KDE ni macOS: esas plataformas deben compilarse en CI y probarse en sus escritorios reales antes de distribuir.
+Protocol references: [RemoteDesktop](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.RemoteDesktop.html), [GlobalShortcuts](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html), [Hyprland dispatchers](https://wiki.hypr.land/configuring/core/dispatchers/).
 
-Referencias de los protocolos: [portales de entrada](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.RemoteDesktop.html), [atajos de portal](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html) y [dispatchers Hyprland](https://wiki.hypr.land/configuring/core/dispatchers/).
-
-Ocultar el panel no detiene una grabación activa; al terminar el dictado se cierra el micrófono y la aplicación y el modelo siguen cargados para el próximo dictado. No se ha medido el consumo de RAM/CPU de este flujo ni se descarga el modelo automáticamente. Para salir, vuelve al editor y cierra la aplicación.
-
-El panel deja un margen inferior aproximado del 15 % de la altura de la pantalla para no tapar el campo de entrada de los chats. No se vuelve a posicionar al iniciar cada dictado si ya está visible. Puedes grabar aunque al empezar todavía tengas enfocado GOSU; el destino se necesita al terminar, no al abrir el micrófono.
+The application and model remain loaded after dictation for the next session; RAM/CPU have not been measured and no automatic model unloading exists. Return to the editor and close the app to exit. The panel leaves roughly 15% of screen height below it and is not repositioned for every recording while visible. Starting with GOSU focused is allowed; the destination is required at completion.

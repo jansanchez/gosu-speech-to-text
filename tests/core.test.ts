@@ -19,7 +19,7 @@ test('dictionary replacement uses unicode boundaries and literal values', () =>
     'Nexo $& y dólares',
   ));
 test('unrecognized instruction leaves text intact', () =>
-  assert.equal(edit('Texto importante.', 'envía el mensaje').changed, false));
+  assert.equal(edit('Text importante.', 'envía el mensaje').changed, false));
 test('deletes final sentence only', () =>
   assert.equal(
     edit('Primera frase. Segunda frase.', 'borra la última frase').text,

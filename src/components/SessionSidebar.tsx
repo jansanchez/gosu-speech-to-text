@@ -44,13 +44,13 @@ export default function SessionSidebar({
         </div>
       </div>
       <button className="new" onClick={newSession} disabled={disabled}>
-        <Plus size={17} /> Nuevo dictado <span>＋</span>
+        <Plus size={17} /> New dictation <span>＋</span>
       </button>
       <div className="search">
         <Search size={16} />
         <input
-          aria-label="Buscar dictados"
-          placeholder="Buscar en tus ideas…"
+          aria-label="Search dictations"
+          placeholder="Search your ideas…"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -63,19 +63,19 @@ export default function SessionSidebar({
         disabled={searching || !query.trim()}
         onClick={() => void semanticSearch()}
       >
-        {searching ? 'Buscando…' : 'Buscar por significado · local'}
+        {searching ? 'Searching…' : 'Search by meaning · local'}
       </button>
       <button
         className="favorites-filter"
         aria-pressed={onlyFavorites}
         onClick={() => setOnlyFavorites(!onlyFavorites)}
       >
-        {onlyFavorites ? 'Mostrar todos' : 'Solo favoritos'}
+        {onlyFavorites ? 'Show all' : 'Favorites only'}
       </button>
       <div className="section-label">
-        TU BANDEJA <span>{state.sessions.length}</span>
+        YOUR WORKSPACE <span>{state.sessions.length}</span>
       </div>
-      <nav aria-label="Dictados guardados">
+      <nav aria-label="Saved dictations">
         {(semanticResults
           ? semanticResults
               .map((id) => state.sessions.find((s) => s.id === id))
@@ -99,10 +99,10 @@ export default function SessionSidebar({
             >
               <span>
                 {s.favorite ? '★ ' : ''}
-                {s.title || s.text.slice(0, 48) || 'Una idea por comenzar'}
+                {s.title || s.text.slice(0, 48) || 'An idea waiting to happen'}
               </span>
               <small>
-                {new Date(s.created).toLocaleString('es-PE', {
+                {new Date(s.created).toLocaleString('en-US', {
                   day: 'numeric',
                   month: 'short',
                   hour: '2-digit',
@@ -113,9 +113,9 @@ export default function SessionSidebar({
           ))}
       </nav>
       <div className="side-bottom">
-        <span className="local-dot" /> Tus dictados, en este equipo.
+        <span className="local-dot" /> Your dictations, on this device.
         <button onClick={() => openSettings()}>
-          <Settings2 size={17} /> Preferencias
+          <Settings2 size={17} /> Settings
         </button>
       </div>
     </aside>

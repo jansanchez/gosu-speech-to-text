@@ -1,3 +1,4 @@
+import { appendTranscript } from '../speech';
 import { useRef, useState, type MutableRefObject } from 'react';
 import { set } from 'idb-keyval';
 import type { Job } from '../jobs';
@@ -109,7 +110,7 @@ export function useAudioQueue(options: Options) {
       stalled.current = true;
       queue.current = [];
       latest.current.onError(
-        'No se pudo guardar el audio. Detén la grabación. El audio no guardado sigue en memoria.',
+        'Could not save audio. Stop recording. Unsaved audio remains in memory.',
       );
       throw error;
     } finally {
@@ -142,10 +143,12 @@ export function useAudioQueue(options: Options) {
             );
             o.onTranscript(result);
             const session = o.state.current.sessions.find((s) => s.id === job.session);
-            if (!session) throw Error('El borrador de destino ya no existe.');
+            if (!session) throw Error('The destination draft no longer exists.');
             if (job.editing) {
               if (session.text !== job.snapshot)
-                throw Error('El borrador cambió durante la orden. Se conserva el audio.');
+                throw Error(
+                  'The draft changed during the command. Audio has been preserved.',
+                );
               await o.applyCommand(result.text, job);
             } else if (result.text) {
               const raw = job.settings.punctuation
@@ -161,14 +164,18 @@ export function useAudioQueue(options: Options) {
                   : raw;
               o.patchSession(job.session, (s) => ({
                 ...s,
-                text: s.text + (s.text && !/\s$/.test(s.text) ? ' ' : '') + text,
-                original: s.original + (s.original ? ' ' : '') + result.text,
+                text: appendTranscript(s.text, text, job.settings.language),
+                original: appendTranscript(
+                  s.original,
+                  result.text,
+                  job.settings.language,
+                ),
                 versions: pushHistory(s.versions, s.text),
                 redo: [],
               }));
               o.onDictation(job.session);
-              o.notify('Tramo añadido. Puedes seguir hablando.');
-            } else o.notify('No se detectó voz en este fragmento.');
+              o.notify('Chunk added. You can keep speaking.');
+            } else o.notify('No speech detected in this chunk.');
             o.patchSession(job.session, (s) => ({
               ...s,
               done: [...s.done, job.id],
@@ -180,7 +187,8 @@ export function useAudioQueue(options: Options) {
           stalled.current = true;
           queue.current = [];
           latest.current.onError(
-            String(error) + ' · Cola pausada. El audio sigue recuperable en Pendientes.',
+            String(error) +
+              ' · Queue paused. Audio remains recoverable in Pending audio.',
           );
           break;
         }
@@ -197,7 +205,7 @@ export function useAudioQueue(options: Options) {
     try {
       await mutate(() => persistJobs([...allJobs.current]));
     } catch (error) {
-      latest.current.onError('No se pudo guardar el audio pendiente: ' + String(error));
+      latest.current.onError('Could not save pending audio: ' + String(error));
       return;
     }
     stalled.current = false;
@@ -205,7 +213,7 @@ export function useAudioQueue(options: Options) {
     await drain();
   }
   async function discard() {
-    if (active()) throw Error('Espera a que termine de guardarse y procesarse el audio.');
+    if (active()) throw Error('Wait for audio to finish saving and processing.');
     try {
       await mutate(async () => {
         await persistJobs([]);
@@ -216,7 +224,7 @@ export function useAudioQueue(options: Options) {
       pruneReceipts();
     } catch (error) {
       setJobs(allJobs.current);
-      latest.current.onError('No se pudo eliminar el audio: ' + String(error));
+      latest.current.onError('Could not delete audio: ' + String(error));
       throw error;
     }
   }

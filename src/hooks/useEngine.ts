@@ -12,7 +12,7 @@ export function useEngine(
   tokenRef.current = token;
   const [ready, setReady] = useState(false);
   const [model, setModel] = useState('');
-  const [issue, setIssue] = useState(isTauri() ? 'Iniciando motor local…' : '');
+  const [issue, setIssue] = useState(isTauri() ? 'Starting local engine…' : '');
   const [diagnostics, setDiagnostics] = useState('');
   const [restarting, setRestarting] = useState(false);
   const restartingRef = useRef(false);
@@ -38,7 +38,8 @@ export function useEngine(
     setIssue(
       health.ready
         ? ''
-        : health.error || 'Preparando el modelo local. La primera descarga puede tardar.',
+        : health.error ||
+            'Preparing the local model. The first download may take a while.',
     );
     return health.ready;
   }
@@ -72,12 +73,12 @@ export function useEngine(
   async function check() {
     try {
       const available = await connect();
-      if (available) notify('Motor local disponible.');
+      if (available) notify('Local engine available.');
       return available;
     } catch (error) {
       setReady(false);
       setIssue(String(error));
-      onError('El motor no está disponible. ' + String(error));
+      onError('The engine is unavailable. ' + String(error));
       return false;
     }
   }
@@ -87,10 +88,10 @@ export function useEngine(
     generation.current++;
     setRestarting(true);
     setReady(false);
-    setIssue('Reiniciando motor local…');
+    setIssue('Restarting local engine…');
     try {
       await invoke('engine_restart');
-      notify('Motor reiniciado. Preparando conexión y modelo…');
+      notify('Engine restarted. Preparing connection and model…');
     } catch (error) {
       setIssue(String(error));
       onError(String(error));

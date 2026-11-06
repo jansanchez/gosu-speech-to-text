@@ -73,15 +73,10 @@ export default function SettingsDialog({
   }, []);
   return (
     <div className="modal-backdrop">
-      <section
-        className="settings"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Preferencias"
-      >
-        <h2>Hazlo tuyo.</h2>
+      <section className="settings" role="dialog" aria-modal="true" aria-label="Settings">
+        <h2>Make it yours.</h2>
         <p>
-          Las reglas las decides tú. El prototipo no aprende preferencias automáticamente.
+          You choose the rules. The application does not learn preferences automatically.
         </p>
         <ShortcutPicker
           value={config.shortcut}
@@ -112,26 +107,26 @@ export default function SettingsDialog({
         {!isTauri() ? (
           <>
             <label>
-              Clave del motor local
+              Local engine token
               <input
                 type="password"
                 value={token}
                 autoComplete="off"
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="Pega la clave de la terminal"
+                placeholder="Paste the token from the terminal"
               />
             </label>
-            <small>Solo en memoria. Se borra al cerrar esta ventana.</small>
-            <button onClick={check}>Comprobar conexión</button>
+            <small>In memory only. Cleared when you close this window.</small>
+            <button onClick={check}>Check connection</button>
           </>
         ) : (
           <p>
-            El motor se conecta automáticamente. El diagnóstico está disponible en la
-            ventana principal.
+            The engine connects automatically. Diagnostics are available in the main
+            window.
           </p>
         )}
         <label>
-          Idioma
+          Language
           <select
             value={config.language}
             onChange={(e) =>
@@ -149,7 +144,7 @@ export default function SettingsDialog({
           </select>
         </label>
         <label>
-          Tratamiento del texto
+          Text processing
           <select
             value={config.mode}
             onChange={(e) =>
@@ -162,12 +157,12 @@ export default function SettingsDialog({
               }))
             }
           >
-            <option value="literal">Literal · salida del reconocedor</option>
-            <option value="clean">Depurado · tus reglas manuales</option>
+            <option value="literal">Verbatim · recognizer output</option>
+            <option value="clean">Cleaned · your manual rules</option>
           </select>
         </label>
         <label>
-          Pausa para cerrar un tramo: {config.pause.toFixed(1)} s
+          Pause to close a chunk: {config.pause.toFixed(1)} s
           <input
             type="range"
             min="0.5"
@@ -183,7 +178,7 @@ export default function SettingsDialog({
           />
         </label>
         <label>
-          Micrófono
+          Microphone
           <select
             value={config.device}
             onChange={(e) =>
@@ -193,7 +188,7 @@ export default function SettingsDialog({
               }))
             }
           >
-            <option value="">Predeterminado del sistema</option>
+            <option value="">System default</option>
             {devices.map((d) => (
               <option key={d.deviceId} value={d.deviceId}>
                 {d.label || d.deviceId.slice(0, 12)}
@@ -201,9 +196,9 @@ export default function SettingsDialog({
             ))}
           </select>
         </label>
-        <button onClick={microphones}>Detectar micrófonos</button>
+        <button onClick={microphones}>Detect microphones</button>
         <label>
-          Muletillas a quitar, separadas por coma
+          Filler words to remove, comma-separated
           <input
             value={config.fillers}
             onChange={(e) =>
@@ -212,12 +207,12 @@ export default function SettingsDialog({
                 settings: { ...x.settings, fillers: e.target.value },
               }))
             }
-            placeholder="eh, em"
+            placeholder="um, uh"
           />
         </label>
-        <small>Se eliminan literalmente en modo depurado. Empieza sin reglas.</small>
+        <small>Removed literally in cleaned mode. Start without rules.</small>
         <label>
-          Diccionario: lo reconocido → lo correcto (JSON)
+          Dictionary: recognized → corrected (JSON)
           <textarea
             value={config.dictionary}
             onChange={(e) =>
@@ -226,22 +221,22 @@ export default function SettingsDialog({
                 settings: { ...x.settings, dictionary: e.target.value },
               }))
             }
-            placeholder={'{"ne cso":"Nexo"}'}
+            placeholder={'{"go sue":"GOSU"}'}
           />
         </label>
         <div className="profile-actions">
           <button
             onClick={() =>
               download(
-                'gosu-speech-to-text-preferencias.json',
+                'gosu-speech-to-text-settings.json',
                 JSON.stringify({ schema: 1, settings: config }, null, 2),
               )
             }
           >
-            Exportar perfil
+            Export profile
           </button>
           <label className="import">
-            Importar perfil
+            Import profile
             <input
               type="file"
               accept="application/json"
@@ -252,12 +247,12 @@ export default function SettingsDialog({
           </label>
         </div>
         <p className="privacy">
-          Texto y versiones se guardan en IndexedDB de este equipo. Audio pendiente: se
-          elimina al transcribirlo o al pedirlo. Sin nube, telemetría ni cifrado propio
-          del historial.
+          Text and history are stored in IndexedDB on this device. Pending audio is
+          deleted after successful transcription or when you remove it. GOSU does not
+          provide cloud storage or encrypt the normal history.
         </p>
         <button className="done" onClick={() => close()}>
-          Listo
+          Done
         </button>
       </section>
     </div>

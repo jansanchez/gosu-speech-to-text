@@ -37,7 +37,7 @@ export function useWorkspace(onError: (message: string) => void) {
       (ok, error) => {
         setSaved(ok);
         if (error)
-          errorHandler.current('No se pudo guardar. Exporta el texto antes de cerrar.');
+          errorHandler.current('Could not save. Export the text before closing.');
       },
     ),
   );
@@ -86,7 +86,7 @@ export function useWorkspace(onError: (message: string) => void) {
       .catch((error) => {
         if (!cancelled)
           errorHandler.current(
-            'No se pudo abrir el almacenamiento local. Los datos originales se conservan. ' +
+            'Could not open local storage. The original data has been preserved. ' +
               String(error),
           );
       });

@@ -1,44 +1,51 @@
-# Historial de cambios
+# Changelog
 
-Se utiliza [SemVer 2.0.0](https://semver.org/lang/es/). Cada entrada agrupa los cambios de una versión; la etiqueta Git identifica su código exacto. Una etiqueta no certifica instalación ni compatibilidad en plataformas pendientes.
+Versions follow [SemVer 2.0.0](https://semver.org/). A Git tag identifies exact source; it does not certify installation or compatibility on untested platforms.
+
+## [0.6.0] — 2026-11-06
+
+### English product and multilingual speech
+
+- Migrated desktop/Chrome interface, diagnostics, permission descriptions, tools, documentation, and release notes to English.
+- English is the default recognition language for new installations. Existing saved recognition languages, user content, storage identities, and backup formats are retained.
+- Prioritized English, Mandarin Chinese, Hindi, Spanish, French, Arabic, Bengali, Portuguese, Russian, and Urdu without removing other recognition options.
+- Added shared basic control/editing phrases and spoken punctuation for the ten priority languages, Unicode-aware matching, and non-Latin sentence boundaries. Retained Spanish command compatibility.
+- Added deterministic language/API/backup regressions. These do not establish real recognition accuracy, native-speaker phrase review, or platform installation; see [LANGUAGES.md](LANGUAGES.md).
 
 ## [0.5.0] — 2026-11-05
 
-### Automatización de releases
+### Release automation
 
-- Aprobación de una versión desde Actions; después de todas las comprobaciones y builds, creación automática de etiqueta anotada y publicación de release con seis paquetes y manifiesto SHA256.
-- Verificación de hashes de los instaladores, nombres separados por plataforma/arquitectura y exclusión de archivos internos del runtime.
-- Rechazo de versiones discordantes, etiquetas de otro commit, releases existentes y artefactos incompletos. Publicación mediante borrador para evitar mostrar una entrega con archivos parcialmente subidos.
-- Los pushes de etiquetas y las ejecuciones sin aprobación siguen generando candidatos sin publicar. La automatización no acredita por sí sola instalación, micrófono, permisos ni firma.
+- Approval in Actions followed by annotated tagging and release publication after all checks/builds, with six packages and SHA256 manifest.
+- Installer checksum verification, platform/architecture filenames, and exclusion of internal runtime files.
+- Reject mismatched versions, tags on another commit, existing releases, and incomplete artifacts. Upload through a draft before publication.
+- Tag pushes and runs without approval remain candidate-only. Automation does not establish installation, microphone, permission, or signing validation.
 
 ## [0.4.1] — 2026-11-05
 
-### Correcciones de validación multiplataforma
+### Cross-platform validation fixes
 
-- Pruebas de migración de atajos con escenarios explícitos Linux y macOS: `CommandOrControl` equivale a Control en Linux y a Cmd/Super en macOS. Se comprueba que Control y Cmd sigan siendo distintos en macOS.
-- Plazo global de pruebas TypeScript de 30 segundos por archivo: la suite de interfaz completa alcanzó el límite anterior de 15 segundos en macOS Intel. Se conservan todas las pruebas y un límite finito.
-- No cambia la lógica de la aplicación. La etiqueta `v0.4.0` se conserva; los candidatos 0.4.1 requieren su propia compilación y validación.
+- Explicit Linux/macOS shortcut migration tests: CommandOrControl maps to Control on Linux and Cmd/Super on macOS, where Control remains distinct.
+- TypeScript file deadline raised to 30 seconds after the full UI file reached 15 seconds on macOS Intel, retaining every test and a finite deadline.
+- No application logic change. `v0.4.0` remains immutable; 0.4.1 candidates require their own build/validation.
 
 ## [0.4.0] — 2026-11-05
 
-### Funcionalidades
+### Features
 
-- Dictado minimalista con nivel de micrófono, borradores independientes y copia del resultado antes de intentar insertarlo en otra aplicación.
-- Tres atajos configurables para alternar vistas, ocultar/restaurar e iniciar/terminar dictado; migración de preferencias y recuperación ante conflictos.
-- Adaptadores de inserción y permisos por plataforma, con integración Hyprland y portales Wayland; conservación del texto ante fallos, sin Enter automático.
-- Preparación y empaquetado nativo del motor Python junto a Tauri; flujo de candidatos para Linux, Windows y macOS.
+- Minimal dictation with microphone level, independent drafts, and copying before attempted insertion.
+- Three configurable view/visibility/dictation shortcuts, preference migration, and conflict recovery.
+- Native insertion/permission adapters, Hyprland and Wayland portals, text preservation on errors, and no automatic Enter.
+- Native Python/Tauri packaging and cross-platform release candidates.
 
-### Correcciones
+### Fixes and maintenance
 
-- Resolución de bibliotecas privadas de PyAV y otros wheels al generar AppImage mediante el coordinador de build.
-- Normalización de saltos de línea entre Linux y Windows y mejoras de ventana y foco del dictado mínimo.
+- Resolve private PyAV/wheel dependencies during AppImage packaging.
+- Normalize Linux/Windows line endings; improve minimal window and focus handling.
+- Centralize version metadata in brand.json, synchronize manifests/lockfiles, and check tags/changelog in CI.
+- Local checks passed and a diagnostic 0.3.2 AppImage was built before the version increment. It is not a 0.4.0 installer; rebuild from the version tag.
+- Clean installation and microphone/recognition/permission/insertion acceptance remain platform-specific; see [VALIDACION.md](VALIDACION.md).
 
-### Mantenimiento y límites
+## Earlier versions
 
-- Versión centralizada en `brand.json`, sincronización de manifiestos y lockfiles, comprobación de etiqueta y política de releases.
-- Comprobaciones locales aprobadas y AppImage 0.3.2 de diagnóstico generada antes del incremento de versión. Ese artefacto no corresponde a 0.4.0: los candidatos 0.4.0 deben recompilarse desde su etiqueta.
-- Instalación limpia y validación de micrófono, reconocimiento, permisos y pegado por plataforma pendientes; consultar [VALIDACION.md](VALIDACION.md).
-
-## Versiones anteriores
-
-El código anterior declaraba 0.3.2, pero no se encontraron etiquetas Git locales al iniciar esta consolidación. No se asignan etiquetas retrospectivas ni se presupone una release publicada para cada commit histórico.
+Earlier source declared 0.3.2, but no local/remote tags were found during consolidation. No retrospective tags or assumed public release for every historic commit are introduced.

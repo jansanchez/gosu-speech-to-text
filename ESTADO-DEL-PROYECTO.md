@@ -1,116 +1,59 @@
-# Automatización preparada — 2026-11-05
+# Resume state — 2026-11-06
 
-Versión preparada **0.5.0**, sobre `fedf95e`. El usuario pidió automatizar etiquetas y publicación tras aprobar una funcionalidad y eligió explícitamente **aprobar desde Actions**. No publicar por cada push o commit.
+## Current work
 
-El workflow de candidatos ahora admite `publish` (false por defecto) y versión exacta. Con aprobación manual desde main y todos los checks/builds aprobados, reúne seis paquetes del mismo run, verifica hashes de instaladores, genera SHA256 común, crea etiqueta anotada y borrador, sube archivos y publica. Solo el job publicador tiene `contents: write`; utiliza GITHUB_TOKEN, sin PAT y sin depender de otro workflow por el push del bot. Conserva candidatos por tag o ejecución sin publish. Rechaza etiquetas de otro commit y releases existentes, incluidos borradores. Documentación y recuperación en [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md).
+The maintainer requires English for all digital products: UI, errors, tools, documentation, and release notes. Conversation with the maintainer remains Spanish. English migration is ready for candidate validation as **0.6.0** on base `97cb754`. Persistent identities, legacy filenames/entry points, backups, and multilingual user content are preserved. English becomes the new-install recognition default; existing saved language choices remain intact.
 
-Validación local: `make check` fuera del sandbox aprobado en Linux x86_64; pruebas de aprobación, selección de notas y paquetes, hashes incorrectos/incompletos y secuencia de publicación simulada. YAML parseado y dependencias de jobs revisadas. No se ejecutó aún este flujo completo en GitHub ni se publicaron releases. No hay nueva evidencia de instalación, firma ni micrófono por SO. No crear etiqueta local para 0.5.0: la creará el workflow tras aprobación. Primero subir el código y revisar candidatos sin marcar publish; comprobar resultados reales de CI.
+The maintainer approved ten priority speech languages: English, Mandarin Chinese, Hindi, Spanish, French, Arabic, Bengali, Portuguese, Russian, Urdu. Shared deterministic phrase/punctuation support and API/Unicode/backup tests cover them; additional existing recognition options are retained. See [LANGUAGES.md](LANGUAGES.md) for exact grammar and limitations. Real microphone/recognition quality and native-speaker phrase review remain pending; do not claim all ten languages or platforms validated from mocks.
 
-Pendientes principales: subir esta automatización a main, revisar los candidatos de 0.4.1 y los de la nueva versión, validar instaladores por plataforma, y solo entonces aprobar publicación. Conservar el historial siguiente como evidencia de sesiones anteriores.
+The migration is saved in its version commit after local checks. Compare this record with `git status`, HEAD, tags, and Actions when resuming. Historical evidence is translated and retained in [VALIDACION.md](VALIDACION.md); documentation edits do not revalidate old artifacts.
 
-# Estado al cerrar la sesión — 2026-11-05
+## Recent release and signing context
 
-## Punto de reanudación
+- `0741fc6461d89cd336336a07804f27ddf23efc00` / `v0.4.1` fixed macOS shortcut tests and a 15-second UI timeout. `v0.4.0` remains on `0b32242`.
+- Some Codex and external terminal pushes failed with server-side `fatal error in commit_refs_rules`, even without `--atomic`. The user had no repository rules. Later external pushes succeeded; no definitive cause was established and no rules or tags were bypassed/moved.
+- `fedf95e` saved resume context. `e9ca724` introduced **0.5.0** release automation and was pushed to main. `f374492` added the public privacy policy; `97cb754` standardized README/policy language and recorded the maintainer's preference.
+- The user reported candidate builds passed with publish correctly skipped, then confirmed releases were available. This session has not independently audited those artifacts or installation behavior.
+- Publication approval is **Actions → GOSU Speech to Text release candidates → Run workflow → main**, enable `publish`, exact version. Without that input, candidates only. All native builds must succeed before the same-run assets are checked, annotated tag created, draft uploaded, and release published. No PAT is required; only the publishing job requests `contents: write`.
+- Publication does not sign packages. The user has neither Apple Developer credentials nor a Windows signing provider yet, and chose to focus on Windows. SignPath Foundation was suggested as an application-based free OSS option; it has not been approved/configured. The user was filling its form. Public privacy URL: https://github.com/jansanchez/gosu-speech-to-text/blob/main/PRIVACY.md . Do not claim signed packages or SignPath sponsorship before approval. No service accounts/certificates were purchased or submitted by the agent.
+- Prepare a new version rather than replacing previously published releases. Do not create/push `v0.6.0` merely for migration work; the approved Actions flow creates it when explicitly requested.
 
-- Rama `main`, versión **0.4.1**; commit funcional actual `0741fc6461d89cd336336a07804f27ddf23efc00`, etiqueta anotada `v0.4.1`. `v0.4.0` sigue en `0b32242` y no se movió.
-- El usuario confirmó que ejecutó los comandos fuera de Codex y la subida funcionó. Al guardar este resumen se comprobó que `HEAD` y la referencia local `origin/main` coinciden en `0741fc6`; el árbol estaba limpio antes de esta actualización documental. No se consultó de nuevo el servidor ni se verificó el resultado de Actions 0.4.1 en este cierre.
-- Los intentos anteriores desde Codex y algunos desde la terminal fallaron con `remote: fatal error in commit_refs_rules`, incluso sin `--atomic`. El usuario confirmó que el repositorio no tiene reglas configuradas. No atribuirlo a una regla concreta ni a Codex: no se estableció la causa del fallo del servidor. No se cambiaron protecciones ni se usó force push.
-- `make check` de 0.4.1 aprobado fuera del sandbox en Linux/CachyOS x86_64: frontend, extensión, Python, formato y Rust. Las pruebas de plataforma macOS son simuladas; no equivalen a validar un instalador macOS.
-- Correcciones incluidas: búsqueda de bibliotecas privadas del motor durante build Linux; pruebas de migración de atajos diferenciando Control y Cmd; plazo de pruebas TypeScript de 30 segundos por archivo. La versión y lockfiles están sincronizados y CI comprueba etiqueta/changelog.
+## Next steps
 
-## Próxima tarea
+1. Local migration review and full checks passed: npm checks/builds, 24 Python tests, 11 Rust tests (one graphical exclusion). See VALIDACION for exact scope. Review the new commit on Actions and generate candidates without publish.
+2. Review current Checks/candidate runs for the concrete commit on [Actions](https://github.com/jansanchez/gosu-speech-to-text/actions). Historical 0.4.0 macOS logs in Downloads are not evidence about newer versions.
+3. Generate unsigned candidates without publish, inspect the English UI including narrow minimal windows and RTL drafts, and validate the ten-language recordings with real speakers. Mocks establish contracts/Unicode behavior only.
+4. Clean-install each native package without development toolchains. Validate startup/parent exit, permissions, customizable shortcuts/conflicts, microphone, target focus, clipboard, and insertion without Enter. Preserve text/audio after errors.
+5. Complete SignPath application and obtain service details before integrating Windows signing. Sign inner application/engine and final installer as appropriate, verify signatures, then hash final bytes. Signing does not guarantee immediate SmartScreen reputation. macOS signing/notarization remains a separate credential-dependent task.
+6. Retain pending X11/GNOME/KDE portal validation, application-specific tests (terminal/Codex, WhatsApp, Google Docs/ChatGPT), RAM/CPU measurements, screen-reader audits, and dependency review. Earlier audit had two high npm advisories; do not apply a forced Transformers major upgrade without WASM/cache/model/extension review.
 
-1. Consultar [GitHub Actions](https://github.com/jansanchez/gosu-speech-to-text/actions) para el commit `0741fc6` y la etiqueta `v0.4.1`. Confirmar por separado Checks y candidatos de Windows x64, Linux x64, macOS ARM64, macOS Intel y Chrome. Registrar enlaces y resultados efectivos.
-2. Si falla un job, leer el primer error y corregir con evidencia. Los logs anteriores `job-logs.txt` y `job-logs-2.txt`, aportados en Downloads, corresponden a macOS de **0.4.0**, no a 0.4.1. Conservar las etiquetas existentes; cualquier corrección posterior necesita su versión conforme a la política del proyecto.
-3. Descargar los candidatos del mismo commit, revisar hashes y validar instalación limpia e inicio/cierre del motor por SO/arquitectura. Probar micrófono, reconocimiento, permisos, atajos, conservación del texto e inserción sin Enter. No hay evidencia nueva de instalación limpia.
-4. Preparar notas desde [CHANGELOG.md](CHANGELOG.md) y actualizar [VALIDACION.md](VALIDACION.md). La release pública y firmas siguen pendientes; **no se publicó ni firmó una release durante esta sesión**.
-5. Mantener los pendientes funcionales del registro histórico: pruebas en aplicaciones reales y escritorios, RAM/CPU y revisión de dependencias npm.
+## Current functional contract
 
-## Retomar con Codex
-
-Desde la raíz del proyecto, `codex resume --last` retoma la sesión más reciente; `codex resume` permite elegir. En una conversación nueva: «Lee AGENTS.md y ESTADO-DEL-PROYECTO.md, contrasta con Git y revisa los candidatos v0.4.1». No hace falta repetir setup ni modificar las etiquetas para retomar.
-
-Esta actualización solo guarda contexto documental; no cambia código ni versión. Los registros siguientes son históricos y no sustituyen el punto de reanudación anterior.
-
-# Corrección de candidatos — 2026-11-05
-
-Versión vigente **0.4.1**, corrección de pruebas multiplataforma sobre `0b32242` (`v0.4.0`). `v0.4.0` se subió a GitHub y se conserva inmutable. Los candidatos de esa etiqueta fallaron en macOS por dos aserciones de atajos que confundían Control con Cmd y, en Intel, por el límite de 15 s del archivo completo de interfaz. Logs del usuario revisados; evidencia en [VALIDACION.md](VALIDACION.md).
-
-0.4.1 cubre explícitamente Linux y macOS con escenarios simulados, conserva la distinción Control/Cmd y usa un plazo finito de 30 s por archivo. No cambia la lógica de producto. `make check` fuera del sandbox aprobado en Linux. Se prepara su commit y etiqueta anotada para repetir candidatos; consultar Git y Actions para el resultado efectivo. La aprobación local no valida macOS ni los instaladores. Sigue pendiente instalación limpia y pruebas reales antes de publicar.
-
-Los registros siguientes son históricos; sus estados de publicación y versión corresponden a cada momento.
-
-# Consolidación de versión — 2026-11-05
-
-Se prepara **0.4.0** sobre la base `26fe01a`, incluyendo las funcionalidades recientes de dictado mínimo y tres atajos y la corrección de búsqueda de bibliotecas PyAV al generar AppImage. Consultar [CHANGELOG.md](CHANGELOG.md) y la política SemVer en [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md). `brand.json` es la fuente de versión; `brand:sync` incluye ahora la entrada propia de `Cargo.lock`. `release:check` valida coherencia, changelog y etiqueta en CI. Las etiquetas son anotadas, `vX.Y.Z`, por versión agrupada; no por commit.
-
-La consulta `git ls-remote --tags origin` fuera del sandbox no devolvió etiquetas al consolidar. La etiqueta local `v0.4.0` identifica el commit de consolidación; comprobar su existencia con Git. No se ha subido ni publicado una release en esta tarea. Los candidatos 0.4.0 necesitan recompilarse desde esa etiqueta; la AppImage local de diagnóstico sigue siendo 0.3.2 y no debe renombrarse como 0.4.0.
-
-La corrección de AppImage está en el código fuente: el coordinador `desktop:build` pasa las carpetas de bibliotecas del motor mediante `LD_LIBRARY_PATH` solo a su proceso de compilación en Linux. La generación completa 0.3.2 fue aprobada fuera del sandbox; hash y límites en [VALIDACION.md](VALIDACION.md). Permanecen pendientes instalación limpia y validación por SO; no se declaró 1.0 estable ni se certificaron plataformas nuevas.
-
-El siguiente registro conserva el contexto funcional anterior; sus referencias a HEAD y origin describen el estado del 4 de noviembre, no el commit de consolidación actual.
-
-# Estado para retomar — 2026-11-04
-
-## Punto de partida guardado
-
-Repositorio `gosu-speech-to-text`, rama `main`. La funcionalidad está publicada en el commit [`d970f81`](https://github.com/jansanchez/gosu-speech-to-text/commit/d970f81bc7f662662050dec40cffdc9e78fc1f7c), `feat: separar atajos de vista, visibilidad y dictado`. Se verificó que `HEAD` y `origin/main` apuntaban a ese commit y que el árbol estaba limpio antes de esta actualización documental. La consolidación documental se guarda en un commit posterior a la funcionalidad, a petición del usuario; no modifica el código de la aplicación.
-
-El usuario trabaja en Linux/CachyOS con Hyprland y usa frecuentemente WezTerm/Codex, ChatGPT y WhatsApp. Probó GOSU tras iniciarlo con `make dev`, confirmó satisfacción con el flujo y pidió publicar la funcionalidad. Esa confirmación no equivale a una prueba detallada de micrófono o de cada aplicación de destino.
-
-Este resumen sustituye los borradores anteriores de uno o dos atajos. El historial de validaciones se conserva en [VALIDACION.md](VALIDACION.md).
-
-## Funcionamiento vigente
-
-| Atajo predeterminado Linux/Windows | Acción |
+| Default shortcut (Cmd on macOS) | Action |
 |---|---|
-| Ctrl+Shift+M | Alternar editor y modo minimalista |
-| Ctrl+Shift+H | Ocultar/restaurar GOSU conservando la vista elegida |
-| Ctrl+Shift+Espacio | Iniciar/terminar el dictado |
+| Ctrl+Shift+M | Switch editor/minimal panel |
+| Ctrl+Shift+H | Hide/restore current view |
+| Ctrl+Shift+Space | Start/stop dictation |
 
-En macOS se usa Cmd para estos valores iniciales. Los tres atajos son configurables desde Preferencias y desde la pantalla inicial, se guardan por separado y recuperan la combinación anterior ante conflictos. Las preferencias antiguas se completan sin reemplazar los atajos existentes; se evitan colisiones entre las tres acciones. La disponibilidad real depende del SO, el compositor y sus permisos.
+All three are configurable independently from first use, persisted, checked for collisions, and restored on conflict. Startup opens the editor. Hiding retains view and does not stop recording/model processing. Returning to the editor stops minimal capture and cancels automatic insertion while preserving work.
 
-- La aplicación inicia en el editor. Ocultar/restaurar recuerda la vista en memoria durante esa ejecución; no configura arranque automático ni añade bandeja del sistema.
-- Ocultar no detiene una grabación o transcripción. Volver al editor durante un dictado mínimo detiene la captura y cancela la inserción automática, conservando el trabajo recuperable.
-- En el panel, terminar espera los fragmentos pendientes y guarda el resultado; copia el dictado completo al portapapeles antes de intentar pegarlo en la ventana seleccionada al terminar. El panel permanece visible para otro dictado. El editor conserva su flujo de edición habitual.
-- El micrófono puede iniciarse con GOSU enfocado, sin exigir un destino previo. Al terminar se solicita el destino y se detiene la captura sin esperar a que esa consulta responda. Seleccionar el campo mediante clic antes de terminar; mantenerlo enfocado durante el procesamiento.
-- Si falla identificar el destino o pegar, el texto queda copiado y el panel lo indica. Pegar manualmente con Ctrl+V o Ctrl+Shift+V en WezTerm. Si falla el portapapeles, se conserva el borrador y se comunica el error. Nunca se envía Enter.
-- Panel de 460×220 con nivel del micrófono y margen inferior aproximado del 15 % de pantalla. No se vuelve a posicionar al iniciar otra grabación si ya está visible.
-- Hyprland espera el mapeo de la ventana y admite las clases `gosu-speech-to-text` y `org.voz.prototype`, con rechazo de ambigüedad y de la propia aplicación como destino. Redimensiona explícitamente al regresar al editor. Atajos separados y temporales, sin editar configuración permanente del compositor.
-- Puente local Linux: `--show-minimal` alterna vistas; `--toggle-visibility` oculta/restaura; `--toggle-minimal` activa el dictado. Ver [MINIMAL-MODE.md](MINIMAL-MODE.md).
-- Ocultar mantiene el motor/modelo cargados. RAM/CPU sin medir; no hay descarga automática del modelo.
+Each minimal session has an independent draft. It can start with GOSU focused; target capture happens at stop before awaiting final chunks. Completed text is saved/copied before attempted insertion. Failure to identify/paste does not prevent copying; clipboard failure preserves the draft and reports failure. Never automatically press Enter. The panel remains available for consecutive sessions and is positioned roughly 15% above the bottom of the screen without repositioning on every recording. RAM/CPU and automatic unloading remain unimplemented/unmeasured.
 
-## Evidencia y límites
+Hyprland waits for window mapping and recognizes `gosu-speech-to-text` / `org.voz.prototype`, rejecting ambiguity/self-targets and resizing explicitly on return to the editor. Its shortcuts are temporary; no permanent compositor settings are changed. Linux bridge flags: `--show-minimal`, `--toggle-visibility`, `--toggle-minimal`. Generic Wayland portals use the focused field without identifying the application.
 
-Base de implementación `8fba04b`; cambios finalmente publicados en `d970f81`. Entorno comprobado: Linux x86_64, Hyprland 0.57.0.
+Historical real evidence: isolated GTK/WezTerm Unicode insertion without Enter and editor → panel → hide → restore → editor on Linux/Hyprland 0.57.0. WezTerm used `--skip-config`; these do not validate the personal terminal configuration or every target application. User satisfaction after `make dev` does not replace a detailed microphone/recognition acceptance record. Temporary `/tmp/gosu-validate-paste.py` and `/tmp/gosu-validate-window.py` may disappear and must not be assumed available.
 
-- `make check` fuera del sandbox aprobado: 60 pruebas TypeScript, 21 Python y 11 Rust. Una prueba gráfica Rust se excluye de la suite habitual por necesitar una ventana aislada. Formato, enlaces Markdown y compilaciones web/extensión aprobados.
-- Tras el último ajuste de identidad/cobertura: `cargo test --locked --manifest-path src-tauri/Cargo.toml hyprland::tests`, aprobado.
-- Pegado real Unicode aprobado en GTK y WezTerm aislados sin Enter. WezTerm se abrió con `--skip-config`: no valida su configuración personal ni Codex, ChatGPT o WhatsApp.
-- Recorrido gráfico real aprobado: editor → panel → ocultar → restaurar panel → editor → ocultar/restaurar editor. Se utilizó el puente de comandos de los mismos manejadores; no se grabó audio ni se simularon pulsaciones globales. No apareció el error «No se encontró la ventana de GOSU» en la prueba final.
-- Los scripts `/tmp/gosu-validate-paste.py` y `/tmp/gosu-validate-window.py` eran herramientas temporales de esta sesión; pueden desaparecer al reiniciar y no forman parte del repositorio. Las instancias de esas pruebas se cerraron. No dar por vigente una instancia posterior de `make dev` sin comprobar procesos.
-- El usuario confirmó satisfacción tras probar el flujo. Pendiente un registro detallado de pulsaciones físicas, micrófono/reconocimiento e inserción por aplicación. Otras plataformas no quedan acreditadas por estas pruebas Linux.
-- En sandbox, FastAPI TestClient puede superar su plazo de 60 s; fuera pasó. Persiste un aviso de deprecación TestClient/httpx que no impide las comprobaciones.
-
-## Pendientes prioritarios
-
-1. Revisar GitHub Actions de `d970f81`; el push se confirmó, sus resultados CI aún no se consultaron.
-2. Registrar pruebas reales del último flujo: atajos personalizados/conflictos, micrófono y recuperación de permisos, pegado en WezTerm/Codex, ChatGPT y WhatsApp. Medir RAM/CPU en reposo, grabando y transcribiendo.
-3. Validar Linux X11 y portales GNOME/KDE. El portal genérico usa el campo enfocado y no identifica la aplicación. Repetir permisos/foco por escritorio.
-4. Generar e instalar candidatos nativos Windows x64/MSVC, macOS ARM64 e Intel; comprobar instalación sin herramientas de desarrollo, motor y cierre sin procesos huérfanos. Compilar siempre en el mismo SO/arquitectura del destino.
-5. Revisar deuda de dependencias: `make setup` notificó dos vulnerabilidades altas. La auditoría anterior las relacionó con sharp/Transformers 3.8.1; consultar `npm audit` antes de actualizar. No ejecutar `npm audit fix --force` sin revisar WASM, caché, modelos y extensión Chrome.
-6. Firma Windows y firma/notarización macOS antes de distribución pública. No se firmaron, publicaron ni instalaron nuevos paquetes por este feature.
-
-## Cómo retomar
-
-Leer [AGENTS.md](AGENTS.md), este documento, [ARCHITECTURE.md](ARCHITECTURE.md), [CONTRIBUTING.md](CONTRIBUTING.md) y los [criterios de éxito](CRITERIOS-DE-EXITO.md). Contrastar el resumen con Git y la evidencia actual.
+## Resume commands
 
 ```bash
 git status
 make doctor
+# Prepared development environment:
 make dev
+# Full checks:
+make check
 ```
 
-El entorno local está preparado; no hace falta `make setup` en cada inicio. `make check` verifica el proyecto. Para empaquetar, seguir [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) y las guías por plataforma. Los lockfiles, identificadores históricos y el protocolo audio → transcripción → texto e ID → borrado de audio → limpieza de ID deben conservarse.
+Read [AGENTS.md](AGENTS.md), this file, [ARCHITECTURE.md](ARCHITECTURE.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [acceptance criteria](CRITERIOS-DE-EXITO.md). Do not repeat setup unnecessarily or reuse engines across OS/architectures. Preserve audio → recognition → text plus ID → audio deletion → ID cleanup. Invalid data blocks writes; private content stays in memory. These records contain technical context, not exported dictation.
 
-Un apagado termina los procesos de desarrollo. Los datos recuperables siguen las reglas de persistencia; las sesiones privadas solo existen en memoria. Este documento guarda contexto técnico, sin exportar dictados ni datos privados.
+Codex CLI: `codex resume --last` resumes the most recent session; `codex resume` selects one. A new conversation can read AGENTS and this state, compare Git, and continue. A shutdown ends development processes; do not assume a previous instance is running. FastAPI TestClient may hang in the sandbox; repeat authorized checks outside before diagnosing a product failure.

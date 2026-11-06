@@ -9,27 +9,27 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 BRAND = json.loads((ROOT/'brand.json').read_text(encoding='utf-8'))
-HELP = '''GOSU Speech to Text · comandos GNU Make para Linux
-  make doctor       Revisa Node, Python, Rust y dependencias nativas
-  make setup        Crea .venv Python 3.12 e instala dependencias
-  make dev / run    Abre el escritorio; motor automático
-  make test         Pruebas de interfaz/lógica y API
-  make check        Documentación, formato, pruebas, web/extensión y comprobaciones Rust
-  make frontend     Compila solo React/TypeScript
-  make engine       Empaqueta el motor Python para este SO/arquitectura
-  make appimage     Pruebas + motor + AppImage + SHA256SUMS
-  make deb          Pruebas + motor + DEB + SHA256SUMS
-  make bundle       Pruebas + motor + AppImage y DEB
-  make build        Alias de make appimage
-  make extension    Compila y comprime la extensión Chrome
-  make smoke        Comprueba el motor empaquetado (descarga tiny si falta)
-  make install      Instala AppImage y acceso de menú en ~/.local
-  make uninstall    Retira solo los archivos instalados por make install
-  make clean        Elimina salidas generadas; conserva .venv y datos
+HELP = """GOSU Speech to Text · GNU Make tasks for Linux
+  make doctor       Check tools and native dependencies
+  make setup        Create Python 3.12 .venv and install dependencies
+  make dev / run    Open the desktop with its automatic engine
+  make test         Run interface, logic, and API tests
+  make check        Check docs, formatting, tests, builds, and Rust
+  make frontend     Build React/TypeScript only
+  make engine       Package Python for this OS and architecture
+  make appimage     Check and build AppImage with SHA256SUMS
+  make deb          Check and build DEB with SHA256SUMS
+  make bundle       Check and build AppImage and DEB
+  make build        Alias for make appimage
+  make extension    Build and package the Chrome extension
+  make smoke        Check the bundled engine (downloads tiny if missing)
+  make install      Install AppImage and menu entry under ~/.local
+  make uninstall    Remove only files managed by make install
+  make clean        Remove generated output; preserve .venv and user data
 
-La instalación acepta PREFIX=/otra/ruta. No uses sudo para ~/.local.
-Consulta LINUX-MAKE.md para requisitos Arch/Ubuntu y límites Wayland.
-'''
+Installation accepts PREFIX=/another/path. Do not use sudo for ~/.local.
+See LINUX-MAKE.md for Arch/Ubuntu dependencies and Wayland limitations.
+"""
 
 def run(*args, **kwargs):
     print('+', ' '.join(str(a) for a in args), flush=True)
@@ -38,7 +38,7 @@ def run(*args, **kwargs):
 def tool(name):
     path = shutil.which(name)
     if not path:
-        raise RuntimeError('Falta '+name+'. Consulta LINUX-MAKE.md y vuelve a abrir la terminal tras instalarlo.')
+        raise RuntimeError('Missing '+name+'. See LINUX-MAKE.md and reopen the terminal after installing it.')
     return path
 
 def venv_python():
@@ -52,7 +52,7 @@ def setup():
     python = venv_python()
     if python.exists():
         if version_of(python) != '3.12':
-            raise RuntimeError('La .venv existente no usa Python 3.12. Renómbrala como respaldo antes de ejecutar make setup; no se ha borrado.')
+            raise RuntimeError('The existing .venv does not use Python 3.12. Rename it as a backup before running make setup; it has not been deleted.')
     else:
         executable = shutil.which('python3.12')
         if executable:
@@ -63,12 +63,12 @@ def setup():
             run(tool('uv'), 'python', 'install', '3.12')
             run(tool('uv'), 'venv', '--python', '3.12', '--seed', '.venv')
         else:
-            raise RuntimeError('Falta Python 3.12. En Arch instala uv y repite make setup; el Python del sistema se conserva.')
+            raise RuntimeError('Python 3.12 is missing. On Arch install uv and rerun make setup; system Python is preserved.')
     if subprocess.run([str(python), '-m', 'pip', '--version'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
         run(python, '-m', 'ensurepip', '--upgrade')
     run(python, '-m', 'pip', 'install', '-r', 'server/requirements-build.txt')
     run(npm, 'ci')
-    print('Preparado. Ejecuta make dev o make appimage.')
+    print('Ready. Run make dev or make appimage.')
 
 def ensure():
     if not venv_python().is_file() or not (ROOT / 'node_modules').is_dir():
@@ -93,21 +93,21 @@ def native_requirements():
     if sys.platform == 'linux':
         pkgconfig=tool('pkg-config')
         if subprocess.run([pkgconfig,'--exists','webkit2gtk-4.1']).returncode:
-            raise RuntimeError('Falta WebKitGTK 4.1 de desarrollo. Instala los paquetes de LINUX-MAKE.md antes de compilar.')
+            raise RuntimeError('WebKitGTK 4.1 development files are missing. Install the packages in LINUX-MAKE.md before building.')
 
 def build(bundles):
     if sys.platform != 'linux':
-        raise RuntimeError('Los paquetes Linux se generan en Linux. Para macOS/Windows consulta GUIA-0.3.md.')
+        raise RuntimeError('Build Linux packages on Linux. For macOS/Windows see GUIA-0.3.md.')
     native_requirements()
     run(sys.executable, 'scripts/make_tasks.py', 'check')
     run(tool('npm'), 'run', 'desktop:build', '--', '--bundles', bundles, '--', '--locked')
     run(sys.executable, 'scripts/checksums.py', Path(os.environ.get('CARGO_TARGET_DIR', 'src-tauri/target')) / 'release/bundle')
-    print('Paquetes: src-tauri/target/release/bundle/')
+    print('Packages: src-tauri/target/release/bundle/')
 
 def install_paths(prefix):
     prefix = Path(prefix).expanduser().absolute()
     if '\n' in str(prefix) or '\r' in str(prefix):
-        raise RuntimeError('El prefijo contiene caracteres de control.')
+        raise RuntimeError('The prefix contains control characters.')
     return {
         'binary': prefix / 'lib/gosu-speech-to-text/GOSU-Speech-to-Text.AppImage',
         'link': prefix / 'bin/gosu-speech-to-text',
@@ -118,24 +118,24 @@ def install_paths(prefix):
 
 def install(prefix):
     if sys.platform != 'linux':
-        raise RuntimeError('make install instala un AppImage Linux.')
+        raise RuntimeError('make install installs a Linux AppImage.')
     packages = sorted((ROOT / 'src-tauri/target/release/bundle/appimage').glob('*.AppImage'), key=lambda p: p.stat().st_mtime)
     if not packages:
         build('appimage')
         packages = sorted((ROOT / 'src-tauri/target/release/bundle/appimage').glob('*.AppImage'), key=lambda p: p.stat().st_mtime)
     if not packages:
-        raise RuntimeError('No se generó ningún AppImage.')
+        raise RuntimeError('No AppImage was generated.')
     paths = install_paths(prefix)
     link = paths['link']
     if (link.exists() or link.is_symlink()) and not (link.is_symlink() and link.resolve() == paths['binary'].resolve()):
-        raise RuntimeError(str(link)+' pertenece a otra instalación. No se ha reemplazado.')
+        raise RuntimeError(str(link)+' belongs to another installation. It was not replaced.')
     if paths['binary'].exists():
         try:
             owner=json.loads(paths['marker'].read_text()) if paths['marker'].is_file() else {}
         except (ValueError,OSError):
             owner={}
         if not isinstance(owner,dict) or owner.get('managed_by')!='gosu-speech-to-text-make-v1':
-            raise RuntimeError('El destino contiene un AppImage ajeno al instalador. Elige otro PREFIX.')
+            raise RuntimeError('The destination contains an unmanaged AppImage. Choose another PREFIX.')
     for path in paths.values():
         path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(packages[-1], paths['binary'])
@@ -144,14 +144,14 @@ def install(prefix):
         link.symlink_to(paths['binary'])
     shutil.copy2(ROOT / 'src-tauri/icons/icon.png', paths['icon'])
     executable = str(paths['binary']).replace('\\', '\\\\').replace('"', '\\"').replace('`', '\\`').replace('$', '\\$')
-    paths['desktop'].write_text('[Desktop Entry]\nType=Application\nName=GOSU Speech to Text\nComment=Dictado y corrección local\nExec="'+executable+'"\nIcon=org.voz.prototype\nTerminal=false\nCategories=Utility;Accessibility;\n', encoding='utf-8')
+    paths['desktop'].write_text('[Desktop Entry]\nType=Application\nName=GOSU Speech to Text\nComment=Local dictation and correction\nExec="'+executable+'"\nIcon=org.voz.prototype\nTerminal=false\nCategories=Utility;Accessibility;\n', encoding='utf-8')
     paths['marker'].write_text(json.dumps({'managed_by':'gosu-speech-to-text-make-v1','version':BRAND['version']}))
     updater = shutil.which('update-desktop-database')
     if updater:
         subprocess.run([updater, str(paths['desktop'].parent)], check=False)
     migrate_legacy_install(prefix,paths)
-    print('Instalado:', paths['binary'])
-    print('Abre GOSU Speech to Text desde el menú o ejecuta:', link)
+    print('Installed:', paths['binary'])
+    print('Open GOSU Speech to Text from the menu or run:', link)
 
 def migrate_legacy_install(prefix, paths):
     # Only the previous installer-owned files are removed. Keep data and user files.
@@ -165,7 +165,7 @@ def migrate_legacy_install(prefix, paths):
     binary.unlink(missing_ok=True);marker.unlink(missing_ok=True)
     try:old.rmdir()
     except OSError:pass
-    print('Nombre anterior migrado a GOSU Speech to Text. Los datos se conservan.')
+    print('Previous name migrated to GOSU Speech to Text. Data is preserved.')
 
 def uninstall(prefix):
     paths = install_paths(prefix)
@@ -174,12 +174,12 @@ def uninstall(prefix):
     except (ValueError,OSError):
         marker={}
     if not isinstance(marker,dict) or marker.get('managed_by') != 'gosu-speech-to-text-make-v1':
-        raise RuntimeError('No hay una instalación administrada por este Makefile en ese PREFIX.')
+        raise RuntimeError('No installation managed by this Makefile exists at that PREFIX.')
     if paths['link'].is_symlink() and paths['link'].resolve() == paths['binary'].resolve():
         paths['link'].unlink()
     for key in ['desktop','icon','binary','marker']:
         paths[key].unlink(missing_ok=True)
-    print('Aplicación retirada. Se conservan dictados, modelos, respaldos y entorno de desarrollo.')
+    print('Application removed. Dictations, models, backups, and the development environment are preserved.')
 
 def clean():
     for relative in ['dist','extension-dist','engine-dist','build-engine','src-tauri/target','gosu-speech-to-text-chrome.zip']:
@@ -188,25 +188,25 @@ def clean():
             path.unlink()
         elif path.is_dir():
             shutil.rmtree(path)
-        print('Salida generada limpiada:', relative)
+        print('Generated output cleaned:', relative)
 
 def doctor():
     missing = []
     for name in ['node','npm','cargo','rustc','pkg-config']:
         path = shutil.which(name)
-        print(('OK ' if path else 'FALTA ')+name+((': '+path) if path else ''))
+        print(('OK ' if path else 'MISSING ')+name+((': '+path) if path else ''))
         if not path: missing.append(name)
     python = venv_python()
-    print('Python 3.12:', str(python) if python.exists() else shutil.which('python3.12') or 'se puede instalar con uv durante make setup')
-    if not python.exists() and not shutil.which('python3.12') and not shutil.which('uv') and sys.version_info[:2] != (3,12):missing.append('Python 3.12 o uv')
+    print('Python 3.12:', str(python) if python.exists() else shutil.which('python3.12') or 'can be installed with uv during make setup')
+    if not python.exists() and not shutil.which('python3.12') and not shutil.which('uv') and sys.version_info[:2] != (3,12):missing.append('Python 3.12 or uv')
     if sys.platform == 'linux' and shutil.which('pkg-config'):
         result = subprocess.run(['pkg-config','--exists','webkit2gtk-4.1'])
-        print('WebKitGTK 4.1:', 'OK' if result.returncode == 0 else 'FALTA; consulta LINUX-MAKE.md')
+        print('WebKitGTK 4.1:', 'OK' if result.returncode == 0 else 'MISSING; see LINUX-MAKE.md')
         if result.returncode:missing.append('WebKitGTK 4.1')
-    session = os.environ.get('XDG_SESSION_TYPE','desconocida')
-    print('Sesión gráfica:',session)
-    print('Pegado X11 opcional:',shutil.which('xdotool') or 'instala xdotool y xprop para X11; Wayland requiere Hyprland o portales compatibles')
-    if missing:raise RuntimeError('Pendiente: '+', '.join(missing)+'. Las dependencias del sistema se instalan según LINUX-MAKE.md.')
+    session = os.environ.get('XDG_SESSION_TYPE','unknown')
+    print('Desktop session:',session)
+    print('Optional X11 pasting:',shutil.which('xdotool') or 'install xdotool and xprop for X11; Wayland requires Hyprland or compatible portals')
+    if missing:raise RuntimeError('Pending: '+', '.join(missing)+'. Install system dependencies as described in LINUX-MAKE.md.')
 
 def main():
     parser=argparse.ArgumentParser(description=HELP,formatter_class=argparse.RawDescriptionHelpFormatter)

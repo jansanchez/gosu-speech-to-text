@@ -1,59 +1,48 @@
-# Desarrollo y mantenimiento
+# Development and maintenance
 
-Consulta `ARCHITECTURE.md` para las responsabilidades y las reglas de recuperación. `README.md` y las guías por plataforma describen cómo preparar Node 22, Python 3.12, Rust y las bibliotecas nativas.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for responsibilities and recovery invariants. The README and platform guides cover Node 22, Python 3.12, Rust, and native dependencies. Product UI, errors, public documentation, and release notes are written in English; recognition content and command phrase data retain their original languages. Conversations with the maintainer may be in Spanish.
 
-## Comprobaciones
+## Checks
 
 ```bash
-# Enlaces locales de documentación, formato, pruebas TypeScript, compilación web y extensión
 npm run check
-
-# Ambas suites Python, con un plazo de 60 segundos por suite
 .venv/bin/python scripts/test-python.py
-
-# Comprobaciones nativas
 cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 cargo check --locked --manifest-path src-tauri/Cargo.toml
 cargo test --locked --manifest-path src-tauri/Cargo.toml
-
-# Todas las anteriores, desde Linux con el entorno preparado
+# All of the above on a prepared Linux environment:
 make check
 ```
 
-En Windows, usa `.venv\Scripts\python.exe scripts\test-python.py` para las pruebas Python. Las pruebas de instalación Make solo se ejecutan en Linux.
+On Windows use `.venv\Scripts\python.exe scripts\test-python.py`. Make installation tests run only on Linux. `npm run format` applies Prettier; `cargo fmt --manifest-path src-tauri/Cargo.toml` applies rustfmt. Generated brand metadata is excluded from Prettier: edit `brand.json` and run `npm run brand:sync` instead of editing `src/brand.ts`.
 
-`npm run format` aplica Prettier; `cargo fmt --manifest-path src-tauri/Cargo.toml` aplica rustfmt. Los metadatos generados de marca están excluidos de Prettier: modifícalos mediante `brand.json` y `npm run brand:sync`.
+CI checks pushes and pull requests. Python and Rust cover Linux, Windows, and both macOS architectures. Native installers are built by the release workflow. Configuring a workflow is not evidence that it passed or that a platform works.
 
-La CI ejecuta comprobaciones en cada push y pull request. Python y Rust tienen una matriz de Linux, Windows y macOS; los instaladores continúan en el workflow de candidatos de release. La configuración de estos workflows no sustituye comprobar sus resultados en GitHub.
+## Regression tests
 
-## Pruebas de regresión
+Storage, queue, privacy, and concurrency changes must cover the failure they correct: quota exhaustion, interrupted writes, failed writes/deletions, retries, and reloads. Verify text, recoverable audio, and processed IDs. UI tests mock React/IndexedDB devices and recognition; extension tests run its compiled controller.
 
-Los cambios de almacenamiento, colas o privacidad deben cubrir el fallo que corrigen: cuota de disco, interrupción, escritura o eliminación fallida, reintento y recarga. Comprobar tanto el texto como la existencia del audio y del ID procesado. Las pruebas de interfaz usan React e IndexedDB simulada; las de extensión ejecutan su controlador compilado.
+TypeScript tests have a 30-second deadline per file; the full UI suite exceeded 15 seconds on a macOS Intel runner. Python suites have a 60-second deadline. In restricted environments, FastAPI TestClient can hang even for an empty API: repeat outside the sandbox before diagnosing an application defect. Do not remove tests or disable checks to hide a timeout.
 
-El runner TypeScript tiene un plazo de 30 segundos por archivo (la suite de interfaz completa superó 15 segundos en el runner macOS Intel). El runner Python termina una suite bloqueada tras 60 segundos. En un entorno restringido, `TestClient` puede bloquearse incluso con una API vacía; comprobar el mismo comando fuera del sandbox antes de atribuirlo a la aplicación. No eliminar pruebas ni desactivar validación para ocultar ese bloqueo.
+## Compatibility
 
-## Compatibilidad
+- Preserve previous data and migrate missing fields without overwriting existing settings.
+- Validate stored and external data before enabling writes.
+- Preserve desktop, Chrome, and development-web consumers of shared modules.
+- Preserve schemas, application identity, and storage keys unless an explicit, tested migration is included.
+- Ollama remains optional and local. Suggestions and learned rules require explicit confirmation.
+- Changing UI language must not translate users' drafts or change their saved recognition language.
 
-- Conservar datos anteriores y completar valores nuevos mediante migración.
-- Validar datos externos y almacenados antes de habilitar escrituras.
-- Mantener los adaptadores de escritorio y Chrome y la ruta de desarrollo web.
-- No introducir cambios de esquema, identificador de aplicación o claves de almacenamiento sin pruebas de migración.
-- Las funciones Ollama deben seguir siendo opcionales y locales. No aplicar propuestas sin confirmación.
+## Dependency maintenance
 
-## Dependencias pendientes de actualización
+The earlier npm audit reported two high-severity entries involving `sharp` and `@huggingface/transformers` 3.8.1. The proposed resolution involved Transformers 4. These affect native image libraries; the browser voice bundle does not remove the repository's dependency debt. Run a fresh audit to establish current status.
 
-La auditoría npm realizada durante esta preparación informa dos entradas de severidad alta: `sharp` y su dependencia ascendente `@huggingface/transformers` 3.8.1. La corrección propuesta por npm implica migrar Transformers a la versión mayor 4. Los avisos afectan bibliotecas nativas de imágenes de `sharp`; el flujo de voz de Chrome utiliza el bundle de navegador, pero esto no elimina la deuda de dependencias del repositorio.
+Before a major update, test model download/cache, quantization, packaged WASM files, and real Chrome transcription. Do not run `npm audit fix --force` without reviewing the migration.
 
-Antes de actualizar, comprobar descarga y caché del modelo, opciones de cuantización, archivos WASM empaquetados y transcripción real en Chrome. No ejecutar `npm audit fix --force` sin revisar el cambio de API. Consultar `npm audit` para el estado vigente; el informe de hoy no es una garantía permanente.
+## Platforms and releases
 
-## Preparar cambios para otros sistemas
+[BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) is the build contract. Platform guides: [Linux](LINUX-MAKE.md), [Windows](INSTALAR-WINDOWS.md), [macOS](INSTALAR-MACOS.md). `scripts/configurar.py` prepares dependencies and checks the project before `--dev` or `--build`. Build the complete application and engine natively on the same OS/architecture. Record the effective Rust version when validating a candidate.
 
-La guía central es [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md); las instrucciones específicas están en [Linux](LINUX-MAKE.md), [Windows](INSTALAR-WINDOWS.md) y [macOS](INSTALAR-MACOS.md). El asistente `scripts/configurar.py`, ejecutado con Python 3.12, prepara dependencias y aplica las comprobaciones comunes antes de `--dev` o `--build`.
+Apply [acceptance criteria](CRITERIOS-DE-EXITO.md), including installation without development toolchains. `npm run docs:check` checks local links in root Markdown files; it does not validate external URLs, anchors, or instruction accuracy. Keep documentation, scripts, and CI coherent and append evidence without presenting historical results as current.
 
-Aplica los [criterios de éxito](CRITERIOS-DE-EXITO.md) afectados. La CI separa Windows x64/MSVC, Ubuntu x64, macOS ARM64 e Intel. Los instaladores se generan nativamente e incluyen la carpeta completa del motor; no reutilices entornos de otra plataforma. La versión de Rust estable debe registrarse cuando se valida un candidato.
-
-`npm run docs:check` comprueba que los enlaces relativos de los Markdown de la raíz existen; forma parte de `npm run check`. No verifica enlaces externos, anclas ni exactitud de instrucciones: revisa manualmente comandos, rutas y permisos. Actualiza documentación, scripts y workflows juntos. Conserva el historial de validación y añade evidencia nueva sin presentar resultados anteriores como actuales.
-
-## Aprobar y publicar versiones
-
-Después de preparar versión y changelog, subir el commit y validar los candidatos, la aprobación se da desde Actions con `publish` y versión exacta en `main`. El workflow crea la etiqueta y publica la release tras todos los checks y builds. Las pruebas de publicación usan órdenes simuladas y paquetes de fixture; no crean releases reales. Seguir [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) para permisos, aceptación, etiquetas existentes y recuperación de un borrador incompleto.
+After preparing version/changelog, uploading the commit, and validating candidates, approve publication in Actions using `publish` and the exact version on `main`. The workflow creates the tag and release only after all checks and builds pass. Publication tests use mocked commands and fixture packages; they do not create real releases. See the build guide for permissions and recovery after a partial draft upload.

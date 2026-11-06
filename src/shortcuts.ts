@@ -13,7 +13,7 @@ export function shortcutFromKey(event: KeyStroke): string | null {
   if (['Control', 'Alt', 'Shift', 'Meta', 'OS', 'AltGraph'].includes(event.key))
     return null;
   if (!event.ctrlKey && !event.altKey && !event.metaKey)
-    throw Error('Incluye Ctrl, Alt o la tecla del sistema en la combinación.');
+    throw Error('Include Ctrl, Alt, or the system key in the combination.');
   const code = event.code;
   let key = /^Key[A-Z]$/.test(code)
     ? code.slice(3)
@@ -25,7 +25,7 @@ export function shortcutFromKey(event: KeyStroke): string | null {
       key,
     )
   ) {
-    throw Error('Elige una letra, un número, Espacio o una tecla de función.');
+    throw Error('Choose a letter, number, Space, or function key.');
   }
   key = key.replace(/^Arrow/, '');
   const shortcut = [
@@ -38,7 +38,7 @@ export function shortcutFromKey(event: KeyStroke): string | null {
     .filter(Boolean)
     .join('+');
   if (reserved.has(shortcut))
-    throw Error('Esa combinación ya se usa en GOSU. Elige otra.');
+    throw Error('That combination is already used in GOSU. Choose another one.');
   return shortcut;
 }
 
@@ -48,6 +48,5 @@ export function shortcutLabel(value: string): string {
     .replace('CommandOrControl', mac ? 'Cmd' : 'Ctrl')
     .replace('Control', 'Ctrl')
     .replace('Super', mac ? 'Cmd' : 'Super')
-    .replace('Space', 'Espacio')
     .replaceAll('+', ' + ');
 }

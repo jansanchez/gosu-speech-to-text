@@ -13,7 +13,7 @@ pub struct Destination {
 #[tauri::command]
 pub async fn minimal_window(window: tauri::WebviewWindow, mode: String) -> Result<(), String> {
     if !["overlay", "hide", "editor"].contains(&mode.as_str()) {
-        return Err("Modo de ventana inválido".into());
+        return Err("Invalid window mode".into());
     }
     let result = (|| -> tauri::Result<()> {
         match mode.as_str() {
@@ -67,7 +67,7 @@ pub async fn minimal_window(window: tauri::WebviewWindow, mode: String) -> Resul
                 .await
                 .map_err(|e| e.to_string())?
         {
-            eprintln!("Ventana mínima: {error}");
+            eprintln!("Minimal window: {error}");
         }
     }
     Ok(())
@@ -85,7 +85,7 @@ pub async fn dictation_shortcut(
         Some("dictation") => "dictation",
         None if panel.unwrap_or(false) => "panel",
         None => "dictation",
-        _ => return Err("Acción de atajo inválida".into()),
+        _ => return Err("Invalid shortcut action".into()),
     };
     #[cfg(target_os = "linux")]
     {
@@ -131,7 +131,7 @@ pub async fn dictation_target(window: tauri::WebviewWindow) -> Result<Destinatio
             return Ok(Destination {
                 id: "wayland-active".into(),
                 app: "Portal Wayland".into(),
-                name: "Campo activo".into(),
+                name: "Active field".into(),
                 terminal: false,
                 pid: 0,
             });
@@ -154,7 +154,7 @@ pub async fn dictation_target(window: tauri::WebviewWindow) -> Result<Destinatio
     #[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
     {
         let _ = window;
-        Err("La integración de este sistema no está disponible.".into())
+        Err("Integration is unavailable on this system.".into())
     }
 }
 #[tauri::command]
@@ -164,14 +164,14 @@ pub async fn dictation_insert(
     text: String,
 ) -> Result<(), String> {
     if text.len() > 1_000_000 {
-        return Err("El dictado es demasiado largo para insertarlo de una vez.".into());
+        return Err("Dictation is too long to insert in one operation.".into());
     }
     #[cfg(target_os = "linux")]
     {
         let _ = window;
         if crate::portal::wayland() && !crate::hyprland::available() {
             if target_id != "wayland-active" {
-                return Err("El destino no corresponde a esta sesión de escritorio.".into());
+                return Err("The destination does not belong to this desktop session.".into());
             }
             let _ = crate::copy_text(text.clone());
             return crate::portal::insert(&text).await;
@@ -204,7 +204,7 @@ pub async fn dictation_insert(
     #[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
     {
         let _ = (window, target_id, text);
-        Err("Usa Copiar y pega el texto en el destino.".into())
+        Err("Use Copy and paste the text into the destination.".into())
     }
 }
 
@@ -223,14 +223,14 @@ mod bridge {
     use tauri::Emitter;
     static RUNNING: AtomicBool = AtomicBool::new(false);
     fn path() -> Result<PathBuf, String> {
-        let root = std::env::var_os("XDG_RUNTIME_DIR").ok_or("Falta XDG_RUNTIME_DIR.")?;
+        let root = std::env::var_os("XDG_RUNTIME_DIR").ok_or("XDG_RUNTIME_DIR is missing.")?;
         Ok(PathBuf::from(root)
             .join("gosu-speech-to-text")
             .join("control.sock"))
     }
     pub fn send(command: &str) -> Result<(), String> {
         let mut stream = UnixStream::connect(path()?)
-            .map_err(|_| "GOSU no está abierto. Inicia la aplicación primero.".to_owned())?;
+            .map_err(|_| "GOSU is not open. Start the application first.".to_owned())?;
         stream
             .set_write_timeout(Some(Duration::from_secs(2)))
             .map_err(|e| e.to_string())?;
@@ -243,7 +243,7 @@ mod bridge {
         let directory = socket.parent().unwrap();
         if let Ok(metadata) = std::fs::symlink_metadata(directory) {
             if !metadata.is_dir() || metadata.file_type().is_symlink() {
-                return Err("La ruta de control de GOSU no es un directorio seguro.".into());
+                return Err("The GOSU control path is not a secure directory.".into());
             }
         } else {
             std::fs::create_dir(directory).map_err(|e| e.to_string())?;
@@ -252,10 +252,10 @@ mod bridge {
             .map_err(|e| e.to_string())?;
         if let Ok(metadata) = std::fs::symlink_metadata(&socket) {
             if !metadata.file_type().is_socket() {
-                return Err("La ruta de control está ocupada por otro archivo.".into());
+                return Err("The control path is occupied by another file.".into());
             }
             if UnixStream::connect(&socket).is_ok() {
-                return Err("Ya hay una instancia de GOSU escuchando atajos.".into());
+                return Err("A GOSU instance is already listening for shortcuts.".into());
             }
             std::fs::remove_file(&socket).map_err(|e| e.to_string())?;
         }
@@ -317,7 +317,7 @@ pub fn handle_cli() -> bool {
 pub fn start(app: &tauri::AppHandle) {
     #[cfg(target_os = "linux")]
     if let Err(error) = bridge::start(app) {
-        eprintln!("Control mínimo: {error}");
+        eprintln!("Minimal control: {error}");
     }
     #[cfg(not(target_os = "linux"))]
     let _ = app;

@@ -16,7 +16,7 @@ function strings(value: unknown): value is string[] {
 }
 
 export function validateSettings(input: unknown, resetDevice = false): Settings {
-  if (!object(input)) throw Error('Preferencias inválidas.');
+  if (!object(input)) throw Error('Invalid settings.');
   // Copy known fields only. Missing fields migrate from older versions.
   const cfg = { ...defaults };
   for (const key of Object.keys(defaults) as (keyof Settings)[]) {
@@ -80,7 +80,7 @@ export function validateSettings(input: unknown, resetDevice = false): Settings 
       (key) => typeof cfg[key as keyof Settings] !== 'boolean',
     )
   ) {
-    throw Error('Preferencias inválidas.');
+    throw Error('Invalid settings.');
   }
   // Dictionary may be an unfinished JSON edit; it is interpreted safely by dictionaryOf.
   if (resetDevice) cfg.device = '';
@@ -94,7 +94,7 @@ export function validateWorkspace(input: unknown, resetDevice = false): State {
     !input.sessions.length ||
     input.sessions.length > 5000
   )
-    throw Error('Historial local inválido.');
+    throw Error('Invalid local history.');
   const ids = new Set<string>();
   const sessions: Session[] = input.sessions.map((value) => {
     if (
@@ -113,7 +113,7 @@ export function validateWorkspace(input: unknown, resetDevice = false): State {
       (value.tags !== undefined && typeof value.tags !== 'string') ||
       (value.favorite !== undefined && typeof value.favorite !== 'boolean')
     ) {
-      throw Error('El historial contiene un borrador inválido.');
+      throw Error('The history contains an invalid draft.');
     }
     ids.add(value.id);
     const session = value as Session;
@@ -124,7 +124,7 @@ export function validateWorkspace(input: unknown, resetDevice = false): State {
     };
   });
   if (typeof input.active !== 'string' || !ids.has(input.active))
-    throw Error('El borrador activo no existe.');
+    throw Error('The active draft does not exist.');
   if (
     input.snippets !== undefined &&
     (!Array.isArray(input.snippets) ||
@@ -138,7 +138,7 @@ export function validateWorkspace(input: unknown, resetDevice = false): State {
           value.text.length > 100000,
       ))
   ) {
-    throw Error('Plantillas inválidas.');
+    throw Error('Invalid snippets.');
   }
   return {
     sessions,

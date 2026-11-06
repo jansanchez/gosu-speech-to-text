@@ -20,8 +20,8 @@ for (const file of files) {
   }
 }
 if (failures.length) {
-  console.error('Enlaces locales inexistentes:\n' + failures.join('\n'));
+  console.error('Missing local documentation links:\n' + failures.join('\n'));
   process.exitCode = 1;
 } else {
-  console.log(`Documentación: enlaces locales correctos en ${files.length} archivos.`);
+  console.log(`Documentation: valid local links in ${files.length} files.`);
 }

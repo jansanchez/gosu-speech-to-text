@@ -34,18 +34,18 @@ type Options = {
 export function useGlobalShortcuts(options: Options) {
   const latest = useRef(options);
   latest.current = options;
-  const [status, setStatus] = useState('Comprobando atajos…');
+  const [status, setStatus] = useState('Checking shortcuts…');
   const lastVisibilityGood = useRef<string | null>(null);
   const lastPanelGood = useRef<string | null>(null);
   const lastGood = useRef<string | null>(null);
   useEffect(() => {
     if (!options.loaded) return;
     if (options.capturing) {
-      setStatus('Configurando atajo…');
+      setStatus('Configuring shortcut…');
       return;
     }
     if (!isTauri()) {
-      setStatus('Navegador · atajos solo dentro de esta página');
+      setStatus('Browser · shortcuts apply only within this page');
       return;
     }
     let disposed = false;
@@ -119,7 +119,7 @@ export function useGlobalShortcuts(options: Options) {
                 .catch((e) => latest.current.onError(String(e)));
           });
         } catch (error) {
-          failures.push('Eventos de atajos: ' + String(error));
+          failures.push('Shortcut events: ' + String(error));
         }
         const good = new Set<string>();
         for (const [keys, action] of [
@@ -187,11 +187,11 @@ export function useGlobalShortcuts(options: Options) {
             latest.current.onPrimaryFailure(options.shortcut, lastGood.current);
           setStatus(
             failures.length
-              ? 'Hay atajos no disponibles. Revisa el aviso.'
-              : 'Escritorio · atajos globales activos',
+              ? 'Some shortcuts are unavailable. Review the notice.'
+              : 'Desktop · global shortcuts active',
           );
           if (failures.length)
-            latest.current.onError('No se pudieron registrar: ' + failures.join(' / '));
+            latest.current.onError('Could not register: ' + failures.join(' / '));
         }
       });
     return () => {

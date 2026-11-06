@@ -1,55 +1,47 @@
-# GOSU Speech to Text — Dictation & Voice Typing · 0.3.2
+# Updating GOSU Speech to Text
 
-Esta entrega aplica el nombre aprobado al escritorio, la extensión, los metadatos de instaladores, la documentación, los archivos de respaldo y las herramientas de Linux. El código conserva el parche de arranque y la compatibilidad de datos de la versión anterior.
+This guide retains the historical 0.3.2 source-update procedure. For current releases use [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) and the corresponding release source/package. Branding updates preserve historical application/storage identities.
 
-## Tu Windows existente
+## Existing Windows checkout
 
-Cierra la aplicación y detén su terminal con Ctrl+C. Guarda gosu-speech-to-text-v0.3.2-source.zip en Downloads. En PowerShell:
+Close the app and stop its development terminal with Ctrl+C. For the historical 0.3.2 source ZIP:
 
 ```powershell
 $zip = Join-Path $env:USERPROFILE 'Downloads\gosu-speech-to-text-v0.3.2-source.zip'
 $update = Join-Path $env:TEMP ('gosu-update-' + [guid]::NewGuid().ToString())
 Expand-Archive -LiteralPath $zip -DestinationPath $update
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$update\gosu-speech-to-text\scripts\actualizar-windows.ps1" -ProjectPath 'D:\projects\voz'
-if ($LASTEXITCODE -ne 0) { throw 'No se pudo aplicar la actualización.' }
+if ($LASTEXITCODE -ne 0) { throw 'Could not apply the update.' }
 Set-Location 'D:\projects\voz'
 npm.cmd ci
-if ($LASTEXITCODE -ne 0) { throw 'Falló npm ci.' }
+if ($LASTEXITCODE -ne 0) { throw 'npm ci failed.' }
 npm.cmd run desktop
 ```
 
-D:\projects\voz sigue siendo tu carpeta de trabajo anterior; no se necesita renombrarla. El actualizador crea un respaldo del código en .voz-backups. Cambiar la marca no modifica el identificador ni las claves del historial.
+For another source version adjust the ZIP filename/root. `D:\projects\voz` remains the existing project directory; it does not need renaming. The updater creates a source backup under `.voz-backups`. Branding does not change history keys or native identity.
 
-## Linux existente
+## Existing Linux checkout
 
-Descomprime el ZIP nuevo en otra carpeta. Desde la carpeta gosu-speech-to-text del nuevo ZIP:
+Extract new source into a separate directory. From that directory:
 
 ```bash
-python3 scripts/actualizar.py /ruta/a/tu/proyecto/anterior
-cd /ruta/a/tu/proyecto/anterior
+python3 scripts/actualizar.py /path/to/previous/project
+cd /path/to/previous/project
 make setup
 make dev
-```
-
-Para crear e instalar el AppImage:
-
-```bash
+# After closing development:
 make appimage
 make install
 ```
 
-El nuevo comando es `gosu-speech-to-text` y el acceso del menú se llama GOSU Speech to Text. Si existía una instalación hecha por el Makefile anterior, se migra su AppImage y enlace administrados. No se borran dictados, modelos ni otros archivos del usuario. La migración necesita el marcador de propiedad del instalador anterior y no reemplaza comandos ajenos.
-
-Consulta LINUX-MAKE.md para Arch, Ubuntu, PREFIX, desinstalación y límites Wayland.
+The current command/menu name is `gosu-speech-to-text` / GOSU Speech to Text. Previous Make-managed AppImages/links migrate only when their ownership marker matches. Dictations, models, unrelated files, and commands owned by others are preserved. See [Linux](LINUX-MAKE.md) for dependencies, PREFIX, removal, and Wayland limits.
 
 ## Chrome
 
-El ZIP incluye **ready/gosu-speech-to-text-chrome.zip**. Para conservar una instalación descomprimida existente, reconstruye la extensión en la misma carpeta extension-dist y pulsa Recargar en chrome://extensions. El nombre nuevo no exige borrar sus datos.
+Historical source deliveries included `ready/gosu-speech-to-text-chrome.zip`. Current builds generate `gosu-speech-to-text-chrome.zip`; obtain it from the matching workflow or build it. To retain an unpacked extension's data, rebuild into the same `extension-dist` directory and Reload through `chrome://extensions`. Branding does not require clearing data.
 
-Si la instalas por primera vez, descomprime ese ZIP en una carpeta estable y selecciónala mediante Cargar descomprimida. Exporta tu respaldo antes de desinstalar o mover la instalación existente a otra carpeta, porque eso puede cambiar su identidad local.
+For a fresh installation, extract to a stable directory and choose Load unpacked. Export a backup before uninstalling or moving an existing extension, since its local identity may change.
 
-## macOS y compilación de paquetes
+## macOS and installed packages
 
-Los comandos y requisitos de GUIA-0.3.md y BUILD-AND-RELEASE.md siguen aplicando. La aplicación empaquetada y los instaladores llevan el nombre GOSU Speech to Text; el motor interno se genera ahora en engine-dist/gosu-engine y se incorpora automáticamente.
-
-La actualización no configura firma de código ni publicación externa. El workflow genera candidatos con el nombre nuevo para los tres sistemas.
+Use the commands in [usage](GUIA-0.3.md) and [build contract](BUILD-AND-RELEASE.md). Installers include the complete `engine-dist/gosu-engine` runtime automatically. Updating source does not update an already installed executable; rebuild/reinstall its complete package. This updater does not configure signing or publish an external release. Explicit Actions publication is handled separately.

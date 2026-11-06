@@ -26,12 +26,24 @@ class ApiTests(unittest.TestCase):
         module.model=None
         response=self.post()
         self.assertEqual(response.status_code,503)
-        self.assertIn('modelo',response.json()['detail'])
+        self.assertIn('model',response.json()['detail'])
     def test_auth(self):self.assertEqual(self.post(token='wrong').status_code,401)
     def test_invalid_audio(self):self.assertEqual(self.post(data=b'not wav').status_code,400)
     def test_invalid_language(self):self.assertEqual(self.post(language='made-up').status_code,400)
     def test_transcription_and_review(self):
         r=self.post();self.assertEqual(r.status_code,200);self.assertEqual(r.json()['text'],'Hola Jan.');self.assertTrue(r.json()['words'][1]['review'])
+    def test_priority_languages_are_forwarded_without_altering_unicode(self):
+        for language, text in [('en','Hello'),('zh','你好'),('hi','नमस्ते'),('es','Hola'),('fr','Bonjour'),('ar','مرحبا'),('bn','হ্যালো'),('pt','Olá'),('ru','Привет'),('ur','سلام')]:
+            with self.subTest(language=language):
+                class LocalModel:
+                    def transcribe(inner, *args, **kwargs):
+                        self.assertEqual(kwargs['language'], language)
+                        return iter([SimpleNamespace(text=text, words=[])]), SimpleNamespace(language=language)
+                module.model=LocalModel()
+                response=self.post(language=language)
+                self.assertEqual(response.status_code,200)
+                self.assertEqual(response.json()['text'],text)
+                self.assertEqual(response.json()['language'],language)
     def test_cors(self):
         r=self.client.options('/transcribe',headers={'Origin':'https://untrusted.example','Access-Control-Request-Method':'POST'});self.assertNotIn('access-control-allow-origin',r.headers)
     def test_health(self):self.assertEqual(self.client.get('/health').json()['processing'],'local')

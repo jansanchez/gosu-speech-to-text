@@ -90,7 +90,7 @@ test('stopping while microphone permission is pending releases the eventual stre
     await capture.stop(() => {});
     const before = stops;
     release(await original());
-    await assert.rejects(starting, /cancelada/);
+    await assert.rejects(starting, /canceled/);
     assert.equal(stops, before + 1);
   } finally {
     media.getUserMedia = original;

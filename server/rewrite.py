@@ -19,12 +19,12 @@ def local_post(path, payload, timeout):
             if len(body)>1_000_000:raise ValueError('Response too large')
             return json.loads(body)
     except (OSError,ValueError,urllib.error.URLError) as exc:
-        raise HTTPException(503,'El servicio local de texto no responde. Inicia Ollama y descarga el modelo elegido; consulta GUIA-0.3.md.') from exc
+        raise HTTPException(503,'The local text service is not responding. Start Ollama and download the chosen model; see GUIA-0.3.md.') from exc
 
 def rewrite(request:RewriteRequest):
-    if 'cloud' in request.model.lower():raise HTTPException(400,'Selecciona un modelo local, sin variante cloud.')
+    if 'cloud' in request.model.lower():raise HTTPException(400,'Select a local model, not a cloud variant.')
     info=local_post('/api/show',{'model':request.model},15)
-    if info.get('remote_model') or info.get('remote_host'):raise HTTPException(400,'Este modelo es remoto. Selecciona un modelo instalado localmente.')
+    if info.get('remote_model') or info.get('remote_host'):raise HTTPException(400,'This model is remote. Select a locally installed model.')
     response=local_post('/api/chat',{
         'model':request.model,'stream':False,'format':'json','options':{'temperature':0,'num_predict':4096},
         'messages':[
@@ -35,4 +35,4 @@ def rewrite(request:RewriteRequest):
         text=json.loads(response['message']['content'])['text']
         if not isinstance(text,str) or len(text)>48000:raise ValueError()
         return {'text':text,'model':request.model,'review_required':True}
-    except (KeyError,TypeError,ValueError) as exc:raise HTTPException(502,'El editor no produjo una propuesta válida. El borrador permanece intacto.') from exc
+    except (KeyError,TypeError,ValueError) as exc:raise HTTPException(502,'The editor did not produce a valid suggestion. The draft remains unchanged.') from exc

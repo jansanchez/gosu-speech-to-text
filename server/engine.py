@@ -5,7 +5,7 @@ import socket
 import sys
 import threading
 
-print('GOSU Speech to Text: iniciando motor local.', file=sys.stderr, flush=True)
+print('GOSU Speech to Text: starting local engine.', file=sys.stderr, flush=True)
 import uvicorn
 from server.app import app, TOKEN
 
@@ -25,7 +25,7 @@ def watch_parent():
         kernel.CloseHandle.restype = wintypes.BOOL
         handle = kernel.OpenProcess(0x00100000, False, os.getppid())  # SYNCHRONIZE
         if not handle:
-            print('Aviso: no se pudo vigilar el proceso padre; la app conserva el cierre explicito del motor.', file=sys.stderr, flush=True)
+            print('Warning: could not monitor the parent process; the app retains explicit engine shutdown.', file=sys.stderr, flush=True)
             return
         try:
             result = kernel.WaitForSingleObject(handle, 0xFFFFFFFF)
@@ -33,7 +33,7 @@ def watch_parent():
             kernel.CloseHandle(handle)
         if result == 0:  # WAIT_OBJECT_0: parent exited
             os._exit(0)
-        print('Aviso: fallo la vigilancia del proceso padre.', file=sys.stderr, flush=True)
+        print('Warning: parent process monitoring failed.', file=sys.stderr, flush=True)
         return
     # POSIX pipe lifetime monitor; started only after native imports finish.
     while os.read(sys.stdin.fileno(), 4096):
@@ -45,13 +45,13 @@ def main():
     # Match the successful standalone import before starting any watcher thread
     # or the server event loop. Keep a timed traceback if imports still stall.
     import faulthandler
-    print('Importando Faster Whisper y bibliotecas nativas...', file=sys.stderr, flush=True)
+    print('Importing Faster Whisper and native libraries...', file=sys.stderr, flush=True)
     faulthandler.dump_traceback_later(60, repeat=False, file=sys.stderr)
     try:
         from faster_whisper import WhisperModel  # noqa: F401; primes module cache
     finally:
         faulthandler.cancel_dump_traceback_later()
-    print('Reconocedor importado. Iniciando servidor local...', file=sys.stderr, flush=True)
+    print('Recognizer imported. Starting local server...', file=sys.stderr, flush=True)
     sock = socket.socket()
     sock.bind(('127.0.0.1', 0))
     sock.listen(128)

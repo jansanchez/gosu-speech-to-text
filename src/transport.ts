@@ -15,7 +15,7 @@ export async function engineHealth(baseUrl: string): Promise<Health> {
   const response = await fetch(baseUrl + '/health', {
     signal: AbortSignal.timeout(3000),
   });
-  if (!response.ok) throw Error(`Motor: HTTP ${response.status}`);
+  if (!response.ok) throw Error(`Engine: HTTP ${response.status}`);
   return response.json();
 }
 export async function transcribeAudio(
@@ -44,8 +44,8 @@ export async function transcribeAudio(
   if (!response.ok) {
     const detail = await response
       .json()
-      .catch(() => ({ detail: `Motor: HTTP ${response.status}` }));
-    throw Error(detail.detail || 'Error al transcribir');
+      .catch(() => ({ detail: `Engine: HTTP ${response.status}` }));
+    throw Error(detail.detail || 'Transcription error');
   }
   return response.json();
 }
@@ -65,7 +65,7 @@ export async function rewriteText(
     signal: AbortSignal.timeout(210000),
   });
   if (!r.ok) {
-    const error = await r.json().catch(() => ({ detail: 'Error del editor local' }));
+    const error = await r.json().catch(() => ({ detail: 'Local editor error' }));
     throw Error(error.detail);
   }
   return r.json();
@@ -86,9 +86,7 @@ export async function searchMeaning(
     signal: AbortSignal.timeout(300000),
   });
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ detail: 'Error de búsqueda local' }));
+    const error = await response.json().catch(() => ({ detail: 'Local search error' }));
     throw Error(error.detail);
   }
   return response.json();

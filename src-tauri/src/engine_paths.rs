@@ -13,12 +13,12 @@ pub fn development_root(candidates: &[PathBuf]) -> Result<PathBuf, String> {
             return Ok(root.clone());
         }
     }
-    Err(format!("No se encontró la carpeta del proyecto. Rutas comprobadas: {}. Abre una terminal en el proyecto y ejecuta npm run desktop.",candidates.iter().map(|p|p.display().to_string()).collect::<Vec<_>>().join("; ")))
+    Err(format!("The project directory was not found. Checked paths: {}. Open a terminal in the project and run npm run desktop.",candidates.iter().map(|p|p.display().to_string()).collect::<Vec<_>>().join("; ")))
 }
 pub fn require_python(root: &Path) -> Result<PathBuf, String> {
     let path = python_path(root);
     if !path.is_file() {
-        return Err(format!("Falta el entorno Python del proyecto: {}. Desde {} ejecuta npm run desktop (prepara el entorno automáticamente) o py -3.12 scripts/configurar.py --dev.",path.display(),root.display()));
+        return Err(format!("Project Python environment missing: {}. From {} run npm run desktop (automatically prepares the environment) or py -3.12 scripts/configurar.py --dev.",path.display(),root.display()));
     }
     Ok(path)
 }
@@ -40,7 +40,7 @@ pub fn release_engine(resources: Option<&Path>, executable: &Path) -> Result<Pat
             }
         }
     }
-    Err(format!("No se encontró el motor incluido. Rutas comprobadas: {}. Si abriste el EXE de target/release, necesita la carpeta engine al lado; no copies solo el EXE. Genera el paquete con npm run desktop:build o instala el paquete completo.",paths.iter().map(|p|p.display().to_string()).collect::<Vec<_>>().join("; ")))
+    Err(format!("The bundled engine was not found. Checked paths: {}. An EXE from target/release needs the adjacent engine directory; do not copy the EXE alone. Build with npm run desktop:build or install the complete package.",paths.iter().map(|p|p.display().to_string()).collect::<Vec<_>>().join("; ")))
 }
 #[cfg(test)]
 mod tests {

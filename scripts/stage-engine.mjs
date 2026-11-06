@@ -27,10 +27,8 @@ export async function stageEngine({ root = project, args = [], env = process.env
   await rm(destination, { recursive: true, force: true });
   await mkdir(destination, { recursive: true });
   await cp(source, destination, { recursive: true, force: true, verbatimSymlinks: true });
-  console.log('Motor preparado junto al binario:', destination);
-  console.log(
-    'Para distribuir, utiliza preferentemente el instalador completo de bundle/.',
-  );
+  console.log('Engine staged next to the binary:', destination);
+  console.log('For distribution, use the complete installer from bundle/.');
   return destination;
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href)

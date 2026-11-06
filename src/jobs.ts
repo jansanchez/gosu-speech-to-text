@@ -13,10 +13,10 @@ export type Job = {
 
 export function validateJobs(input: unknown): Job[] {
   if (input === undefined) return [];
-  if (!Array.isArray(input)) throw Error('Cola de audio inválida.');
+  if (!Array.isArray(input)) throw Error('Invalid audio queue.');
   const ids = new Set<string>();
   return input.map((value) => {
-    if (!value || typeof value !== 'object') throw Error('Fragmento de audio inválido.');
+    if (!value || typeof value !== 'object') throw Error('Invalid audio chunk.');
     const job = value as Job;
     if (
       typeof job.id !== 'string' ||
@@ -37,7 +37,7 @@ export function validateJobs(input: unknown): Job[] {
           job.selection.some((n) => !Number.isInteger(n) || n < 0) ||
           job.selection[1] < job.selection[0]))
     )
-      throw Error('Fragmento de audio inválido.');
+      throw Error('Invalid audio chunk.');
     ids.add(job.id);
     return { ...job, settings: validateSettings(job.settings) };
   });

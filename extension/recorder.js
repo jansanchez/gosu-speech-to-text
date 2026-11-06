@@ -1,3 +1,4 @@
+import { appendTranscript } from '../src/speech';
 import { pipeline, env } from '@huggingface/transformers';
 import { get, set } from 'idb-keyval';
 import { Capture } from '../src/audio';
@@ -55,7 +56,7 @@ try {
   paused = !!pending.length;
 } catch (error) {
   status(
-    'No se pudo abrir el almacenamiento local. Los datos originales se conservan. ' +
+    'Could not open local storage. The original data has been preserved. ' +
       String(error),
   );
   for (const control of document.querySelectorAll('button,input,textarea,select'))
@@ -67,14 +68,14 @@ const stateWriter = new SerialWriter(
   (workspace) => chrome.storage.local.set({ workspace }),
   (ok, error) => {
     saved = ok;
-    if (error) status('No se pudo guardar el borrador: ' + String(error));
+    if (error) status('Could not save the draft: ' + String(error));
   },
 );
 const audioWriter = new SerialWriter(
   (jobs) => set('voz-extension-audio', jobs),
   (ok, error) => {
     queueSaved = ok;
-    if (error) status('No se pudo guardar el audio: ' + String(error));
+    if (error) status('Could not save audio: ' + String(error));
   },
 );
 let mutations = Promise.resolve();
@@ -99,7 +100,7 @@ function render() {
   $('treatment').value = state.settings.mode;
   document.body.classList.toggle('high-contrast', state.settings.contrast);
   $('pending').textContent =
-    `${pending.length} fragmentos pendientes${privateMode ? ' · sesión privada en memoria' : ''}`;
+    `${pending.length} pending chunks${privateMode ? ' · private session in memory' : ''}`;
   $('templates').replaceChildren();
   for (const t of state.templates) {
     const row = document.createElement('div'),
@@ -111,7 +112,7 @@ function render() {
       const [a, b] = selection;
       change(state.draft.slice(0, a) + t.text + state.draft.slice(b));
     };
-    remove.textContent = 'Eliminar';
+    remove.textContent = 'Delete';
     remove.onclick = () => {
       state.templates = state.templates.filter((x) => x.id !== t.id);
       void persist();
@@ -140,7 +141,7 @@ function change(text) {
   state.redo = [];
   state.draft = text;
   render();
-  void persist().catch((e) => status('No se pudo guardar: ' + e));
+  void persist().catch((e) => status('Could not save: ' + e));
 }
 function undo() {
   manual.reset();
@@ -164,7 +165,7 @@ $('draft').oninput = () => {
   state.versions = manual.record('extension', state.versions, state.draft);
   state.redo = [];
   state.draft = $('draft').value;
-  void persist().catch((e) => status('No se pudo guardar: ' + e));
+  void persist().catch((e) => status('Could not save: ' + e));
 };
 $('draft').onselect = () => {
   selection = [$('draft').selectionStart, $('draft').selectionEnd];
@@ -190,11 +191,11 @@ $('rules').onclick = () => {
       typeof dictionary !== 'object' ||
       Object.values(dictionary).some((v) => typeof v !== 'string')
     )
-      throw Error('El diccionario debe ser un objeto de texto a texto.');
+      throw Error('The dictionary must map text strings to text strings.');
     state.settings.dictionary = $('dictionary').value;
     state.settings.fillers = $('fillers').value;
     void persist();
-    status('Reglas confirmadas. Se aplicarán a nuevos tramos.');
+    status('Rules saved. They will apply to new chunks.');
   } catch (e) {
     status(String(e));
   }
@@ -207,7 +208,7 @@ $('contrast').onchange = () => {
 $('load').onclick = async () => {
   try {
     $('load').disabled = true;
-    status('Preparando modelo local…');
+    status('Preparing the local model…');
     recognizer = await pipeline(
       'automatic-speech-recognition',
       'onnx-community/whisper-tiny',
@@ -216,18 +217,18 @@ $('load').onclick = async () => {
         dtype: 'q8',
         progress_callback: (p) => {
           if (p.status === 'progress')
-            status(`Descargando ${p.file}: ${Math.round(p.progress || 0)} %`);
+            status(`Downloading ${p.file}: ${Math.round(p.progress || 0)} %`);
         },
       },
     );
     $('mic').disabled = false;
     status(
       pending.length
-        ? 'Modelo listo. Pulsa Reintentar pendientes.'
-        : 'Modelo listo. Puedes dictar.',
+        ? 'Model ready. Select Retry pending audio.'
+        : 'Model ready. You can start dictating.',
     );
   } catch (e) {
-    status('No se pudo cargar: ' + e);
+    status('Could not load: ' + e);
     $('load').disabled = false;
   }
 };
@@ -240,7 +241,7 @@ async function accept(blob, options) {
     if (!paused) void drain();
   } catch (e) {
     paused = true;
-    status('No se pudo guardar el audio: ' + e);
+    status('Could not save audio: ' + e);
     throw e;
   }
 }
@@ -278,7 +279,7 @@ async function drain() {
           if (job.mode === 'edit') {
             if (state.draft !== job.snapshot)
               throw Error(
-                'El texto cambió. El audio queda pendiente; vuelve a corregir sobre el texto actual.',
+                'The text changed. Audio remains pending; try correcting the current text again.',
               );
             const action = control(result.text);
             if (action === 'undo') undo();
@@ -303,8 +304,8 @@ async function drain() {
                     job.settings.fillers.split(',').filter(Boolean),
                     dictionaryOf(job.settings.dictionary),
                   );
-            if (text) change(state.draft + (state.draft ? ' ' : '') + text);
-            status(text ? 'Tramo transcrito y guardado.' : 'No se detectó voz.');
+            if (text) change(appendTranscript(state.draft, text, job.settings.language));
+            status(text ? 'Chunk transcribed and saved.' : 'No speech detected.');
           }
           state.done = [...state.done, job.id];
         }
@@ -324,7 +325,7 @@ async function drain() {
         state.done = state.done.filter((id) => ids.has(id));
       } catch (e) {
         paused = true;
-        status('Cola pausada: ' + e);
+        status('Queue paused: ' + e);
         break;
       }
     }
@@ -339,7 +340,7 @@ $('mic').onclick = async () => {
   try {
     if (recording) {
       recording = false;
-      $('mic').textContent = 'Empezar a dictar';
+      $('mic').textContent = 'Start dictation';
       await capture.stop(onChunk);
       return;
     }
@@ -357,7 +358,7 @@ $('mic').onclick = async () => {
       void accept(blob, options).catch(() => {});
       if (options.mode === 'edit' && recording) {
         recording = false;
-        $('mic').textContent = 'Empezar a dictar';
+        $('mic').textContent = 'Start dictation';
         void capture.stop(() => {});
       }
     };
@@ -369,24 +370,24 @@ $('mic').onclick = async () => {
       () => {},
       () => {
         recording = false;
-        $('mic').textContent = 'Empezar a dictar';
+        $('mic').textContent = 'Start dictation';
         void capture.stop(onChunk);
-        status('Micrófono desconectado.');
+        status('Microphone disconnected.');
       },
       options.settings.sensitivity,
     );
     recording = true;
-    $('mic').textContent = 'Terminar';
-    status('Escuchando. Haz una pausa entre ideas.');
+    $('mic').textContent = 'Stop';
+    status('Listening. Pause between ideas.');
   } catch (e) {
-    status('No se pudo acceder al micrófono: ' + e);
+    status('Could not access the microphone: ' + e);
   } finally {
     starting = false;
   }
 };
 async function copy() {
   await navigator.clipboard.writeText(state.draft);
-  status('Copiado. Usa Ctrl+V / Cmd+V.');
+  status('Copied. Use Ctrl+V / Cmd+V.');
 }
 $('copy').onclick = () => void copy().catch((e) => status(String(e)));
 $('undo').onclick = undo;
@@ -394,7 +395,7 @@ $('redo').onclick = redo;
 $('retry').onclick = async () => {
   if (starting || recording || working || importing) return;
   if (!recognizer) {
-    status('Primero carga el modelo.');
+    status('Load the model first.');
     return;
   }
   try {
@@ -402,12 +403,12 @@ $('retry').onclick = async () => {
     paused = false;
     await drain();
   } catch (error) {
-    status('No se pudo guardar el audio pendiente: ' + String(error));
+    status('Could not save pending audio: ' + String(error));
   }
 };
 $('discard').onclick = async () => {
   if (starting || working || recording || importing) return;
-  if (confirm('¿Eliminar los audios pendientes?')) {
+  if (confirm('Delete pending audio?')) {
     await mutate(async () => {
       const previous = pending;
       pending = [];
@@ -424,7 +425,7 @@ $('discard').onclick = async () => {
 };
 $('insert').onclick = async () => {
   if (starting || recording || working || importing) {
-    status('Termina el dictado antes de insertar.');
+    status('Stop dictation before inserting text.');
     return;
   }
   try {
@@ -432,14 +433,14 @@ $('insert').onclick = async () => {
       type: 'insert',
       text: state.draft,
     });
-    status(r.error || 'Texto insertado. Revisa el resultado.');
+    status(r.error || 'Text inserted. Review the result.');
   } catch (e) {
     status(String(e));
   }
 };
 $('private').onclick = async () => {
   if (starting || recording || working || importing || pending.length) {
-    status('Termina el dictado y resuelve los audios pendientes primero.');
+    status('Stop dictation and resolve pending audio first.');
     return;
   }
   starting = true;
@@ -462,11 +463,11 @@ $('private').onclick = async () => {
       };
     }
     render();
-    $('private').textContent = privateMode ? 'Salir de sesión privada' : 'Sesión privada';
+    $('private').textContent = privateMode ? 'Exit private session' : 'Private session';
     status(
       privateMode
-        ? 'Sesión privada: no se guarda automáticamente.'
-        : 'Sesión privada cerrada.',
+        ? 'Private session: content is not saved automatically.'
+        : 'Private session closed.',
     );
   } finally {
     starting = false;
@@ -500,7 +501,7 @@ $('backup').onclick = async () => {
         done: [],
       };
     download(
-      'gosu-speech-to-text-extension-respaldo.gosu',
+      'gosu-speech-to-text-extension-backup.gosu',
       await encodeBackup(
         {
           sessions: [session],
@@ -511,7 +512,7 @@ $('backup').onclick = async () => {
         $('password').value,
       ),
     );
-    status('Respaldo descargado. Sin contraseña se exporta sin cifrar.');
+    status('Backup downloaded. Without a password, it is exported unencrypted.');
   } catch (e) {
     status(String(e));
   }
@@ -522,9 +523,9 @@ $('restore').onchange = async (e) => {
   if (!f || starting || working || recording || importing || pending.length) return;
   try {
     const backup = await decodeBackup(await f.text(), $('password').value);
-    if (!confirm('¿Reemplazar el borrador y preferencias por el respaldo?')) return;
+    if (!confirm('Replace the draft and settings with this backup?')) return;
     if (starting || recording || working || importing || pending.length)
-      throw Error('Termina el dictado antes de restaurar.');
+      throw Error('Stop dictation before restoring.');
     manual.reset();
     const active = backup.sessions.find((x) => x.id === backup.active);
     state = {
@@ -537,9 +538,7 @@ $('restore').onchange = async (e) => {
     };
     render();
     await persist();
-    status(
-      'Restaurado el borrador activo y sus preferencias. Los demás borradores permanecen en el archivo de respaldo.',
-    );
+    status('Active draft and settings restored. Other drafts remain in the backup file.');
   } catch (e) {
     status(String(e));
   }
@@ -549,7 +548,7 @@ $('import-audio').onchange = async (e) => {
   e.target.value = '';
   if (!f) return;
   if (!recognizer || starting || recording || working || importing || pending.length) {
-    status('Carga el modelo y resuelve el audio pendiente primero.');
+    status('Load the model and resolve pending audio first.');
     return;
   }
   importing = true;
@@ -577,13 +576,13 @@ $('import-audio').onchange = async (e) => {
 };
 function read() {
   if (!('speechSynthesis' in window)) {
-    status('Lectura no disponible.');
+    status('Read aloud is unavailable.');
     return;
   }
   speechSynthesis.cancel();
   const voices = speechSynthesis.getVoices().filter((v) => v.localService);
   if (!voices.length) {
-    status('No hay voces locales disponibles en el sistema.');
+    status('No local voices are available on this system.');
     return;
   }
   const voice = new SpeechSynthesisUtterance(state.draft);
@@ -596,7 +595,7 @@ $('read').onclick = read;
 $('stop-read').onclick = () => speechSynthesis.cancel();
 $('clear').onclick = async () => {
   if (starting || recording || working || importing) return;
-  if (!confirm('¿Borrar texto, versiones y audio pendiente?')) return;
+  if (!confirm('Delete text, history, and pending audio?')) return;
   starting = true;
   try {
     await mutate(async () => {
@@ -652,8 +651,7 @@ window.addEventListener('beforeunload', (e) => {
   }
 });
 render();
-if (pending.length)
-  status('Se recuperaron audios pendientes. Carga el modelo y pulsa Reintentar.');
+if (pending.length) status('Pending audio recovered. Load the model and select Retry.');
 
 // DOM event dispatch does not observe promises returned by event handlers.
 for (const element of document.querySelectorAll('button,input,textarea,select')) {

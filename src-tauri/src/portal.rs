@@ -26,7 +26,7 @@ pub fn wayland() -> bool {
         || std::env::var("XDG_SESSION_TYPE").unwrap_or_default() == "wayland"
 }
 fn error(error: impl std::fmt::Display) -> String {
-    format!("El escritorio no autorizó la integración Wayland: {error}. Revisa los permisos de acceso remoto y atajos del sistema. El dictado sigue disponible en el editor.")
+    format!("The desktop did not authorize Wayland integration: {error}. Check remote access and shortcut permissions. Dictation remains available in the editor.")
 }
 fn accelerator(value: &str) -> Result<String, String> {
     let mut parts = Vec::new();
@@ -40,7 +40,7 @@ fn accelerator(value: &str) -> Result<String, String> {
             _ => part.into(),
         };
         if part.is_empty() || !part.chars().all(|c: char| c.is_ascii_alphanumeric()) {
-            return Err("Atajo de teclado inválido.".into());
+            return Err("Invalid keyboard shortcut.".into());
         }
         parts.push(part);
     }
@@ -55,7 +55,7 @@ pub async fn configure(
         "dictation" => &SHORTCUTS,
         "panel" => &PANEL_SHORTCUTS,
         "visibility" => &VISIBILITY_SHORTCUTS,
-        _ => return Err("Acción de atajo inválida".into()),
+        _ => return Err("Invalid shortcut action".into()),
     };
     let mut state = state.lock().await;
     if let Some(previous) = state.take() {
@@ -73,9 +73,9 @@ pub async fn configure(
     let trigger = accelerator(&shortcut)?;
     let id = action;
     let description = match action {
-        "visibility" => "GOSU: mostrar u ocultar aplicación",
-        "panel" => "GOSU: alternar editor y modo minimalista",
-        _ => "GOSU: iniciar o terminar dictado",
+        "visibility" => "GOSU: show or hide the application",
+        "panel" => "GOSU: switch between editor and minimal panel",
+        _ => "GOSU: start or stop dictation",
     };
     let binding = NewShortcut::new(id, description).preferred_trigger(Some(trigger.as_str()));
     let response = proxy
@@ -89,7 +89,7 @@ pub async fn configure(
                 .any(|shortcut| shortcut.id() == id) => {}
         Ok(_) => {
             let _ = session.close().await;
-            return Err("El portal no registró el atajo de dictado.".into());
+            return Err("The portal did not register the dictation shortcut.".into());
         }
         Err(e) => {
             let _ = session.close().await;
@@ -138,7 +138,7 @@ pub async fn authorize() -> Result<(), String> {
             .response()?;
         if !selected.devices().contains(DeviceType::Keyboard) {
             return Err(ashpd::Error::Portal(ashpd::PortalError::NotAllowed(
-                "No se autorizó el teclado".into(),
+                "Keyboard access was not authorized".into(),
             )));
         }
         Ok::<(), ashpd::Error>(())
@@ -168,7 +168,7 @@ pub async fn insert(text: &str) -> Result<(), String> {
     let mut state = INPUT.lock().await;
     let Some(input) = state.as_ref() else {
         return Err(
-            "Autoriza el acceso al teclado antes de dictar. El texto sigue en el editor.".into(),
+            "Authorize keyboard access before dictating. The text remains in the editor.".into(),
         );
     };
     let result = async {

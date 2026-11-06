@@ -54,7 +54,7 @@ pub fn engine_connection(state: tauri::State<Engine>) -> Result<Connection, Stri
     runtime
         .connection
         .clone()
-        .ok_or("Iniciando motor local…".into())
+        .ok_or("Starting local engine…".into())
 }
 
 fn read_connection(reader: &mut impl BufRead) -> Result<Connection, String> {
@@ -64,10 +64,10 @@ fn read_connection(reader: &mut impl BufRead) -> Result<Connection, String> {
         .read_line(&mut line)
         .map_err(|e| e.to_string())?;
     if line.len() as u64 > HANDSHAKE_LIMIT {
-        return Err("Respuesta inicial del motor demasiado grande.".into());
+        return Err("Engine handshake is too large.".into());
     }
-    let connection: Connection = serde_json::from_str(&line)
-        .map_err(|_| "Respuesta inicial del motor inválida.".to_owned())?;
+    let connection: Connection =
+        serde_json::from_str(&line).map_err(|_| "Invalid engine handshake.".to_owned())?;
     let url = tauri::Url::parse(&connection.base_url).map_err(|e| e.to_string())?;
     if url.scheme() != "http"
         || url.host_str() != Some("127.0.0.1")
@@ -80,7 +80,7 @@ fn read_connection(reader: &mut impl BufRead) -> Result<Connection, String> {
         || connection.token.is_empty()
         || connection.token.len() > 1024
     {
-        return Err("Conexión del motor local inválida.".into());
+        return Err("Invalid local engine connection.".into());
     }
     Ok(connection)
 }
@@ -89,7 +89,7 @@ fn spawn(app: &tauri::AppHandle) -> Result<Child, String> {
     let log_dir = app.path().app_log_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&log_dir).map_err(|e| e.to_string())?;
     let mut log = std::fs::File::create(log_dir.join("engine.log")).map_err(|e| e.to_string())?;
-    let _ = writeln!(log, "GOSU: preparando proceso del motor.");
+    let _ = writeln!(log, "GOSU: preparing the engine process.");
     let mut command;
     if cfg!(debug_assertions) {
         let compiled = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -107,7 +107,7 @@ fn spawn(app: &tauri::AppHandle) -> Result<Child, String> {
         let python = engine_paths::require_python(&root)?;
         let _ = writeln!(
             log,
-            "Proyecto: {}\nPython: {}",
+            "Project: {}\nPython: {}",
             root.display(),
             python.display()
         );
@@ -119,7 +119,7 @@ fn spawn(app: &tauri::AppHandle) -> Result<Child, String> {
         let executable = std::env::current_exe().map_err(|e| e.to_string())?;
         let resources = app.path().resource_dir().ok();
         let path = engine_paths::release_engine(resources.as_deref(), &executable)?;
-        let _ = writeln!(log, "Motor incluido: {}", path.display());
+        let _ = writeln!(log, "Bundled engine: {}", path.display());
         command = Command::new(path);
     }
     command
@@ -136,7 +136,7 @@ fn spawn(app: &tauri::AppHandle) -> Result<Child, String> {
     }
     command.spawn().map_err(|e| {
         format!(
-            "No se pudo iniciar el motor: {e}. Ejecutable: {}",
+            "Could not start the engine: {e}. Executable: {}",
             command.get_program().to_string_lossy()
         )
     })
@@ -154,7 +154,7 @@ fn launch(app: &tauri::AppHandle) -> Result<(), String> {
             return Err(error);
         }
     };
-    let output = child.stdout.take().ok_or("Falta la salida del motor.")?;
+    let output = child.stdout.take().ok_or("Engine output is missing.")?;
     runtime.child = Some(child);
     let generation = runtime.generation;
     let (sender, receiver) = mpsc::channel();
@@ -170,12 +170,12 @@ fn launch(app: &tauri::AppHandle) -> Result<(), String> {
         let mut buffer = [0; 4096];
         while reader.read(&mut buffer).unwrap_or(0) != 0 {}
         let _ = sender.send(Err(
-            "El motor se cerró. Pulsa Reiniciar motor para recuperarlo.".into(),
+            "The engine exited. Select Restart engine to recover it.".into(),
         ));
     });
     let handle = app.clone();
     std::thread::spawn(move || {
-        let connection = receiver.recv_timeout(HANDSHAKE_TIMEOUT).unwrap_or_else(|_| Err("El motor no inició en 90 segundos. Consulta el diagnóstico y pulsa Reiniciar motor.".into()));
+        let connection = receiver.recv_timeout(HANDSHAKE_TIMEOUT).unwrap_or_else(|_| Err("The engine did not start within 90 seconds. Check diagnostics and select Restart engine.".into()));
         {
             let state = handle.state::<Engine>();
             let Ok(mut runtime) = state.runtime.lock() else {
@@ -265,7 +265,7 @@ async fn response_json(response: reqwest::Response) -> Result<serde_json::Value,
     let body: serde_json::Value = response
         .json()
         .await
-        .map_err(|e| format!("Respuesta del motor no válida: {e}"))?;
+        .map_err(|e| format!("Invalid engine response: {e}"))?;
     if !status.is_success() {
         return Err(body
             .get("detail")
@@ -274,7 +274,7 @@ async fn response_json(response: reqwest::Response) -> Result<serde_json::Value,
                     .map(str::to_owned)
                     .unwrap_or_else(|| d.to_string())
             })
-            .unwrap_or_else(|| format!("Motor: HTTP {status}")));
+            .unwrap_or_else(|| format!("Engine: HTTP {status}")));
     }
     Ok(body)
 }
@@ -285,7 +285,7 @@ pub async fn engine_health(app: tauri::AppHandle) -> Result<serde_json::Value, S
         .get(format!("{}/health", c.base_url))
         .send()
         .await
-        .map_err(|e| format!("El motor aún no responde: {e}. Consulta Diagnóstico del motor."))?;
+        .map_err(|e| format!("The engine is not responding yet: {e}. See Engine diagnostics."))?;
     response_json(response).await
 }
 #[tauri::command]
@@ -296,7 +296,7 @@ pub async fn engine_transcribe(
     vocabulary: String,
 ) -> Result<serde_json::Value, String> {
     if audio.len() > 5_000_000 {
-        return Err("Fragmento demasiado grande.".into());
+        return Err("Chunk is too large.".into());
     }
     let c = connection(&app)?;
     let file = reqwest::multipart::Part::bytes(audio)
@@ -313,7 +313,7 @@ pub async fn engine_transcribe(
         .multipart(form)
         .send()
         .await
-        .map_err(|e| format!("No se pudo transcribir: {e}"))?;
+        .map_err(|e| format!("Could not transcribe: {e}"))?;
     response_json(response).await
 }
 #[tauri::command]
@@ -326,10 +326,10 @@ pub fn engine_diagnostics(app: tauri::AppHandle) -> Result<String, String> {
     let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let tail = String::from_utf8_lossy(&bytes[bytes.len().saturating_sub(16000)..]);
     Ok(format!(
-        "Registro: {}\n\n{}",
+        "Log: {}\n\n{}",
         path.display(),
         if tail.is_empty() {
-            "El motor todavía no escribió mensajes."
+            "The engine has not written any messages yet."
         } else {
             &tail
         }
@@ -350,7 +350,7 @@ pub async fn engine_rewrite(
         .json(&serde_json::json!({"text":text,"instruction":instruction,"model":model}))
         .send()
         .await
-        .map_err(|e| format!("El editor local no responde: {e}"))?;
+        .map_err(|e| format!("The local editor is not responding: {e}"))?;
     response_json(response).await
 }
 

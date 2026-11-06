@@ -1,21 +1,17 @@
-# Identidad del producto
+# Product identity
 
-Nombre aprobado por el usuario:
+Approved public name: **GOSU Speech to Text — Dictation & Voice Typing**.
 
-**GOSU Speech to Text — Dictation & Voice Typing**
+- Short application name: **GOSU Speech to Text**.
+- Full extension/window/documentation title: **GOSU Speech to Text — Dictation & Voice Typing**.
+- Project identifier and Linux command: **gosu-speech-to-text**.
+- Extension archive: **gosu-speech-to-text-chrome.zip**.
+- Brand source: **brand.json**.
 
-- Nombre corto de la aplicación: **GOSU Speech to Text**.
-- Título completo de la extensión, ventanas y documentación: **GOSU Speech to Text — Dictation & Voice Typing**.
-- Identificador del proyecto y comando Linux: **gosu-speech-to-text**.
-- Archivo de la extensión: **gosu-speech-to-text-chrome.zip**.
-- Fuente única de marca: **brand.json**.
+This follows GOSU JSON — Viewer & Formatter: brand, recognizable purpose, and utility descriptor. `npm run brand:sync` applies metadata and titles; `npm run brand:check` checks consistency before builds.
 
-El patrón mantiene coherencia con GOSU JSON — Viewer & Formatter: marca, función reconocible y descriptor de utilidad.
+## Compatibility and language
 
-`npm run brand:sync` aplica brand.json a los metadatos y títulos generados. `npm run brand:check` comprueba consistencia; las compilaciones lo ejecutan antes de continuar.
+Keep `org.voz.prototype`, existing IndexedDB/Chrome keys, `voz-aes-gcm-v1`, `X-Voz-Token`, and historical protocol/action identifiers. They are technical compatibility identities, not public branding. Existing `.voz` backups remain supported alongside `.gosu`. Public copy and new export filenames use English and the GOSU brand; existing user content is never translated automatically.
 
-## Compatibilidad
-
-El identificador de aplicación `org.voz.prototype`, las claves existentes de IndexedDB/Chrome, el formato de respaldo `voz-aes-gcm-v1` y la cabecera interna `X-Voz-Token` se conservan para evitar pérdida de datos y mantener el protocolo local. Son identificadores técnicos heredados; no son la marca pública.
-
-Se admiten los respaldos anteriores .voz además de los nuevos .gosu. Los nombres visibles y de nuevos archivos usan GOSU Speech to Text. El nombre aprobado no implica que se hayan reservado dominios, cuentas o registros de marca.
+Public interface, messages, guides, and release notes are English. Speech recognition and documented command phrase data support their own languages independently. Historical Spanish filenames and script entry points remain valid to avoid breaking existing commands and links. Product naming does not imply reserved domains, accounts, or registered trademarks.

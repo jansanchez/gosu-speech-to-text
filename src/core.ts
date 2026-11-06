@@ -1,3 +1,4 @@
+import { normalizeEditCommand } from './speech';
 export type Edit = {
   text: string;
   message: string;
@@ -12,28 +13,25 @@ export function clean(
   let result = text;
   for (const [from, to] of Object.entries(dictionary)) {
     if (!from.trim()) continue;
-    result = result.replace(
-      new RegExp(`(?<![\\p{L}\\p{N}_])${escape(from)}(?![\\p{L}\\p{N}_])`, 'giu'),
-      () => to,
-    );
+    result = result.replace(new RegExp(termPattern(from), 'giu'), () => to);
   }
   // Only explicit, user-configured fillers: never infer personal rules.
   for (const filler of fillers.filter((x) => x.trim())) {
-    result = result.replace(
-      new RegExp(
-        `(?<![\\p{L}\\p{N}_])${escape(filler.trim())}(?![\\p{L}\\p{N}_])[, ]*`,
-        'giu',
-      ),
-      '',
-    );
+    result = result.replace(new RegExp(`${termPattern(filler.trim())}[, ]*`, 'giu'), '');
   }
-  return result.replace(/ {2,}/g, ' ').trim();
+  return result.replace(/ {2,}/g, ' ').replace(/^[ \t]+|[ \t]+$/g, '');
 }
 function escape(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+function termPattern(value: string) {
+  // CJK words can be adjacent without spaces. Indic combining marks belong to words.
+  if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(value))
+    return escape(value);
+  return `(?<![\\p{L}\\p{N}\\p{M}_])${escape(value)}(?![\\p{L}\\p{N}\\p{M}_])`;
+}
 export function edit(text: string, command: string, selection?: [number, number]): Edit {
-  const c = command
+  const c = normalizeEditCommand(command)
     .trim()
     .replace(/[.!?]+$/, '')
     .replace(/^replace (.+?) with (.+)$/i, 'cambia $1 por $2')
@@ -50,14 +48,14 @@ export function edit(text: string, command: string, selection?: [number, number]
     if (!selection || selection[0] === selection[1])
       return {
         text,
-        message: 'Selecciona primero el texto que quieres borrar.',
+        message: 'Select the text you want to delete first.',
         changed: false,
       };
     result = '';
   } else if (/^(borra|elimina) (la )?[uú]ltima frase$/i.test(c)) {
     result = target
       .trimEnd()
-      .replace(/[^.!?\n]+[.!?]*$/u, '')
+      .replace(/[^.!?。！？؟۔।\n]+[.!?。！？؟۔।]*$/u, '')
       .trimEnd();
   } else if (/^(nuevo p[aá]rrafo|salto de p[aá]rrafo)$/i.test(c))
     result = target + '\n\n';
@@ -65,7 +63,7 @@ export function edit(text: string, command: string, selection?: [number, number]
     /^(pon|convierte) (eso |esto |la selecci[oó]n )?(en |como )?(una )?lista$/i.test(c)
   ) {
     result = target
-      .split(/\n+|(?<=[.!?])\s+/)
+      .split(/\n+|(?<=[.!?。！？؟۔।])\s+/)
       .filter(Boolean)
       .map((s) => '• ' + s.replace(/^•\s*/, ''))
       .join('\n');
@@ -75,13 +73,10 @@ export function edit(text: string, command: string, selection?: [number, number]
       return {
         text,
         message:
-          'Orden no reconocida. Prueba «cambia mañana por jueves», «borra la última frase» o «deshacer».',
+          'Command not recognized. Try “replace tomorrow with Thursday”, “delete last sentence”, or “undo”.',
         changed: false,
       };
-    const re = new RegExp(
-      `(?<![\\p{L}\\p{N}_])${escape(m[1])}(?![\\p{L}\\p{N}_])`,
-      'giu',
-    );
+    const re = new RegExp(termPattern(m[1]), 'giu');
     const matches = [...target.matchAll(re)];
     if (matches.length !== 1)
       return {
@@ -96,8 +91,8 @@ export function edit(text: string, command: string, selection?: [number, number]
             )
           : undefined,
         message: matches.length
-          ? `Hay ${matches.length} coincidencias. Selecciona una y repite la orden.`
-          : 'No encontré ese texto. No hice cambios.',
+          ? `Found ${matches.length} matches. Select one and repeat the command.`
+          : 'Text not found. Nothing was changed.',
         changed: false,
       };
     result = target.replace(re, () => m[2]);
@@ -107,8 +102,8 @@ export function edit(text: string, command: string, selection?: [number, number]
     text: next,
     message:
       next !== text
-        ? 'Corrección aplicada. Puedes deshacerla.'
-        : 'No había texto que modificar.',
+        ? 'Correction applied. You can undo it.'
+        : 'There was no text to change.',
     changed: next !== text,
   };
 }

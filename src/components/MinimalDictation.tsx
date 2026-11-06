@@ -21,33 +21,36 @@ export default function MinimalDictation(p: Props) {
   const listening = p.phase === 'listening';
   const waiting = p.phase === 'starting' || p.phase === 'processing';
   const status = {
-    ready: 'Listo para dictar',
-    starting: 'Preparando micrófono…',
-    listening: 'Te estoy escuchando',
-    processing: 'Terminando transcripción…',
-    sent: 'Texto insertado y copiado',
-    copied: 'Texto en el portapapeles',
-    error: 'Tu dictado está a salvo',
+    ready: 'Ready to dictate',
+    starting: 'Preparing microphone…',
+    listening: 'Listening to you',
+    processing: 'Finishing transcription…',
+    sent: 'Text inserted and copied',
+    copied: 'Text on clipboard',
+    error: 'Your dictation is safe',
   }[p.phase];
   const targetName = p.target?.app.includes('wezterm') ? 'WezTerm' : p.target?.name;
   return (
-    <main className={'minimal-dictation minimal-' + p.phase} aria-label="Dictado mínimo">
+    <main
+      className={'minimal-dictation minimal-' + p.phase}
+      aria-label="Minimal dictation"
+    >
       <header className="minimal-header">
         <span className="minimal-brand">
-          <AudioLines size={17} /> GOSU <small>DICTADO</small>
+          <AudioLines size={17} /> GOSU <small>DICTATION</small>
         </span>
         <button
           className="minimal-shortcut"
           onClick={() => void p.configureShortcut()}
-          aria-label="Configurar atajo"
-          title="Configurar atajo"
+          aria-label="Configure shortcut"
+          title="Configure shortcut"
           disabled={listening || waiting}
         >
           <kbd>{shortcutLabel(p.shortcut)}</kbd>
         </button>
         <button
-          title={'Ocultar · ' + shortcutLabel(p.panelShortcut)}
-          aria-label="Ocultar dictado mínimo"
+          title={'Hide · ' + shortcutLabel(p.panelShortcut)}
+          aria-label="Hide minimal dictation"
           disabled={p.phase === 'starting'}
           onClick={() => void p.hide()}
         >
@@ -57,9 +60,7 @@ export default function MinimalDictation(p: Props) {
       <div className="minimal-capture">
         <button
           className="minimal-mic"
-          aria-label={
-            listening ? 'Terminar e insertar dictado' : 'Empezar dictado mínimo'
-          }
+          aria-label={listening ? 'Stop and insert dictation' : 'Start minimal dictation'}
           disabled={waiting}
           onClick={() => void p.toggle()}
         >
@@ -87,7 +88,7 @@ export default function MinimalDictation(p: Props) {
             ))}
           </div>
         </div>
-        {waiting && <span className="minimal-spinner" aria-label="Procesando" />}
+        {waiting && <span className="minimal-spinner" aria-label="Processing" />}
       </div>
       <p
         className={'minimal-preview ' + (p.error ? 'minimal-error' : '')}
@@ -96,26 +97,26 @@ export default function MinimalDictation(p: Props) {
         {p.error ||
           p.text.slice(-170) ||
           (listening
-            ? 'Puedes cambiar de campo. Al terminar, el texto irá al destino enfocado.'
+            ? 'You can switch fields. When you stop, the text goes to the focused destination.'
             : p.phase === 'sent'
-              ? 'Pulsa el atajo de dictado para seguir grabando.'
-              : 'Pulsa el atajo para grabar. Elige el destino antes de terminar.')}
+              ? 'Press the dictation shortcut to continue recording.'
+              : 'Press the shortcut to record. Choose the destination before stopping.')}
       </p>
       <footer className="minimal-footer">
-        <span title={'Mostrar/ocultar: ' + shortcutLabel(p.panelShortcut)}>
+        <span title={'Show/hide: ' + shortcutLabel(p.panelShortcut)}>
           {targetName
-            ? `${listening ? 'Destino al terminar' : p.target?.terminal ? 'Terminal' : 'Destino'} · ${listening ? 'campo enfocado' : targetName}`
+            ? `${listening ? 'Destination on stop' : p.target?.terminal ? 'Terminal' : 'Destination'} · ${listening ? 'focused field' : targetName}`
             : listening
-              ? 'Destino al terminar · campo enfocado'
-              : 'Tu voz, donde escribes'}
+              ? 'Destination on stop · focused field'
+              : 'Your voice, wherever you write'}
         </span>
         <div>
           {p.text && (
             <button
               disabled={waiting}
               onClick={() => void p.copy()}
-              title="Copiar este dictado"
-              aria-label="Copiar dictado mínimo"
+              title="Copy this dictation"
+              aria-label="Copy minimal dictation"
             >
               <Copy size={14} />
             </button>

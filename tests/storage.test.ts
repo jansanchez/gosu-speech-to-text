@@ -17,7 +17,7 @@ function workspace() {
     sessions: [
       {
         id: 'a',
-        text: 'Texto',
+        text: 'Text',
         original: 'Original',
         created: 1,
         versions: [],
@@ -163,11 +163,11 @@ for (const platform of ['Linux', 'MacIntel']) {
       assert.throws(
         () =>
           validateSettings({ ...defaults, minimalShortcut: `${modifier}+Shift+Space` }),
-        /Preferencias/,
+        /settings/,
       );
       assert.throws(
         () => validateSettings({ ...defaults, minimalShortcut: 42 }),
-        /Preferencias/,
+        /settings/,
       );
       if (platform === 'MacIntel') {
         assert.equal(
@@ -189,7 +189,7 @@ for (const platform of ['Linux', 'MacIntel']) {
       assert.throws(
         () =>
           validateSettings({ ...defaults, visibilityShortcut: `${modifier}+Shift+M` }),
-        /Preferencias/,
+        /settings/,
       );
     });
   });

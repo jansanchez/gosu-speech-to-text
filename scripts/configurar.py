@@ -17,19 +17,19 @@ def main():
     mode.add_argument('--dev', action='store_true')
     args = parser.parse_args()
     if sys.version_info[:2] != (3, 12):
-        raise RuntimeError('Ejecuta con Python 3.12. Consulta BUILD-AND-RELEASE.md.')
+        raise RuntimeError('Run with Python 3.12. See BUILD-AND-RELEASE.md.')
     npm = shutil.which('npm.cmd' if os.name == 'nt' else 'npm')
     cargo = shutil.which('cargo')
     if not npm or not cargo:
-        raise RuntimeError('Falta Node/npm o Rust/Cargo. Consulta BUILD-AND-RELEASE.md.')
+        raise RuntimeError('Node/npm or Rust/Cargo is missing. See BUILD-AND-RELEASE.md.')
     python = ROOT / '.venv' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
     if not python.exists():
         if (ROOT / '.venv').exists():
-            raise RuntimeError('.venv está incompleto. Consérvalo con otro nombre y prepara uno nuevo.')
+            raise RuntimeError('.venv is incomplete. Preserve it under another name and prepare a new environment.')
         venv.EnvBuilder(with_pip=True).create(ROOT / '.venv')
     version = subprocess.check_output([str(python), '-c', 'import sys; print("%d.%d" % sys.version_info[:2])'], text=True).strip()
     if version != '3.12':
-        raise RuntimeError('.venv debe usar Python 3.12. Consérvalo con otro nombre y prepara uno nuevo.')
+        raise RuntimeError('.venv must use Python 3.12. Preserve it under another name and prepare a new environment.')
 
     def run(*command):
         subprocess.run([str(value) for value in command], cwd=ROOT, check=True)
@@ -45,11 +45,11 @@ def main():
         bundles = 'nsis' if os.name == 'nt' else 'app,dmg' if sys.platform == 'darwin' else 'appimage'
         run(npm, 'run', 'desktop:build', '--', '--bundles', bundles, '--', '--locked')
         run(python, 'scripts/checksums.py', pathlib.Path(os.environ.get('CARGO_TARGET_DIR', 'src-tauri/target')) / 'release/bundle')
-        print('Paquetes: src-tauri/target/release/bundle/ (o CARGO_TARGET_DIR configurado).')
+        print('Packages: src-tauri/target/release/bundle/ (or the configured CARGO_TARGET_DIR).')
     elif args.dev:
         run(npm, 'run', 'desktop')
     else:
-        print('Preparación y comprobaciones completadas. Usa --dev o --build.')
+        print('Setup and checks completed. Use --dev or --build.')
 
 
 if __name__ == '__main__':

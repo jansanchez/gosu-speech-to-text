@@ -26,12 +26,12 @@ test('shortcut capture uses physical keys consistently across keyboard layouts',
 });
 test('modifier-only strokes wait and unsafe or reserved combinations are rejected', () => {
   assert.equal(shortcutFromKey(stroke({ code: 'ControlLeft', key: 'Control' })), null);
-  assert.throws(() => shortcutFromKey(stroke({ ctrlKey: false })), /Incluye/);
+  assert.throws(() => shortcutFromKey(stroke({ ctrlKey: false })), /Include/);
   assert.throws(
     () => shortcutFromKey(stroke({ code: 'KeyC', key: 'c', altKey: true })),
-    /ya se usa/,
+    /already used/,
   );
-  assert.throws(() => shortcutFromKey(stroke({ code: 'Unidentified' })), /Elige/);
+  assert.throws(() => shortcutFromKey(stroke({ code: 'Unidentified' })), /Choose/);
 });
 test('the configured chord has a readable label without changing its stored representation', () => {
   assert.match(shortcutLabel('Control+Alt+K'), /Ctrl \+ Alt \+ K/);

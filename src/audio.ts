@@ -29,12 +29,12 @@ export class Capture {
       });
       if (this.cancelled) {
         this.stream.getTracks().forEach((track) => track.stop());
-        throw new Error('Grabación cancelada.');
+        throw new Error('Recording canceled.');
       }
       for (const t of this.stream.getTracks()) t.onended = onEnded;
       this.ctx = new AudioContext();
       await this.ctx.audioWorklet.addModule('/capture.js');
-      if (this.cancelled) throw new Error('Grabación cancelada.');
+      if (this.cancelled) throw new Error('Recording canceled.');
       this.node = new AudioWorkletNode(this.ctx, 'voice-capture');
       this.node.port.onmessage = (e: MessageEvent<Float32Array>) => {
         const block = e.data;

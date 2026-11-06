@@ -6,7 +6,7 @@ export async function importRecording(
   progress: (text: string) => void,
 ) {
   if (file.size > 40_000_000)
-    throw Error('El archivo supera 40 MB. Divide la grabación antes de importarla.');
+    throw Error('The file exceeds 40 MB. Split the recording before importing.');
   const decoder = new AudioContext();
   let audio: AudioBuffer;
   try {
@@ -14,7 +14,7 @@ export async function importRecording(
   } finally {
     await decoder.close();
   }
-  if (audio.duration > 1800) throw Error('Máximo 30 minutos por archivo.');
+  if (audio.duration > 1800) throw Error('Maximum 30 minutes per file.');
   for (let start = 0; start < audio.duration; start += 18) {
     const count = Math.min(
       Math.round(18 * audio.sampleRate),
@@ -43,7 +43,7 @@ export async function importRecording(
     const rendered = await offline.startRendering();
     await onChunk(wav(rendered.getChannelData(0), 16000));
     progress(
-      `Audio importado: ${Math.min(100, Math.round(((start + 18) / audio.duration) * 100))} %`,
+      `Audio imported: ${Math.min(100, Math.round(((start + 18) / audio.duration) * 100))} %`,
     );
   }
 }

@@ -22,7 +22,7 @@ def assemble(source, destination):
     selected = []
     expected = {'gosu-speech-to-text-' + platform for platform in PACKAGES}
     if {p.name for p in source.iterdir()} != expected:
-        raise ValueError('Faltan artefactos o hay artefactos inesperados.')
+        raise ValueError('Artifacts are missing or unexpected artifacts are present.')
     for platform, patterns in PACKAGES.items():
         folder = source / ('gosu-speech-to-text-' + platform)
         hashes = {}
@@ -33,11 +33,11 @@ def assemble(source, destination):
         for pattern in patterns:
             matches = list(folder.glob(pattern))
             if len(matches) != 1 or matches[0].is_symlink() or not matches[0].is_file():
-                raise ValueError(f'Se esperaba un único paquete: {platform}/{pattern}')
+                raise ValueError(f'Expected exactly one package: {platform}/{pattern}')
             package = matches[0]
             checksum = digest(package)
             if platform != 'chrome' and hashes.get(package.relative_to(folder).as_posix()) != checksum:
-                raise ValueError(f'Hash incorrecto: {platform}/{package.name}')
+                raise ValueError(f'Checksum mismatch: {platform}/{package.name}')
             selected.append((package, platform + '-' + package.name, checksum))
     # Validate everything before copying; never merge with a previous release.
     destination.mkdir(exist_ok=False)

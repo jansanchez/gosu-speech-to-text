@@ -7,9 +7,9 @@ import { validateRelease } from './check-release.mjs';
 export function approval(version, requested, publish, event, ref) {
   if (publish !== 'true') return;
   if (event !== 'workflow_dispatch' || ref !== 'refs/heads/main')
-    throw Error('Solo se publica con aprobación manual desde main.');
+    throw Error('Publishing requires manual approval from main.');
   if (requested !== version)
-    throw Error('La versión aprobada no coincide con brand.json.');
+    throw Error('The approved version does not match brand.json.');
 }
 
 export function releaseNotes(version, changelog) {
@@ -27,7 +27,7 @@ export function releaseNotes(version, changelog) {
 
 export function uploadRelease(run, tag, version, assets) {
   if (assets.length !== 7)
-    throw Error('Se esperaban seis paquetes y un manifiesto de hashes.');
+    throw Error('Expected six packages and one checksum manifest.');
   run('gh', [
     'release',
     'create',
@@ -56,19 +56,19 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     const run = (file, args) => {
       const result = spawnSync(file, args, { encoding: 'utf8' });
       if (result.status !== 0)
-        throw Error(`${file} falló: ${result.stderr || result.error?.message}`);
+        throw Error(`${file} failed: ${result.stderr || result.error?.message}`);
       return result.stdout.trim();
     };
     const tag = `v${version}`;
     const sha = run('git', ['rev-parse', 'HEAD']);
     if (sha !== process.env.GITHUB_SHA)
-      throw Error('El checkout no coincide con el commit aprobado.');
+      throw Error('The checkout does not match the approved commit.');
     run('git', ['fetch', 'origin', '--tags']);
     const tags = run('git', ['tag', '--list', tag]);
     if (tags && run('git', ['rev-parse', `${tag}^{commit}`]) !== sha)
-      throw Error('La etiqueta ya identifica otro commit. Incrementa la versión.');
+      throw Error('The tag already identifies another commit. Increment the version.');
     if (tags && run('git', ['cat-file', '-t', tag]) !== 'tag')
-      throw Error('La etiqueta existente no es anotada.');
+      throw Error('The existing tag is not annotated.');
     if (process.argv.includes('--publish')) {
       // Reject existing releases, including drafts, instead of overwriting assets.
       const releases = JSON.parse(
@@ -81,18 +81,18 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       ).flat();
       if (releases.some((release) => release.tag_name === tag))
         throw Error(
-          'Ya existe una release o borrador de esta versión. Revisar antes de reintentar.',
+          'A release or draft already exists for this version. Review it before retrying.',
         );
       const notes =
         releaseNotes(version, await readFile('CHANGELOG.md', 'utf8')) +
-        `\nCommit: ${sha}\n\nPaquetes sin firma ni notarización. La compilación automatizada no certifica por sí sola instalación, micrófono ni permisos en cada plataforma.\n`;
+        `\nCommit: ${sha}\n\nPackages are unsigned and not notarized. Automated builds alone do not validate installation, microphone access, or permissions on each platform.\n`;
       await writeFile('release-notes.md', notes);
       const { readdir } = await import('node:fs/promises');
       const assets = (await readdir('release-assets')).map(
         (name) => `release-assets/${name}`,
       );
       if (assets.length !== 7)
-        throw Error('Se esperaban seis paquetes y un manifiesto de hashes.');
+        throw Error('Expected six packages and one checksum manifest.');
       if (!tags) {
         run('git', ['config', 'user.name', 'github-actions[bot]']);
         run('git', [
@@ -104,7 +104,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         run('git', ['push', 'origin', `refs/tags/${tag}`]);
       }
       uploadRelease(run, tag, version, assets);
-      console.log(`Release publicada: ${tag}`);
+      console.log(`Release published: ${tag}`);
     }
   }
 }

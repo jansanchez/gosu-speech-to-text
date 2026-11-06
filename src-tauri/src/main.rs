@@ -59,7 +59,7 @@ fn native_paste(text: String, hwnd: isize, own: isize, activate: bool) -> Result
         GetForegroundWindow, IsWindow, SetForegroundWindow,
     };
     if hwnd == 0 || hwnd == own {
-        return Err("Selecciona un campo en la otra aplicación y usa Ctrl+Alt+V allí. El borrador sigue guardado.".into());
+        return Err("Select a field in the other application and use Ctrl+Alt+V there. The draft remains saved.".into());
     }
     copy_text(text)?;
     // On shortcut release, other modifiers may still be held: wait rather than injecting a wrong combination.
@@ -80,26 +80,26 @@ fn native_paste(text: String, hwnd: isize, own: isize, activate: bool) -> Result
             .any(|k| GetAsyncKeyState(*k as i32) < 0)
         {
             return Err(
-                "Suelta las teclas del atajo y vuelve a intentarlo. El texto ya está copiado."
-                    .into(),
+                "Release the shortcut keys and try again. The text is already copied.".into(),
             );
         }
         if IsWindow(hwnd as _) == 0 {
             return Err(
-                "La ventana de destino ya no existe. Usa Ctrl+V en el destino correcto.".into(),
+                "The destination window no longer exists. Use Ctrl+V in the correct destination."
+                    .into(),
             );
         }
         if activate && GetForegroundWindow() as isize != hwnd {
             if SetForegroundWindow(hwnd as _) == 0 {
                 return Err(
-                    "Windows no permitió activar el destino. El texto está copiado: usa Ctrl+V."
+                    "Windows did not allow activating the destination. The text is copied: use Ctrl+V."
                         .into(),
                 );
             }
             std::thread::sleep(std::time::Duration::from_millis(180));
         }
         if GetForegroundWindow() as isize != hwnd {
-            return Err("Cambió la ventana activa. No se enviaron teclas; usa Ctrl+V en el destino correcto.".into());
+            return Err("The active window changed. No keys were sent; use Ctrl+V in the correct destination.".into());
         }
         fn key(vk: u16, up: bool) -> INPUT {
             INPUT {
@@ -137,7 +137,7 @@ fn native_paste(text: String, hwnd: isize, own: isize, activate: bool) -> Result
                 releases.as_ptr(),
                 std::mem::size_of::<INPUT>() as i32,
             );
-            return Err("Windows no aceptó el pegado simulado. El texto está copiado; usa Ctrl+V manualmente. Revisa si el destino se ejecuta como administrador.".into());
+            return Err("Windows did not accept simulated paste. The text is copied; paste manually with Ctrl+V. Check whether the destination is running as administrator.".into());
         }
     }
     Ok(())
@@ -215,7 +215,7 @@ fn main() {
             engine::engine_search
         ])
         .build(tauri::generate_context!())
-        .expect("No se pudo iniciar GOSU Speech to Text");
+        .expect("Could not start GOSU Speech to Text");
     app.run(|handle, event| {
         if let tauri::RunEvent::Exit = event {
             minimal::stop();
@@ -294,14 +294,14 @@ fn windows_destination(window: tauri::WebviewWindow) -> Result<minimal::Destinat
     let hwnd = unsafe { GetForegroundWindow() } as isize;
     let own = window.hwnd().map_err(|e| e.to_string())?.0 as isize;
     if hwnd == 0 || hwnd == own {
-        return Err("Enfoca el campo de otra aplicación y pulsa el atajo.".into());
+        return Err("Focus a field in another application and press the shortcut.".into());
     }
     let mut pid = 0;
     unsafe {
         GetWindowThreadProcessId(hwnd as _, &mut pid);
     }
     if pid == 0 {
-        return Err("No se pudo identificar la ventana de destino.".into());
+        return Err("Could not identify the destination window.".into());
     }
     TARGET.store(hwnd, Ordering::SeqCst);
     let app = windows_app(hwnd);
@@ -329,7 +329,9 @@ async fn windows_insert(
             );
         }
         if expected != format!("windows:{hwnd}:{pid}") || pid == 0 {
-            return Err("La ventana de destino cambió o se cerró. El texto sigue en GOSU.".into());
+            return Err(
+                "The destination window changed or closed. The text remains in GOSU.".into(),
+            );
         }
         native_paste(text, hwnd, own, true)
     })

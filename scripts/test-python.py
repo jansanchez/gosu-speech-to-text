@@ -13,8 +13,8 @@ def main():
         try:
             subprocess.run(command, cwd=ROOT, check=True, timeout=60)
         except subprocess.TimeoutExpired:
-            print(f'Las pruebas de {directory} superaron 60 segundos. '
-                  'Revisa bloqueos del entorno y de TestClient.', file=sys.stderr)
+            print(f'The {directory} tests exceeded 60 seconds. '
+                  'Check for environment or TestClient deadlocks.', file=sys.stderr)
             return 1
         except subprocess.CalledProcessError as error:
             return error.returncode or 1

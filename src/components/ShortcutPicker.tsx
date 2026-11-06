@@ -42,12 +42,12 @@ export default function ShortcutPicker(p: Props) {
     }
     setCapturing(true);
     setReady(false);
-    setMessage('Preparando el selector…');
+    setMessage('Preparing shortcut capture…');
     try {
       await p.onCapture(true);
       if (!alive.current) return;
       setReady(true);
-      setMessage('Pulsa tu combinación. Esc cancela.');
+      setMessage('Press your combination. Esc cancels.');
       input.current?.focus();
     } catch (error) {
       setMessage(String(error));
@@ -63,30 +63,30 @@ export default function ShortcutPicker(p: Props) {
     <fieldset className="shortcut-picker">
       <legend>
         {p.visibility
-          ? 'Mostrar u ocultar GOSU'
+          ? 'Show or hide GOSU'
           : p.panel
-            ? 'Alternar editor y modo minimalista'
-            : 'Iniciar o detener dictado'}
+            ? 'Switch between editor and minimal panel'
+            : 'Start or stop dictation'}
       </legend>
       <p>
         {p.visibility
-          ? 'Oculta o restaura la aplicación conservando la vista elegida.'
+          ? 'Hide or restore the application while keeping the selected view.'
           : p.panel
-            ? 'Alterna entre la ventana grande y el panel minimalista.'
-            : 'Pulsa para grabar y otra vez para terminar e insertar. El panel permanece disponible.'}
+            ? 'Switch between the full editor and the minimal panel.'
+            : 'Press to record, then again to stop and insert. The panel stays available.'}
       </p>
       <div className="shortcut-picker-controls">
         <input
           ref={input}
           aria-label={
             p.visibility
-              ? 'Combinación del atajo de visibilidad'
+              ? 'Visibility shortcut combination'
               : p.panel
-                ? 'Combinación del atajo del panel'
-                : 'Combinación del atajo de dictado'
+                ? 'Panel shortcut combination'
+                : 'Dictation shortcut combination'
           }
           readOnly
-          value={capturing && ready ? 'Pulsa las teclas…' : shortcutLabel(candidate)}
+          value={capturing && ready ? 'Press the keys…' : shortcutLabel(candidate)}
           disabled={p.disabled}
           data-shortcut-capture={capturing}
           onBlur={() => {
@@ -98,7 +98,7 @@ export default function ShortcutPicker(p: Props) {
             e.stopPropagation();
             if (e.key === 'Escape') {
               setCandidate(p.value);
-              setMessage('Cambio cancelado.');
+              setMessage('Change canceled.');
               void stop();
               return;
             }
@@ -111,9 +111,9 @@ export default function ShortcutPicker(p: Props) {
                     (other) => shortcutLabel(value) === shortcutLabel(other),
                   )
                 )
-                  throw Error('Cada acción debe tener un atajo diferente.');
+                  throw Error('Each action must have a different shortcut.');
                 setCandidate(value);
-                setMessage('Pulsa Guardar atajo para activarlo.');
+                setMessage('Select Save shortcut to activate it.');
                 void stop();
               }
             } catch (error) {
@@ -122,17 +122,17 @@ export default function ShortcutPicker(p: Props) {
           }}
         />
         <button type="button" disabled={p.disabled} onClick={() => void capture()}>
-          {capturing ? 'Cancelar selección' : 'Elegir combinación'}
+          {capturing ? 'Cancel selection' : 'Choose combination'}
         </button>
         <button
           type="button"
           disabled={p.disabled || capturing || candidate === p.value}
           onClick={() => {
             p.onChange(candidate);
-            setMessage('Comprobando y activando el atajo…');
+            setMessage('Checking and activating shortcut…');
           }}
         >
-          Guardar atajo
+          Save shortcut
         </button>
         <button
           type="button"
@@ -140,10 +140,10 @@ export default function ShortcutPicker(p: Props) {
           onClick={() => {
             setCandidate(initial);
             p.onChange(initial);
-            setMessage('Restaurando el atajo inicial…');
+            setMessage('Restoring the default shortcut…');
           }}
         >
-          Usar predeterminado
+          Use default
         </button>
       </div>
       <small role="status">
@@ -151,7 +151,7 @@ export default function ShortcutPicker(p: Props) {
           ? message
           : (candidate !== p.value ? message : p.status) ||
             message ||
-            `Activo: ${shortcutLabel(p.value)}`}
+            `Active: ${shortcutLabel(p.value)}`}
       </small>
     </fieldset>
   );

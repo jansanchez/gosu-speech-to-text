@@ -25,16 +25,16 @@ async def lifespan(app):
     global model, model_error
     model = None
     model_error = None
-    if not os.environ.get('VOZ_MANAGED'): print('Clave para desarrollo manual: ' + TOKEN, flush=True)
+    if not os.environ.get('VOZ_MANAGED'): print('Token for manual development: ' + TOKEN, flush=True)
     async def load():
         global model, model_error
         try:
             from faster_whisper import WhisperModel
-            print('Cargando modelo ' + MODEL_NAME + '. La primera vez se descarga desde Hugging Face.', file=sys.stderr, flush=True)
+            print('Loading model ' + MODEL_NAME + '. The first download is from Hugging Face.', file=sys.stderr, flush=True)
             model = await run_in_threadpool(lambda: WhisperModel(MODEL_NAME, device='cpu', compute_type='int8'))
-            print('Motor local listo.', file=sys.stderr, flush=True)
+            print('Local engine ready.', file=sys.stderr, flush=True)
         except Exception as exc:
-            model_error='No se pudo cargar el modelo ('+type(exc).__name__+'). Revisa la conexión, espacio y diagnóstico; reinicia GOSU Speech to Text tras resolverlo.'
+            model_error='Could not load the model ('+type(exc).__name__+'). Check connectivity, disk space, and diagnostics; restart GOSU Speech to Text after resolving the issue.'
             print(model_error, file=sys.stderr, flush=True)
     loading=asyncio.create_task(load())
     try:
@@ -52,19 +52,19 @@ def health():
     return {'ready':model is not None,'model':MODEL_NAME,'processing':'local','state':'ready' if model is not None else 'error' if model_error else 'loading','error':model_error}
 
 @app.post('/transcribe')
-async def transcribe(file:UploadFile=File(...),language:str=Form('es'),vocabulary:str=Form(''),x_voz_token:str=Header('')):
-    if not secrets.compare_digest(x_voz_token,TOKEN):raise HTTPException(401,'Clave local incorrecta. Cópiala desde la terminal del motor.')
-    if model is None:raise HTTPException(503,model_error or 'El modelo todavía se está preparando. Espera a Motor listo antes de reintentar.')
+async def transcribe(file:UploadFile=File(...),language:str=Form('en'),vocabulary:str=Form(''),x_voz_token:str=Header('')):
+    if not secrets.compare_digest(x_voz_token,TOKEN):raise HTTPException(401,'Incorrect local token. Copy it from the engine terminal.')
+    if model is None:raise HTTPException(503,model_error or 'The model is still being prepared. Wait for Engine ready before retrying.')
     data=await file.read(5_000_001)
-    if len(data)>5_000_000:raise HTTPException(413,'Fragmento demasiado grande.')
-    if len(vocabulary)>2000:raise HTTPException(400,'El diccionario es demasiado largo.')
+    if len(data)>5_000_000:raise HTTPException(413,'Chunk is too large.')
+    if len(vocabulary)>2000:raise HTTPException(400,'The dictionary is too long.')
     allowed=LANGUAGES | {'auto'}
-    if language not in allowed:raise HTTPException(400,'Código de idioma no admitido por Whisper.')
+    if language not in allowed:raise HTTPException(400,'Language code is not supported by Whisper.')
     try:
         with wave.open(io.BytesIO(data)) as w:
             if w.getnchannels()!=1 or w.getsampwidth()!=2 or not 8000<=w.getframerate()<=192000 or w.getnframes()/w.getframerate()>21:
-                raise ValueError('Formato o duración inválidos')
-    except (wave.Error,EOFError,ValueError):raise HTTPException(400,'Se requiere audio WAV mono PCM16 de hasta 21 segundos.')
+                raise ValueError('Invalid format or duration')
+    except (wave.Error,EOFError,ValueError):raise HTTPException(400,'Mono PCM16 WAV audio of up to 21 seconds is required.')
     def run():
         with lock:
             segments,info=model.transcribe(io.BytesIO(data),language=None if language=='auto' else language,beam_size=3,word_timestamps=True,vad_filter=True,condition_on_previous_text=False,initial_prompt=vocabulary or None)
@@ -76,16 +76,16 @@ async def transcribe(file:UploadFile=File(...),language:str=Form('es'),vocabular
             return {'text':''.join(texts).strip(),'words':words,'language':info.language}
     try:return await run_in_threadpool(run)
     except Exception as exc:
-        print('Fallo de inferencia:',type(exc).__name__,file=sys.stderr,flush=True)
-        raise HTTPException(500,'No se pudo transcribir. Conserva o reintenta el fragmento.')
+        print('Inference failed:',type(exc).__name__,file=sys.stderr,flush=True)
+        raise HTTPException(500,'Could not transcribe. Preserve or retry the chunk.')
 
 
 @app.post('/rewrite')
 async def edit_naturally(request:RewriteRequest,x_voz_token:str=Header('')):
-    if not secrets.compare_digest(x_voz_token,TOKEN):raise HTTPException(401,'Autenticación local incorrecta.')
+    if not secrets.compare_digest(x_voz_token,TOKEN):raise HTTPException(401,'Incorrect local authentication.')
     return await run_in_threadpool(lambda:rewrite(request))
 
 @app.post('/search')
 async def search_naturally(request:SearchRequest,x_voz_token:str=Header('')):
-    if not secrets.compare_digest(x_voz_token,TOKEN):raise HTTPException(401,'Autenticación local incorrecta.')
+    if not secrets.compare_digest(x_voz_token,TOKEN):raise HTTPException(401,'Incorrect local authentication.')
     return await run_in_threadpool(lambda:search(request))

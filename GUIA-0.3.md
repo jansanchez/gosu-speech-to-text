@@ -1,153 +1,98 @@
-> Para compilación actual por SO y arquitectura, consulta [README.md](README.md) y [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md). Las cifras antiguas de pruebas de esta guía no acreditan la versión actual; consulta [VALIDACION.md](VALIDACION.md). El dictado mínimo y los permisos actuales están en [MINIMAL-MODE.md](MINIMAL-MODE.md).
+# Installation, updates, and usage
 
-> Linux tiene ahora un Makefile completo. Consulta **LINUX-MAKE.md** para la instalación y compilación con make.
+This guide retains its historical filename for existing links. Use [README.md](README.md) and [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) for current build requirements, [MINIMAL-MODE.md](MINIMAL-MODE.md) for current shortcuts/permissions, and [VALIDACION.md](VALIDACION.md) for the scope of real evidence. Historical 0.3 test counts do not certify current releases.
 
-# GOSU Speech to Text 0.3.2 · instalación, actualización y uso
+The source includes Windows/Linux/macOS desktop clients, an independent Chrome extension, local recognition, and native build workflows. The earlier Windows startup fix is included. [FEATURES.md](FEATURES.md) separates implemented behavior from optional models and unfinished capabilities.
 
-El código fuente incluye escritorio Windows/Linux/macOS, extensión Chrome, motor de transcripción local y workflows de compilación. Incorpora el parche de arranque que el usuario confirmó funcionando en Windows y conserva Ctrl+Alt+C y Ctrl+Alt+V.
+## Updating an existing checkout
 
-Esta versión amplía el producto con funciones reales. FEATURES.md distingue lo implementado, lo que necesita un modelo local opcional y las capacidades aún pendientes. No se afirma haber completado toda la visión de producto ni validado todos los sistemas. Consulta VALIDACION.md para las comprobaciones y el alcance de la evidencia actual.
-
-## 1. Actualizar tu Windows que ya funciona
-
-Cierra GOSU Speech to Text y detén su terminal con Ctrl+C. Descarga gosu-speech-to-text-v0.3.2-source.zip en Downloads. Ejecuta en PowerShell:
+Export important drafts/backups first. Close GOSU and stop its development terminal with Ctrl+C. For historical 0.3.2 source ZIPs on Windows:
 
 ```powershell
 $zip = Join-Path $env:USERPROFILE 'Downloads\gosu-speech-to-text-v0.3.2-source.zip'
 $update = Join-Path $env:TEMP ('gosu-update-' + [guid]::NewGuid().ToString())
 Expand-Archive -LiteralPath $zip -DestinationPath $update
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$update\gosu-speech-to-text\scripts\actualizar-windows.ps1" -ProjectPath 'D:\projects\voz'
-if ($LASTEXITCODE -ne 0) { throw 'La actualización falló. Revisa el mensaje anterior.' }
+if ($LASTEXITCODE -ne 0) { throw 'Update failed. Review the output above.' }
 Set-Location 'D:\projects\voz'
 npm.cmd ci
-if ($LASTEXITCODE -ne 0) { throw 'La instalación npm falló.' }
+if ($LASTEXITCODE -ne 0) { throw 'npm installation failed.' }
 npm.cmd run desktop
 ```
 
-El actualizador respalda los archivos que reemplaza en .voz-backups. Conserva .venv, target, modelos descargados y los datos de la aplicación. El identificador org.voz.prototype y las claves de almacenamiento se mantienen. Antes de cualquier actualización importante, exporta tus dictados o un respaldo desde la aplicación.
+For newer ZIPs adjust the filename and extracted root. The updater backs up replaced source files under `.voz-backups`, preserving `.venv`, `target`, model caches, application data, `org.voz.prototype`, and storage keys. To revert source, restore its code backup and run `npm ci`; code backups are not transcript backups.
 
-Si quieres revertir el código, copia el contenido de la carpeta de respaldo creada sobre el proyecto y ejecuta npm ci. Los respaldos de código no sustituyen los respaldos de tus textos.
-
-## 2. Preparar desde cero
-
-Instala las herramientas de BUILD-AND-RELEASE.md: Python 3.12, Node 22, Rust estable y las dependencias nativas de tu sistema. INSTALAR-WINDOWS.md detalla C++ Build Tools, SDK, WebView2 y Rust. No hace falta activar venv ni copiar una clave en el escritorio.
-
-Desde la carpeta descomprimida gosu-speech-to-text:
-
-Windows PowerShell:
-
-```powershell
-py -3.12 scripts\configurar.py --dev
-```
-
-Linux y macOS, con Python 3.12 ya instalado:
+On Linux/macOS, run the updater from the new extracted source:
 
 ```bash
-python3.12 scripts/configurar.py --dev
-```
-
-El asistente crea .venv, instala dependencias, ejecuta las pruebas y abre el escritorio. No instala herramientas del sistema con privilegios ni cambia su configuración global. Si falta una dependencia nativa, consulta los comandos de tu distribución en BUILD-AND-RELEASE.md.
-
-En Arch puedes usar uv:
-
-```bash
-uv python install 3.12
-uv run --python 3.12 --no-project python scripts/configurar.py --dev
-```
-
-Para actualizar otro proyecto Linux/macOS desde el nuevo ZIP:
-
-```bash
-python3 scripts/actualizar.py /ruta/al/proyecto/voz
-cd /ruta/al/proyecto/voz
+python3 scripts/actualizar.py /path/to/previous/project
+cd /path/to/previous/project
 npm ci
 npm run desktop
 ```
 
-Puedes revisar primero los archivos afectados añadiendo --dry-run al actualizador.
+Add `--dry-run` to inspect affected files first. Updating source does not replace an already installed binary; rebuild/reinstall its full package.
 
-## 3. Generar instaladores
+## First setup and packaging
 
-En cada SO/arquitectura correspondiente, con los requisitos instalados:
-
-Windows:
+Install Python 3.12, Node 22, stable Rust, and native dependencies from the [build guide](BUILD-AND-RELEASE.md). Windows requires C++ Build Tools/SDK/WebView2. No environment activation or manual engine token is needed on desktop.
 
 ```powershell
-py -3.12 scripts\configurar.py --build
+py -3.12 scripts/configurar.py --dev
+# After closing development:
+py -3.12 scripts/configurar.py --build
 ```
 
-Linux/macOS:
-
 ```bash
+python3.12 scripts/configurar.py --dev
+# After closing development:
 python3.12 scripts/configurar.py --build
 ```
 
-Resultados en src-tauri/target/release/bundle:
+On Arch, `uv python install 3.12` and `uv run --python 3.12 --no-project python scripts/configurar.py --dev` can provide the required interpreter without replacing system Python. The helper prepares dependencies and checks the project; it does not elevate privileges or change global system configuration.
 
-| Compilación | Resultado |
+Build natively on each OS/architecture. Output under `src-tauri/target/release/bundle/`: Windows `nsis/*.exe`, Linux `appimage/*.AppImage`/`deb/*.deb`, macOS `macos/*.app`/`dmg/*.dmg` separately for ARM64 and Intel. `make bundle` builds Linux packages; the low-level route is `npm run desktop:build -- --bundles deb,appimage -- --locked`.
+
+Public Linux builds use Ubuntu 22.04; Arch builds may require newer glibc. Installers include Python; users need applicable system components but no Rust/Node/Python development tools. Initial Whisper weights are downloaded and cached. Signing/notarization require separate setup and are not established by packaging alone.
+
+## First dictation
+
+Wait for Engine ready. Resolve recovered chunks with Retry; desktop can play pending audio. Select your recognition language, dictate, and pause. Review marked words; signals are heuristic, not calibrated probabilities. Copy/paste after review. GOSU never automatically submits text or presses Enter.
+
+| Shortcut | Action |
 |---|---|
-| Windows x64 | nsis/*.exe |
-| Linux x64 | appimage/*.AppImage |
-| macOS ARM64 | macos/*.app y dmg/*.dmg |
-| macOS Intel | macos/*.app y dmg/*.dmg, compilados en Intel |
+| Ctrl+Shift+Space | Configurable start/stop; minimal mode copies and attempts insertion on stop |
+| Ctrl+Shift+M | Configurable editor/panel switch |
+| Ctrl+Shift+H | Configurable hide/restore with view preserved |
+| Ctrl+Alt+D | Start dictation or stop active capture |
+| Ctrl+Alt+E | Start correction or stop active capture |
+| Ctrl+Alt+C | Copy draft |
+| Ctrl+Alt+V | Request paste in the active window |
 
-Para DEB en Ubuntu, después de preparar el motor:
+On macOS the configurable defaults use Cmd; fixed shortcuts use Control+Option. Conflicts are reported and buttons remain available. See [minimal mode](MINIMAL-MODE.md) for focus, target selection, and permissions.
 
-```bash
-npm run desktop:build -- --bundles deb,appimage
-```
+## Languages and corrections
 
-Compila el AppImage público en Ubuntu 22.04 con el workflow, además de probarlo en Arch. Un build en Arch puede depender de una glibc más reciente. Cada instalador contiene su motor Python; el usuario final no instala Rust/Node/Python. Los pesos de Whisper se descargan en el primer arranque y después se reutilizan localmente.
+The interface is English; recognition is independent. English is the default for new installations. Existing saved language settings are preserved. The ten priority languages are English, Mandarin Chinese, Hindi, Spanish, French, Arabic, Bengali, Portuguese, Russian, and Urdu. Other existing recognition options remain available. [Language guide](LANGUAGES.md) lists explicit supported phrases and validation limits.
 
-La firma y notarización para publicación requieren configurar los certificados del editor. El workflow genera candidatos de release; no publica ni firma automáticamente. Prueba cada paquete en un equipo limpio antes de distribuirlo.
+Select Correct or press Ctrl+Alt+E. One command is captured as one chunk, then that capture stops. English commands include:
 
-## 4. Primera sesión
+- “replace tomorrow with Thursday”, “delete last sentence”, “delete selection”, “new paragraph”, “make it a list”.
+- “select tomorrow” selects a unique occurrence; “option one”, “option two” resolve ambiguous replacements. Buttons/manual selection remain available.
+- “undo”, “redo”, “copy text”, “paste text”, “read text”, “stop reading”.
+- “insert snippet greeting”; “confirm change”, “cancel change”; “remember correction”.
+- “mark favorite”, “remove favorite”, “new draft”, “dictation mode”, “correction mode”.
 
-1. Espera a Motor listo · base.
-2. Si hay audio pendiente, usa Reintentar. Ahora puedes escucharlo antes de decidir.
-3. Dicta una frase y haz una pausa. La aplicación añade el tramo terminado.
-4. Revisa las palabras marcadas. Pulsarlas selecciona una aparición en el borrador para corregirla; son señales heurísticas del modelo, no probabilidades calibradas.
-5. Copia o pega después de revisar. Nunca envía el mensaje ni pulsa Enter por ti.
+Spanish commands remain compatible. Basic controls and editing phrases are available for all ten priority languages; grammars are deliberately limited and not arbitrary natural language. Desktop selection, snippet insertion, and numbered ambiguity use the documented priority-language phrase grammars. Commands are interpreted in Correct mode: normal dictated text containing “copy” is not automatically executed.
 
-| Atajo de escritorio | Acción |
-|---|---|
-| Ctrl+Shift+Espacio (configurable) | Iniciar/detener el dictado; en modo mínimo copia e intenta insertar al terminar |
-| Ctrl+Shift+M (configurable) | Alternar editor/minimalista |
-| Ctrl+Shift+H (configurable) | Ocultar/restaurar la aplicación conservando su vista |
-| Ctrl+Alt+D | Iniciar dictado o detener la grabación activa |
-| Ctrl+Alt+E | Iniciar corrección o detener la grabación activa |
-| Ctrl+Alt+C | Copiar el borrador |
-| Ctrl+Alt+V | Solicitar pegado en la ventana activa |
+Ambiguous corrections present choices or request selection. Undo/redo also have buttons. Manual typing is grouped to avoid storing one history entry per keystroke.
 
-Los atajos pueden entrar en conflicto con los del sistema; la aplicación muestra los errores de registro. En macOS, los tres atajos configurables predeterminados utilizan Command en lugar de Control. Los atajos fijos anteriores utilizan Control+Option. Los botones siguen disponibles.
+## Optional local editing and semantic search
 
-## 5. Correcciones por voz y teclado
+Dictation and deterministic commands do not need Ollama. For free-form requests such as “make it shorter” or “translate into English”:
 
-Activa Corregir o pulsa Ctrl+Alt+E. Una orden se procesa como un tramo y termina la captura de esa orden.
-
-- «cambia mañana por jueves» / «replace tomorrow with Thursday».
-- «borra la última frase» / «delete last sentence».
-- «borra la selección», «nuevo párrafo», «pon en lista».
-- «selecciona mañana»: selecciona una aparición única.
-- «opción uno», «opción dos»: elige entre apariciones de un reemplazo ambiguo.
-- «deshacer», «rehacer», «copiar», «pegar».
-- «leer texto», «detener lectura» (requiere voz local del sistema).
-- «insertar plantilla saludo».
-- «confirmar cambio», «cancelar cambio»: propuestas del editor natural.
-- «recordar corrección»: guarda como regla personal el último reemplazo propuesto.
-- «marcar favorito», «quitar favorito», «nuevo dictado», «modo dictado», «modo corrección».
-
-Las órdenes concretas tienen gramática limitada en español y algunas equivalencias en inglés; el dictado multilingüe no significa que cada orden esté traducida a todos los idiomas. Las órdenes se interpretan en Corregir: dictar una frase que contiene la palabra copiar no copia por accidente.
-
-Si una orden es ambigua, se ofrecen opciones o se pide seleccionar. Las correcciones libres necesitan el editor local opcional del siguiente apartado. Deshacer/rehacer también tienen botones. La escritura manual se agrupa en operaciones para evitar guardar una versión por cada letra.
-
-## 6. Edición libre y búsqueda por significado, opcionales
-
-El dictado y las órdenes concretas funcionan sin Ollama. Para «hazlo más breve», «corrige la redacción», «traduce al inglés» y búsqueda semántica:
-
-1. Instala Ollama desde https://ollama.com/download para tu sistema. Es una aplicación adicional; no está incluida en el instalador básico de GOSU Speech to Text.
-2. En Linux, si no lo instalas mediante tu gestor de paquetes, sigue https://docs.ollama.com/linux. En Arch puedes usar el paquete de tu distribución. Inicia el servicio o ejecuta `ollama serve` en una terminal que permanezca abierta. Windows y macOS pueden iniciar el servicio con su aplicación.
-3. En otra terminal, descarga los modelos:
+1. Install Ollama from https://ollama.com/download. It is separate from GOSU's base installer. On Linux see https://docs.ollama.com/linux or your distribution package. Start its app/service or keep `ollama serve` running.
+2. Download compatible local models:
 
 ```bash
 ollama pull qwen2.5:1.5b
@@ -155,52 +100,31 @@ ollama pull bge-m3
 ollama list
 ```
 
-4. En GOSU Speech to Text abre Herramientas, preferencias y respaldos > Edición natural local. Activa propuestas con Ollama y deja qwen2.5:1.5b. El modelo de búsqueda es bge-m3.
-5. Selecciona un fragmento si quieres limitar la corrección. Dicta una petición en Corregir o escríbela en Escribir una petición de edición.
-6. Revisa Antes y Propuesta. Aplica con el botón o diciendo «confirmar cambio» en Corregir. Si editaste manualmente mientras esperaba, no permite sobrescribir el texto cambiado.
+3. In Tools, settings, and backups → Local natural editing, enable local suggestions and choose the model; `qwen2.5:1.5b` is an entry-level default, not a claim of equal quality in all languages. `bge-m3` is the default search model.
+4. Select text to limit the edit. Dictate a request in Correct mode or type it in Enter an editing request.
+5. Review Before/Suggestion. Confirm by button or “confirm change”; edits made while the suggestion was pending cannot be silently overwritten.
 
-GOSU Speech to Text se conecta solo a http://127.0.0.1:11434 y rechaza modelos identificados como remotos/cloud. No transmite texto a un proveedor externo por su cuenta. Los modelos deben descargarse antes de usar estas funciones sin Internet. La calidad y velocidad dependen del equipo y del modelo; revisa especialmente nombres, cifras y negaciones. El modelo pequeño es una opción de entrada y puedes sustituirlo por otro modelo local compatible.
+GOSU connects only to `127.0.0.1:11434` and rejects models reported as remote/cloud. Models need downloading before offline use. Quality/speed vary by machine, model, and language; review names, numbers, and negations. Choose another compatible local model when needed.
 
-La búsqueda por significado se activa con el botón de la bandeja después de escribir una consulta. Revisa hasta 300 borradores, como máximo los primeros 4000 caracteres de cada uno, y devuelve 20 resultados. Los vectores se cachean en memoria del motor; no se crea un índice permanente ni se sube la bandeja a una nube. El primer uso puede tardar más.
+Semantic search uses up to 300 drafts and their first 4000 characters, returning 20 results. Embeddings are cached in engine memory, without a permanent index or cloud upload. Initial requests may take longer. Similarity scores are not accuracy percentages.
 
-## 7. Preferencias personales, plantillas y bandeja
+## Personal rules, snippets, and workspace
 
-- Tras «cambia X por Y», Recordar esta corrección añade una regla solamente si la confirmas. También puedes agregar o quitar reglas en Lo que has enseñado a GOSU Speech to Text.
-- Las muletillas solo se eliminan si tú las escribes y eliges modo Depurado. No se deducen reglas permanentes de una conversación.
-- Guarda plantillas con nombre e insértalas con botón o por voz.
-- Asigna título, etiquetas y favorito a cada borrador. La búsqueda normal incluye esos campos.
-- Unir conserva el otro borrador. Dividir usa la posición del cursor y crea un segundo borrador.
-- La limpieza por antigüedad muestra una confirmación y conserva favoritos y borradores con audio pendiente. No hay una tarea automática que borre información sin intervención.
+After an explicit replacement, Remember this correction saves a personal rule only on confirmation. Manage rules in Tools; fillers are removed only when explicitly configured in Cleaned mode. The application does not infer permanent preferences from a conversation. Named snippets support buttons and the documented voice grammar. Draft titles/tags/favorites participate in normal search. Joining preserves the source draft; splitting uses the cursor and creates another draft. Age cleanup requires confirmation and preserves favorites and pending audio; it is not an automatic deletion task.
 
-## 8. Privacidad y respaldos
+## Privacy, backups, and accessibility
 
-Sesión privada abre una bandeja temporal en memoria y vuelve a la bandeja anterior al salir. No guarda su texto ni audio nuevo en IndexedDB. No puedes cambiar de sesión con una grabación, importación o audio pendiente activo. El motor recibe audio en memoria para inferencia. No es una promesa de borrado forense de memoria, swap, registro del sistema o archivos que exportes expresamente.
+Private session opens a temporary in-memory workspace and restores the previous one on exit. New private content avoids normal IndexedDB persistence. Switching is blocked during active capture/import/pending audio. This does not guarantee forensic erasure of memory/swap/system logs or files explicitly exported.
 
-El respaldo completo incluye textos, versiones, preferencias y plantillas; excluye audio pendiente y claves del motor. Sin contraseña se descarga sin cifrar. Con contraseña de al menos 10 caracteres se cifra mediante AES-GCM y PBKDF2-SHA256. Si pierdes la contraseña no hay recuperación incorporada. Máximo 20 MB de contenido antes del cifrado. El historial interno normal sigue sin cifrado propio.
+Full backups include text, history, settings, and snippets, excluding pending audio and engine tokens. Without a password they are readable JSON. Passwords of at least 10 characters enable AES-GCM/PBKDF2-SHA256; forgotten passwords cannot be recovered. Maximum plaintext content: 20 MB. Normal internal history has no application encryption. You can transfer an encrypted backup using Drive/Dropbox, but this does not implement OAuth, automatic synchronization, or conflict resolution.
 
-Puedes guardar el archivo cifrado en una carpeta sincronizada de Drive/Dropbox y restaurarlo en otro equipo. Esto es una transferencia mediante archivo; no hay OAuth de Google, sincronización automática ni resolución de conflictos implementados.
+Read aloud uses voices reported as local by the platform; install a system voice if unavailable. Import recording accepts formats the WebView can decode, limited to 40 MB/30 minutes; conversion produces mono 16 kHz WAV chunks of up to 18 seconds in the recoverable queue. Session switching is blocked during import. Compressed audio can require substantial decoded memory. Convert unsupported formats to WAV or split large recordings.
 
-La lectura en voz alta utiliza únicamente voces que el navegador identifica como locales. Si no hay ninguna disponible, pide instalar una voz del sistema.
+Tools includes high contrast, editor size, microphone threshold, and optional stop sound. Buttons, visible focus, and labels remain available. Real NVDA/VoiceOver and ten-language speaker audits remain pending. See [PRIVACY.md](PRIVACY.md).
 
-## 9. Grabaciones y accesibilidad
+## External insertion and Chrome
 
-Importar grabación acepta formatos que el WebView pueda decodificar. Límite 40 MB y 30 minutos por archivo. Se convierte a WAV mono 16 kHz por segmentos de 18 segundos y se guarda en la misma cola recuperable. Si el formato no es compatible, convierte el archivo a WAV o divídelo. Durante la importación se bloquean cambios de sesión. Importar una grabación comprimida puede necesitar bastante memoria al decodificarla.
-
-Herramientas incluye alto contraste, tamaño del editor, umbral ajustable para voz suave y señal sonora opcional al detener. Todos los controles conservan botones, foco visible y etiquetas; falta auditoría real con NVDA/VoiceOver. El modo compacto se conserva.
-
-## 10. Linux y macOS: pegado externo
-
-El flujo Windows dictado/copia/pegado fue confirmado por el usuario en 0.2.1 + hotfix. La ampliación 0.3 requiere repetir esa prueba de aceptación.
-
-Linux X11: instala xdotool y xprop según LINUX-MAKE.md. El adaptador recuerda la ventana externa, activa el destino si corresponde, comprueba que siga activo y solicita el pegado apropiado al destino (Ctrl+Shift+V en terminales detectadas). Si falta la herramienta o cambia el foco, conserva el texto copiado y explica el fallo.
-
-Wayland: Hyprland dispone de integración propia; otros compositores pueden usar los portales GlobalShortcuts/RemoteDesktop compatibles y sus permisos. El portal genérico no identifica la aplicación y utiliza el campo enfocado. Si la inserción falla, conserva el texto para copiar. Consulta MINIMAL-MODE.md.
-
-macOS: utiliza System Events/osascript y el portapapeles. Puede requerir permisos de Accesibilidad y Automatización para GOSU Speech to Text. Comprueba el destino antes de solicitar Cmd+V. El adaptador está incluido pero no ha sido ejecutado en un Mac real en esta entrega.
-
-## 11. Extensión Chrome
-
-Código editable en extension/. Puedes compilarlo en cualquier sistema:
+Earlier Windows 0.2.1 plus hotfix was user-confirmed; repeat acceptance for current releases. X11 needs `xdotool`/`xprop`, verifies focus, and uses Ctrl+Shift+V for detected terminals. Wayland needs Hyprland or authorized compatible portals; generic portals cannot identify the application. macOS uses System Events/osascript and may require Accessibility/Automation permission. Failed insertion preserves copied text. See [MINIMAL-MODE.md](MINIMAL-MODE.md) for all limits.
 
 ```bash
 npm ci
@@ -208,21 +132,12 @@ npm run extension:build
 python3 scripts/package-extension.py
 ```
 
-En Windows usa `py -3.12 scripts\package-extension.py` en el último paso.
+On Windows use `py -3.12 scripts/package-extension.py`. Load `extension-dist/` via `chrome://extensions` → Developer mode → Load unpacked. The generated ZIP has a root manifest suitable for store submission, which separately requires a developer account, listing, privacy policy, and review. Compiled files are not kept in Git.
 
-- Para instalar localmente: chrome://extensions > Modo desarrollador > Cargar descomprimida > extension-dist.
-- Para la tienda: gosu-speech-to-text-chrome.zip contiene manifest.json en la raíz. Necesitas cuenta de desarrollador, ficha, política de privacidad y revisión de Chrome Web Store.
-- La extensión compilada no se mantiene en Git. Genera el ZIP con los comandos anteriores o descárgalo del workflow del mismo commit.
-- Coloca el cursor en una página y abre GOSU Speech to Text desde el icono. En su pestaña carga el modelo, dicta y revisa antes de insertar.
-- La extensión conserva audio pendiente en IndexedDB, permite reintentar, reglas manuales, plantillas, sesión privada y respaldos cifrados. El respaldo exportado puede abrirse en el escritorio. Al restaurar un respaldo de escritorio, la extensión importa el borrador activo y preferencias, no toda su bandeja.
-- Usa input/textarea y algunos contenteditable. Rechaza destinos cambiados, contraseñas y ciertos editores estructurados. Google Docs y editores no compatibles requieren Copiar.
-- La extensión no incluye editor libre ni búsqueda semántica de Ollama. Su motor WASM y permisos todavía necesitan validación en Chrome real. No se afirma paridad de funciones con el escritorio.
-- Conserva la identidad/carpeta de la extensión al actualizar, o exporta antes de reinstalar. La versión de tienda tendrá su identidad asignada por Chrome Web Store.
+Focus the destination, open GOSU's extension icon, load the model in its recorder tab, dictate, review, and insert. The extension supports recoverable audio, manual rules/snippets, private sessions, and encrypted backups. Desktop restoration imports only the active draft/settings/snippets, not the full multi-draft workspace. Simple input/textarea/contenteditable are supported; changed/password/structured destinations are rejected. Use Copy for Google Docs or unsupported editors. Free-form Ollama editing and semantic search are desktop-only. Real Chrome model/device/permission validation is still required.
 
-## 12. GitHub y release
+Preserve the extension identity and directory when updating, or export before reinstalling. Chrome Web Store assigns the store identity.
 
-Publica este árbol de código en tu repositorio. No subas .venv, node_modules, motores generados, target ni ready. Conserva la licencia y notices de dependencias.
+## Release handling
 
-El workflow .github/workflows/release.yml genera Windows, Ubuntu Linux, macOS ARM64, macOS Intel y el ZIP Chrome mediante ejecución manual o tag v*. Consulta BUILD-AND-RELEASE.md para preparar la compilación y revisar los artefactos. Publicar y firmar requiere un paso separado. Los builds de escritorio generan también SHA256SUMS.txt.
-
-Prueba paquetes en cada SO antes de marcarlos estables. No se incluyen credenciales, certificados de firma ni publicación automática a la tienda.
+Do not upload `.venv`, `node_modules`, generated engines, `target`, or historical `ready` output to Git. Retain licenses/notices. The workflow builds native installers and Chrome ZIP; publication requires explicit `publish` approval and the exact version from main. Review [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md), hashes, and clean-install acceptance before distributing. No signing/store credentials are bundled in the source.

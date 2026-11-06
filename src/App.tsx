@@ -1,3 +1,4 @@
+import { normalizeEditCommand, normalizeNavigationCommand } from './speech';
 import { shortcutLabel } from './shortcuts';
 import ShortcutPicker from './components/ShortcutPicker';
 import { useMinimalDictation } from './hooks/useMinimalDictation';
@@ -53,7 +54,7 @@ export default function App() {
     [editing, setEditing] = useState(false),
     [busy, setBusy] = useState(false),
     [level, setLevel] = useState(0),
-    [message, setMessage] = useState('Tu voz, con espacio para pensar.'),
+    [message, setMessage] = useState('Your voice, with room to think.'),
     [settingsOpen, setSettingsOpen] = useState(false),
     [devices, setDevices] = useState<MediaDeviceInfo[]>([]),
     [query, setQuery] = useState(''),
@@ -157,7 +158,7 @@ export default function App() {
     if (loaded) {
       restoreJobs(recoveredJobs);
       if (recoveredJobs.length)
-        setMessage('Hay fragmentos de audio pendientes. Reinténtalos o elimínalos.');
+        setMessage('There are pending audio chunks. Retry or delete them.');
     }
   }, [loaded, recoveredJobs]);
   useEffect(() => {
@@ -188,7 +189,7 @@ export default function App() {
     persist: persistState,
     createSession: () => {
       const session = fresh();
-      session.title = 'Dictado rápido';
+      session.title = 'Quick dictation';
       manual.current.reset();
       change((s) => ({ ...s, sessions: [session, ...s.sessions], active: session.id }));
       selection.current = [0, 0];
@@ -216,7 +217,7 @@ export default function App() {
           shortcutLabel(ref.current.settings[other]) === shortcutLabel(value),
       )
     ) {
-      setShortcutError('Cada acción debe tener un atajo diferente.');
+      setShortcutError('Each action must have a different shortcut.');
       return;
     }
     change((s) => ({ ...s, settings: { ...s.settings, [key]: value } }));
@@ -232,7 +233,7 @@ export default function App() {
       if (ref.current.settings.shortcut === requested) {
         setShortcut(previous);
         setShortcutError(
-          'No se pudo activar esa combinación. Se conservó el atajo anterior.',
+          'Could not activate that combination. The previous shortcut was preserved.',
         );
       }
     },
@@ -242,7 +243,7 @@ export default function App() {
       if (ref.current.settings.visibilityShortcut === requested) {
         setVisibilityShortcut(previous);
         setShortcutError(
-          'No se pudo activar el atajo de visibilidad. Se conservó el anterior.',
+          'Could not activate the visibility shortcut. The previous shortcut was preserved.',
         );
       }
     },
@@ -251,7 +252,7 @@ export default function App() {
       if (ref.current.settings.minimalShortcut === requested) {
         setMinimalShortcut(previous);
         setShortcutError(
-          'No se pudo activar el atajo del panel. Se conservó el anterior.',
+          'Could not activate the panel shortcut. The previous shortcut was preserved.',
         );
       }
     },
@@ -276,7 +277,7 @@ export default function App() {
         ),
       );
     } catch (e) {
-      setError('No se pudo acceder al micrófono: ' + String(e));
+      setError('Could not access the microphone: ' + String(e));
     }
   }
   async function toggle(requestedMode?: boolean) {
@@ -302,10 +303,9 @@ export default function App() {
       }
       if (stalled.current)
         setMessage(
-          'Micrófono detenido. Hay audio pendiente: comprueba el motor y pulsa Reintentar.',
+          'Microphone stopped. Audio is pending: check the engine and select Retry.',
         );
-      else
-        setMessage('Micrófono detenido. Los fragmentos pendientes siguen procesándose.');
+      else setMessage('Microphone stopped. Pending chunks are still being processed.');
       return;
     }
     if (!loaded || importing.current || restarting) return;
@@ -317,7 +317,7 @@ export default function App() {
       if (!isTauri() && !tokenRef.current.trim()) {
         setSettingsOpen(true);
         setError(
-          'Espera a que el motor se conecte; en desarrollo web introduce la clave de la terminal.',
+          'Wait for the engine to connect; in web development, enter the token from the terminal.',
         );
         return;
       }
@@ -365,7 +365,7 @@ export default function App() {
         setLevel,
         () => {
           if (recording.current) void toggle();
-          setError('Se desconectó el micrófono. El borrador se conserva.');
+          setError('Microphone disconnected. The draft has been preserved.');
         },
         config.sensitivity,
       );
@@ -373,11 +373,11 @@ export default function App() {
       setListening(true);
       note(
         mode
-          ? 'Escuchando una orden de corrección.'
-          : 'Escuchando. Haz una pausa para ver el siguiente tramo.',
+          ? 'Listening for a correction command.'
+          : 'Listening. Pause to see the next chunk.',
       );
     } catch (e) {
-      setError('No se pudo iniciar el micrófono: ' + String(e));
+      setError('Could not start the microphone: ' + String(e));
     } finally {
       starting.current = false;
     }
@@ -398,7 +398,7 @@ export default function App() {
       );
       setSemanticResults(result.results.map((a) => a.id));
       note(
-        'Resultados por significado de hasta 300 borradores. Las puntuaciones son similitud, no porcentajes de acierto.',
+        'Semantic results from up to 300 drafts. Scores measure similarity, not accuracy percentages.',
       );
     } catch (e) {
       setError(String(e));
@@ -416,7 +416,7 @@ export default function App() {
     manual.current.reset();
     const s = ref.current.sessions.find((x) => x.id === id)!;
     if (!s.redo?.length) {
-      note('No hay cambios para rehacer.');
+      note('There are no changes to redo.');
       return;
     }
     patchSession(id, (x) => ({
@@ -425,7 +425,7 @@ export default function App() {
       versions: pushHistory(x.versions, x.text),
       redo: x.redo!.slice(0, -1),
     }));
-    note('Cambio rehecho.');
+    note('Change redone.');
   }
   function manualText(id: string, text: string) {
     patchSession(id, (x) => ({
@@ -446,15 +446,13 @@ export default function App() {
   }
   function readText() {
     if (!('speechSynthesis' in window)) {
-      setError('Este sistema no ofrece lectura de voz en el navegador integrado.');
+      setError('Read aloud is unavailable in this embedded browser.');
       return;
     }
     speechSynthesis.cancel();
     const local = speechSynthesis.getVoices().filter((v) => v.localService);
     if (!local.length) {
-      setError(
-        'No hay una voz local disponible. Instala una voz del sistema y vuelve a intentarlo.',
-      );
+      setError('No local voice is available. Install a system voice and try again.');
       return;
     }
     const utterance = new SpeechSynthesisUtterance(
@@ -473,19 +471,19 @@ export default function App() {
     const s = ref.current.sessions.find((a) => a.id === p.session);
     if (!s || s.text !== p.snapshot) {
       setError(
-        'El borrador cambió. Cancela la propuesta y vuelve a pedirla sobre el texto actual.',
+        'The draft changed. Cancel the suggestion and request it again for the current text.',
       );
       return;
     }
     updateText(s.id, p.text);
     setProposal(null);
     proposalRef.current = null;
-    note('Propuesta aplicada. Puedes deshacerla.');
+    note('Suggestion applied. You can undo it.');
   }
   function rememberRule() {
     const rule = learnRef.current;
     if (!rule) {
-      note('Primero aplica una orden «cambia X por Y».');
+      note('Apply a “replace X with Y” command first.');
       return;
     }
     const dictionary = dictionaryOf(ref.current.settings.dictionary);
@@ -496,7 +494,7 @@ export default function App() {
     }));
     setLearn(null);
     learnRef.current = null;
-    note('Regla personal confirmada. Puedes olvidarla en Herramientas.');
+    note('Personal rule saved. You can remove it in Tools.');
   }
   async function propose(
     instruction: string,
@@ -509,7 +507,7 @@ export default function App() {
       end = selected ? range[1] : s.text.length;
     if (!ref.current.settings.llm) {
       note(
-        'Activa Edición natural local en Herramientas para esta petición. Las órdenes concretas siguen disponibles.',
+        'Enable Local natural editing in Tools for this request. Explicit commands are still available.',
       );
       return;
     }
@@ -529,20 +527,20 @@ export default function App() {
     proposalRef.current = p;
     setProposal(p);
     note(
-      'Propuesta preparada. Revisa y di «confirmar cambio» o «cancelar cambio» en Corregir.',
+      'Suggestion ready. Review it and say “confirm change” or “cancel change” in Correct mode.',
     );
   }
   async function applyCommand(command: string, job: Job) {
-    const c = command.trim().replace(/[.!?]+$/, '');
+    const c = normalizeEditCommand(normalizeNavigationCommand(command));
     const action = control(c);
     if (action === 'dictate') {
       setEditing(false);
-      note('Modo dictado activado.');
+      note('Dictation mode enabled.');
       return;
     }
     if (action === 'edit') {
       setEditing(true);
-      note('Modo corrección activado.');
+      note('Correction mode enabled.');
       return;
     }
     if (action === 'favorite' || action === 'unfavorite') {
@@ -550,7 +548,7 @@ export default function App() {
         ...s,
         favorite: action === 'favorite',
       }));
-      note('Favorito actualizado.');
+      note('Favorite updated.');
       return;
     }
     if (action === 'undo') {
@@ -578,7 +576,7 @@ export default function App() {
       setProposal(null);
       proposalRef.current = null;
       setChoices(null);
-      note('Propuesta cancelada.');
+      note('Suggestion canceled.');
       return;
     }
     if (action === 'learn') {
@@ -596,7 +594,7 @@ export default function App() {
     if (action === 'new') {
       const n = fresh();
       change((x) => ({ ...x, sessions: [n, ...x.sessions], active: n.id }));
-      note('Nuevo dictado creado.');
+      note('New dictation created.');
       return;
     }
     const option = c.match(
@@ -624,19 +622,19 @@ export default function App() {
         hay = s.text.toLocaleLowerCase();
       let i = hay.indexOf(needle);
       if (i < 0) {
-        note('No encontré ese texto.');
+        note('That text was not found.');
         return;
       }
       if (hay.indexOf(needle, i + 1) >= 0) {
-        note('Ese texto aparece varias veces. Selecciona una aparición con el cursor.');
+        note('That text appears more than once. Select an occurrence with the cursor.');
         return;
       }
       chooseRange([i, i + needle.length]);
-      note('Texto seleccionado. Puedes dictar una corrección.');
+      note('Text selected. You can dictate a correction.');
       return;
     }
     const template = c.match(
-      /^(?:insertar plantilla|inserta plantilla|insert template)\s+(.+)$/i,
+      /^(?:insertar plantilla|inserta plantilla|insert template|insert snippet)\s+(.+)$/i,
     );
     if (template) {
       const matches =
@@ -644,11 +642,11 @@ export default function App() {
           (a) => a.name.toLocaleLowerCase() === template[1].toLocaleLowerCase(),
         ) || [];
       if (matches.length !== 1) {
-        note('No hay una plantilla única con ese nombre. Revisa Herramientas.');
+        note('There is no unique snippet with that name. Check Tools.');
         return;
       }
       insertText(matches[0].text);
-      note('Plantilla insertada.');
+      note('Snippet inserted.');
       return;
     }
     const result = edit(job.snapshot, c, job.selection);
@@ -659,12 +657,16 @@ export default function App() {
         command: c,
         ranges: result.choices,
       });
-      note('Hay varias apariciones. Di «opción uno», «opción dos» o usa los botones.');
+      note(
+        'Multiple occurrences found. Say “option one”, “option two”, or use the buttons.',
+      );
       return;
     }
     if (result.changed) {
       updateText(job.session, result.text);
-      const rule = c.match(/^(?:cambia|reemplaza)\s+(.+?)\s+por\s+(.+)$/i);
+      const rule = c
+        .replace(/^replace (.+?) with (.+)$/i, 'cambia $1 por $2')
+        .match(/^(?:cambia|reemplaza)\s+(.+?)\s+por\s+(.+)$/i);
       if (rule) {
         const next = { from: rule[1], to: rule[2] };
         setLearn(next);
@@ -682,12 +684,12 @@ export default function App() {
   }
   function chooseOption(number: number) {
     if (!choices || !choices.ranges[number - 1]) {
-      note('Esa opción no está disponible.');
+      note('That option is unavailable.');
       return;
     }
     const s = ref.current.sessions.find((a) => a.id === choices.session);
     if (!s || s.text !== choices.snapshot) {
-      setError('El texto cambió; repite la orden.');
+      setError('The text changed; repeat the command.');
       return;
     }
     const result = edit(s.text, choices.command, choices.ranges[number - 1]);
@@ -703,9 +705,7 @@ export default function App() {
       importing.current ||
       allJobs.current.length
     ) {
-      setError(
-        'Termina el dictado y resuelve los audios pendientes antes de cambiar de sesión.',
-      );
+      setError('Stop dictation and resolve pending audio before switching sessions.');
       return;
     }
     starting.current = true;
@@ -719,14 +719,16 @@ export default function App() {
         const original = normalState.current!;
         change(() => original);
         normalState.current = null;
-        note('Sesión privada cerrada. Su texto y audio ya no están en la bandeja.');
+        note(
+          'Private session closed. Its text and audio are no longer in the workspace.',
+        );
       } else {
         normalState.current = ref.current;
         privateRef.current = true;
         setPrivateMode(true);
         const n = fresh();
         change((x) => ({ ...x, sessions: [n], active: n.id }));
-        note('Sesión privada iniciada. No se guarda automáticamente.');
+        note('Private session started. Content is not saved automatically.');
       }
       setLast(null);
       setProposal(null);
@@ -746,14 +748,14 @@ export default function App() {
       importing.current ||
       allJobs.current.length
     )
-      throw Error('Primero termina el dictado y resuelve los fragmentos pendientes.');
+      throw Error('Stop dictation and resolve pending chunks first.');
     const session = ref.current.sessions.find((a) => a.id === ref.current.active)!,
       settings = { ...ref.current.settings };
     importing.current = true;
     stalled.current = true;
     setImporting(true);
     try {
-      if (!(await check())) throw Error('El motor no está listo.');
+      if (!(await check())) throw Error('The engine is not ready.');
       await importRecording(
         file,
         (blob) =>
@@ -770,7 +772,7 @@ export default function App() {
       void retry();
     } catch (e) {
       if (!allJobs.current.length) stalled.current = false;
-      setError(String(e) + ' · Los tramos ya guardados siguen en Pendientes.');
+      setError(String(e) + ' · Saved chunks remain in Pending audio.');
       throw e;
     } finally {
       importing.current = false;
@@ -785,22 +787,20 @@ export default function App() {
       importing.current ||
       allJobs.current.length
     ) {
-      setError(
-        'Termina el dictado y resuelve los audios pendientes antes de restaurar un respaldo.',
-      );
+      setError('Stop dictation and resolve pending audio before restoring a backup.');
       return;
     }
     change(() => next);
     setLast(null);
     setProposal(null);
     proposalRef.current = null;
-    note('Respaldo restaurado.');
+    note('Backup restored.');
   }
   function splitSession() {
     const s = ref.current.sessions.find((a) => a.id === ref.current.active)!,
       at = selection.current[0];
     if (at <= 0 || at >= s.text.length) {
-      note('Coloca el cursor dentro del texto antes de dividir.');
+      note('Place the cursor inside the text before splitting.');
       return;
     }
     const next = fresh();
@@ -808,19 +808,19 @@ export default function App() {
     next.original = next.text;
     updateText(s.id, s.text.slice(0, at));
     change((x) => ({ ...x, sessions: [...x.sessions, next] }));
-    note('Texto dividido en dos borradores. Puedes deshacer el cambio en el primero.');
+    note('Text split into two drafts. You can undo the change in the first one.');
   }
   function joinSession(id: string) {
     const other = ref.current.sessions.find((a) => a.id === id);
     if (!other) return;
     const current = ref.current.sessions.find((a) => a.id === ref.current.active)!;
     updateText(current.id, current.text + '\n\n' + other.text);
-    note('Textos unidos. Se conservó el otro borrador.');
+    note('Drafts joined. The other draft was preserved.');
   }
   function cleanup() {
     const cutoff = Date.now() - ref.current.settings.retentionDays * 86400000;
     if (!ref.current.settings.retentionDays) {
-      note('La conservación está configurada sin límite.');
+      note('Retention is set to unlimited.');
       return;
     }
     const protectedIds = new Set(allJobs.current.map((a) => a.session));
@@ -828,12 +828,12 @@ export default function App() {
       (s) => s.created < cutoff && !s.favorite && !protectedIds.has(s.id),
     );
     if (!remove.length) {
-      note('No hay borradores antiguos para limpiar.');
+      note('There are no old drafts to clean up.');
       return;
     }
     if (
       !confirm(
-        `¿Eliminar ${remove.length} borradores antiguos? Los favoritos y audios pendientes se conservan.`,
+        `Delete ${remove.length} old drafts? Favorites and pending audio will be preserved.`,
       )
     )
       return;
@@ -847,14 +847,14 @@ export default function App() {
         active: sessions.some((a) => a.id === x.active) ? x.active : sessions[0].id,
       };
     });
-    note('Limpieza completada.');
+    note('Cleanup completed.');
   }
   async function eraseAll() {
     if (starting.current || recording.current || queueActive() || importing.current)
       return;
     if (
       !confirm(
-        '¿Borrar todos los dictados, versiones, preferencias, plantillas y audios pendientes de GOSU Speech to Text? Exporta antes lo que quieras conservar.',
+        'Delete all GOSU Speech to Text drafts, history, settings, snippets, and pending audio? Export anything you want to keep first.',
       )
     )
       return;
@@ -886,7 +886,7 @@ export default function App() {
       learnRef.current = null;
       setLast(null);
       note(
-        'Datos de GOSU Speech to Text borrados. Las copias exportadas y modelos descargados se administran por separado.',
+        'GOSU Speech to Text data deleted. Exported backups and downloaded models are managed separately.',
       );
     } finally {
       starting.current = false;
@@ -913,7 +913,7 @@ export default function App() {
     manual.current.reset();
     const s = ref.current.sessions.find((s) => s.id === id)!;
     if (!s.versions.length) {
-      note('No hay una versión anterior.');
+      note('There is no previous version.');
       return;
     }
     patchSession(id, (x) => ({
@@ -922,26 +922,26 @@ export default function App() {
       versions: x.versions.slice(0, -1),
       redo: pushHistory(x.redo || [], x.text),
     }));
-    note('Cambio deshecho.');
+    note('Change undone.');
   }
   async function copy() {
     if (!current.text) {
-      setError('El borrador está vacío. Dicta o escribe antes de copiar.');
+      setError('The draft is empty. Dictate or type before copying.');
       return;
     }
     try {
       if (isTauri()) await invoke('copy_text', { text: current.text });
       else await navigator.clipboard.writeText(current.text);
-      note('Texto copiado. Pégalo con Ctrl+V.');
+      note('Text copied. Paste with Ctrl+V.');
     } catch {
-      setError('No se pudo copiar. Selecciona el texto y usa Ctrl+C.');
+      setError('Could not copy. Select the text and use Ctrl+C.');
     }
   }
   async function paste() {
     if (!current.text) return;
     try {
       await invoke('paste_target', { text: current.text });
-      note('Pegado solicitado. Revisa el resultado en el destino.');
+      note('Paste requested. Review the result in the destination.');
     } catch (e) {
       setError(String(e));
     }
@@ -950,16 +950,16 @@ export default function App() {
     const text =
       ref.current.sessions.find((x) => x.id === ref.current.active)?.text || '';
     if (!text) {
-      setError('El borrador está vacío.');
+      setError('The draft is empty.');
       return;
     }
     if (recording.current || queueActive()) {
-      setError('Termina el dictado y espera a que se procese antes de pegar.');
+      setError('Stop dictation and wait for processing before pasting.');
       return;
     }
     try {
       await invoke('paste_here', { text });
-      note('Pegado solicitado en la ventana activa. Revisa el resultado.');
+      note('Paste requested in the active window. Review the result.');
     } catch (e) {
       setError(String(e));
     }
@@ -973,7 +973,7 @@ export default function App() {
       allJobs.current.some((job) => job.session === ref.current.active)
     )
       return;
-    if (!confirm('¿Eliminar este borrador y su historial?')) return;
+    if (!confirm('Delete this draft and its history?')) return;
     const remaining = ref.current.sessions.filter(
       (session) => session.id !== ref.current.active,
     );
@@ -995,7 +995,7 @@ export default function App() {
     change((x) => ({ ...x, sessions: [s, ...x.sessions], active: s.id }));
     setLast(null);
     selection.current = [0, 0];
-    note('Nuevo borrador.');
+    note('New draft.');
   }
   function download(name: string, data: string, type = 'application/json') {
     const u = URL.createObjectURL(new Blob([data], { type }));
@@ -1021,9 +1021,9 @@ export default function App() {
       if (p.schema !== 1) throw Error();
       const settings = validateSettings(p.settings, true);
       change((x) => ({ ...x, settings }));
-      note('Preferencias importadas.');
+      note('Settings imported.');
     } catch {
-      setError('Perfil inválido. No se cambió la configuración.');
+      setError('Invalid profile. Settings were not changed.');
     }
   }
 
@@ -1091,49 +1091,49 @@ export default function App() {
       <main>
         <header>
           <div className="breadcrumb">
-            Tu espacio <span>/</span> Dictado
+            Your workspace <span>/</span> Dictation
           </div>
           <div className="header-actions">
             {isTauri() && (
               <>
                 <button disabled={disabled} onClick={() => void minimal.show()}>
-                  Modo mínimo
+                  Minimal mode
                 </button>
-                <button aria-label="Alternar ventana compacta" onClick={compactToggle}>
+                <button aria-label="Toggle compact window" onClick={compactToggle}>
                   <Pin size={16} />
                 </button>
               </>
             )}
-            <button onClick={() => setSettingsOpen(true)} aria-label="Preferencias">
+            <button onClick={() => setSettingsOpen(true)} aria-label="Settings">
               <Settings2 size={18} />
             </button>
             <button
               className="header-copy"
               onClick={copy}
               disabled={!current.text}
-              title="Copiar todo el borrador · Ctrl+Alt+C"
+              title="Copy the entire draft · Ctrl+Alt+C"
             >
-              <Copy size={16} /> Copiar <kbd>Ctrl Alt C</kbd>
+              <Copy size={16} /> Copy <kbd>Ctrl Alt C</kbd>
             </button>
             <span className="badge">
-              {isTauri() ? 'ESCRITORIO' : 'NAVEGADOR'} · {BRAND.version}
+              {isTauri() ? 'DESKTOP' : 'BROWSER'} · {BRAND.version}
             </span>
           </div>
         </header>
         <section className="workspace">
           <div className="eyebrow">
-            <span /> MENOS TECLAS. MÁS IDEAS.
+            <span /> FEWER KEYS. MORE IDEAS.
           </div>
-          <h1>Piensa en voz alta.</h1>
+          <h1>Think out loud.</h1>
           <p className="subtitle">
-            Dale espacio a tus ideas. El texto lo construimos por tramos.
+            Give your ideas room. Build your text one chunk at a time.
           </p>
           {isTauri() && (
             <details className="initial-shortcut">
               <summary>
-                Dictado · {shortcutLabel(config.shortcut)} · Panel ·{' '}
-                {shortcutLabel(config.minimalShortcut)} · Mostrar/ocultar ·{' '}
-                {shortcutLabel(config.visibilityShortcut)} · Configurar
+                Dictation · {shortcutLabel(config.shortcut)} · Panel ·{' '}
+                {shortcutLabel(config.minimalShortcut)} · Show/hide ·{' '}
+                {shortcutLabel(config.visibilityShortcut)} · Configure
               </summary>
               <ShortcutPicker
                 value={config.shortcut}
@@ -1164,21 +1164,21 @@ export default function App() {
             </details>
           )}
           <label className="mobile-history">
-            Borrador
+            Draft
             <select
-              aria-label="Abrir borrador guardado"
+              aria-label="Open saved draft"
               disabled={disabled}
               value={state.active}
               onChange={(e) => change((x) => ({ ...x, active: e.target.value }))}
             >
               {state.sessions.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.text.slice(0, 50) || 'Nuevo dictado'}
+                  {s.text.slice(0, 50) || 'New dictation'}
                 </option>
               ))}
             </select>
             <button onClick={newSession} disabled={disabled}>
-              Nuevo
+              New
             </button>
           </label>
           <DictationEditor
@@ -1215,7 +1215,7 @@ export default function App() {
             restoreOriginal={() => updateText(current.id, current.original)}
             undo={() => undo()}
             redo={() => redo()}
-            downloadText={() => download('dictado.txt', current.text, 'text/plain')}
+            downloadText={() => download('dictation.txt', current.text, 'text/plain')}
             deleteSession={deleteSession}
           />
           <div className="capture-bar">
@@ -1226,11 +1226,7 @@ export default function App() {
             >
               {listening ? <Square size={20} /> : <Mic size={22} />}
               <span>
-                {listening
-                  ? 'Terminar'
-                  : editing
-                    ? 'Dictar corrección'
-                    : 'Empezar a dictar'}
+                {listening ? 'Stop' : editing ? 'Dictate correction' : 'Start dictation'}
               </span>
             </button>
             <div className="capture-status">
@@ -1245,7 +1241,7 @@ export default function App() {
                 ))}
               </div>
               <span>
-                {listening ? 'Escuchando' : busy ? 'Transcribiendo…' : 'A tu ritmo'}
+                {listening ? 'Listening' : busy ? 'Transcribing…' : 'At your pace'}
               </span>
             </div>
             <kbd>
@@ -1253,29 +1249,25 @@ export default function App() {
                 ? config.shortcut
                     .replace('CommandOrControl', 'Ctrl')
                     .replaceAll('+', ' + ')
-                : 'Botón de micrófono'}
+                : 'Microphone button'}
             </kbd>
           </div>
           <div className="engine-status" role="status">
             {ready
-              ? 'Motor listo · ' + model
-              : 'Motor sin conexión · ' + (engineIssue || 'Comprueba la conexión.')}
+              ? 'Engine ready · ' + model
+              : 'Engine offline · ' + (engineIssue || 'Check the connection.')}
           </div>
           {isTauri() && (
             <details className="engine-diagnostics">
-              <summary onClick={() => void showDiagnostics()}>
-                Diagnóstico del motor
-              </summary>
-              <button onClick={() => void showDiagnostics()}>
-                Actualizar diagnóstico
-              </button>
+              <summary onClick={() => void showDiagnostics()}>Engine diagnostics</summary>
+              <button onClick={() => void showDiagnostics()}>Refresh diagnostics</button>
               <button
                 disabled={disabled || restarting}
                 onClick={() => {
                   if (!starting.current) void restart();
                 }}
               >
-                {restarting ? 'Reiniciando…' : 'Reiniciar motor'}
+                {restarting ? 'Restarting…' : 'Restart engine'}
               </button>
               <button
                 disabled={!diagnostics}
@@ -1285,9 +1277,9 @@ export default function App() {
                   )
                 }
               >
-                Copiar diagnóstico
+                Copy diagnostics
               </button>
-              <pre>{diagnostics || 'Leyendo registro…'}</pre>
+              <pre>{diagnostics || 'Reading log…'}</pre>
             </details>
           )}
           <div role="status" aria-live="polite" className="message">
@@ -1301,34 +1293,35 @@ export default function App() {
           <div className="shortcut-status">
             {shortcutStatus}
             {isTauri()
-              ? ' · Copiar: Ctrl+Alt+C · Pegar aquí: Ctrl+Alt+V · Corregir: Ctrl+Alt+E · Dictar: Ctrl+Alt+D'
-              : ' · Copiar: Ctrl+Alt+C · Pegar manualmente: Ctrl+V'}
+              ? ' · Copy: Ctrl+Alt+C · Paste here: Ctrl+Alt+V · Correct: Ctrl+Alt+E · Dictate: Ctrl+Alt+D'
+              : ' · Copy: Ctrl+Alt+C · Paste manually: Ctrl+V'}
           </div>
           <div className="output-actions">
             <button className="copy" onClick={copy} disabled={!current.text}>
-              <Copy size={16} /> Copiar texto <kbd>Ctrl Alt C</kbd>
+              <Copy size={16} /> Copy text <kbd>Ctrl Alt C</kbd>
             </button>
             {isTauri() && (
               <button onClick={paste} disabled={!current.text || disabled}>
-                <ArrowUpRight size={17} /> Pegar en destino recordado · experimental
+                <ArrowUpRight size={17} /> Paste into remembered destination ·
+                experimental
               </button>
             )}
           </div>
           {editing && (
             <div className="hint">
-              <strong>Una orden a la vez.</strong> «Cambia mañana por jueves», «borra la
-              última frase», «nuevo párrafo», «pon eso en una lista» o «deshacer». Para
-              ambigüedades, selecciona el texto.
+              <strong>One command at a time.</strong> “Replace tomorrow with Thursday”,
+              “delete last sentence”, “new paragraph”, “make it a list”, or “undo”. Select
+              text to resolve ambiguity.
             </div>
           )}
           {jobs.length > 0 && (
             <div className="pending">
               <strong>
                 {jobs.length} fragmento(s){' '}
-                {busy ? 'en proceso o pendientes' : 'pendientes de recuperar'}
+                {busy ? 'processing or pending' : 'awaiting recovery'}
               </strong>
               <span>
-                Audio temporal guardado en este equipo hasta completar o eliminar.
+                Temporary audio saved on this device until completed or deleted.
               </span>
               {jobs.slice(0, 10).map((job, i) => (
                 <button
@@ -1336,31 +1329,31 @@ export default function App() {
                   disabled={listening}
                   onClick={() => listenPending(job.blob)}
                 >
-                  Escuchar audio {i + 1}
+                  Play audio {i + 1}
                 </button>
               ))}
               <button disabled={busy || listening || isImporting} onClick={retry}>
-                <RotateCcw size={14} /> Reintentar
+                <RotateCcw size={14} /> Retry
               </button>
               <button
                 disabled={busy || listening || isImporting}
                 onClick={() => {
-                  if (confirm('¿Eliminar todos los audios pendientes?')) {
+                  if (confirm('Delete all pending audio?')) {
                     void discard().catch(() => {});
                   }
                 }}
               >
-                Eliminar audios
+                Delete audio
               </button>
             </div>
           )}
           <div className="natural-command">
             <label>
-              Escribir una petición de edición
+              Enter an editing request
               <input
                 value={instruction}
                 onChange={(e) => setInstruction(e.target.value)}
-                placeholder="Por ejemplo: hazlo más breve o traduce al inglés"
+                placeholder="For example: make it shorter or translate into English"
                 maxLength={2000}
               />
             </label>
@@ -1373,7 +1366,7 @@ export default function App() {
                   .finally(() => setBusy(false));
               }}
             >
-              Preparar propuesta local
+              Prepare local suggestion
             </button>
           </div>
           <Workbench
@@ -1395,10 +1388,10 @@ export default function App() {
           />
           <footer>
             <span>
-              <span className="local-dot" /> Procesamiento local · Sin cuenta
+              <span className="local-dot" /> Local processing · No account
             </span>
             <button onClick={check}>
-              {ready ? 'Motor conectado · ' + model : 'Comprobar motor'}
+              {ready ? 'Engine connected · ' + model : 'Check engine'}
             </button>
           </footer>
         </section>

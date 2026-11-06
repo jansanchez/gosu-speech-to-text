@@ -3,11 +3,11 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: 'Publicar: versión probada y aprobada según CRITERIOS-DE-EXITO.md'
+        description: 'Publish: version tested and approved under CRITERIOS-DE-EXITO.md'
         type: boolean
         default: false
       version:
-        description: 'Versión exacta de brand.json (obligatoria para publicar)'
+        description: 'Exact version from brand.json (required to publish)'
         type: string
         default: ''
   push:

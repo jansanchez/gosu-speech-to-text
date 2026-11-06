@@ -28,7 +28,7 @@ test('extension replaces only the chosen field selection and refuses a stale des
   input.setSelectionRange(0, 4);
   captureDestination();
   input.value = 'Cambió mientras dictaba';
-  assert.match(insertDestination('Adiós'), /cambió/);
+  assert.match(insertDestination('Adiós'), /changed/);
   assert.equal(input.value, 'Cambió mientras dictaba');
 });
 test('extension does not target password fields and refuses removed fields', () => {
@@ -37,11 +37,11 @@ test('extension does not target password fields and refuses removed fields', () 
   document.body.append(input);
   input.focus();
   captureDestination();
-  assert.match(insertDestination('secreto'), /no está disponible/);
+  assert.match(insertDestination('secreto'), /no longer available/);
   const area = document.createElement('textarea');
   document.body.append(area);
   area.focus();
   captureDestination();
   area.remove();
-  assert.match(insertDestination('x'), /no está disponible/);
+  assert.match(insertDestination('x'), /no longer available/);
 });

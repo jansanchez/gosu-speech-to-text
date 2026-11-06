@@ -1,10 +1,10 @@
-# Compilar y probar en macOS
+# Build and test on macOS
 
-Consulta primero [README.md](README.md) y [criterios de éxito](CRITERIOS-DE-EXITO.md). Hay dos destinos independientes: Apple Silicon ARM64 e Intel x64. Usa una terminal, Node y Python nativos de la arquitectura elegida; no mezcles herramientas bajo Rosetta con bibliotecas ARM64.
+Read [README.md](README.md) and [acceptance criteria](CRITERIOS-DE-EXITO.md). Apple Silicon ARM64 and Intel x64 are independent targets. Use a native terminal, Node, and Python; do not mix Rosetta tools with ARM64 libraries.
 
-## Preparación
+## Setup
 
-Instala Node.js 22 con npm, Python 3.12 y Rust estable mediante rustup. Instala las herramientas de Xcode:
+Install Node.js 22/npm, Python 3.12, stable Rust, and Xcode tools:
 
 ```bash
 xcode-select --install
@@ -15,29 +15,27 @@ rustc --version
 uname -m
 ```
 
-Los requisitos nativos proceden de [Tauri](https://v2.tauri.app/start/prerequisites/). Si no tienes Python 3.12, puedes instalarlo de forma separada con tu gestor de versiones; no reemplaces el Python del sistema.
-
-Desde la raíz del proyecto:
+Follow [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/). Install Python 3.12 separately if needed; preserve system Python. From the project root:
 
 ```bash
 python3.12 scripts/configurar.py
 python3.12 scripts/configurar.py --dev
 ```
 
-El asistente prepara `.venv`, instala dependencias y ejecuta las comprobaciones antes de iniciar o empaquetar. Si `.venv` pertenece a otro Python, consérvala con otro nombre y crea una nueva; no copies entornos desde otro equipo.
+The helper prepares `.venv`, installs dependencies, and runs checks before launching/packaging. Preserve a wrong-version `.venv` under another name before creating a new one. Do not reuse another machine's environment.
 
-## Generar el paquete
+## Package
 
 ```bash
 python3.12 scripts/configurar.py --build
 ```
 
-Resultado predeterminado: `src-tauri/target/release/bundle/macos/*.app`, `dmg/*.dmg` y `SHA256SUMS.txt`. No es una aplicación universal: compila de nuevo en el otro destino para producir su paquete.
+Output: `src-tauri/target/release/bundle/macos/*.app`, `dmg/*.dmg`, and `SHA256SUMS.txt`. This is not universal: rebuild natively for the other architecture.
 
-## Probar permisos e inserción
+## Permissions and insertion
 
-Concede acceso al micrófono y los permisos de Accesibilidad/Automatización solicitados por macOS. El permiso puede depender de si ejecutas el desarrollo desde Terminal o la aplicación instalada; prueba ambos casos por separado.
+Grant microphone and requested Accessibility/Automation permissions. Development launched from Terminal and the installed application can have different permission identities: test both.
 
-**Cmd+Shift+M** alterna editor/minimalista y **Cmd+Shift+H** oculta/restaura conservando la vista. Los tres atajos son configurables por separado en Preferencias. Con el motor listo, enfoca el destino y pulsa **Cmd+Shift+Espacio** para comenzar y terminar. Cambia la combinación desde el panel o Preferencias y comprueba su persistencia tras reiniciar. Prueba terminal, navegador y aplicaciones objetivo según [MINIMAL-MODE.md](MINIMAL-MODE.md).
+Cmd+Shift+M switches views; Cmd+Shift+H hides/restores; Cmd+Shift+Space starts/stops dictation. Each is configurable in Settings. Check saved custom shortcuts after restarting, and test terminals/browsers according to [minimal mode](MINIMAL-MODE.md).
 
-Los paquetes locales y el workflow actual no configuran firma ni notarización. Antes de distribuir, completa y valida la [firma de macOS](https://v2.tauri.app/distribute/sign/macos/) para aplicación y motor; generar un DMG no acredita esos pasos. Registra resultados reales en [VALIDACION.md](VALIDACION.md).
+Signing/notarization is not configured. Before public distribution, configure and verify [macOS signing](https://v2.tauri.app/distribute/sign/macos/) for the app and engine; generating a DMG is not proof of signature/notarization. Record real results in [VALIDACION.md](VALIDACION.md).

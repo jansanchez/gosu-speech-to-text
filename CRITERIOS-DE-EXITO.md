@@ -1,36 +1,37 @@
-# Criterios de éxito
+# Acceptance criteria
 
-Estos criterios son la puerta de aceptación para cada cambio y cada candidato. La configuración de CI expresa lo que se debe ejecutar; los resultados se registran en [VALIDACION.md](VALIDACION.md). Un resultado en Linux no acredita Windows o macOS.
+These criteria gate every change and release candidate. CI configuration expresses what should run; [VALIDACION.md](VALIDACION.md) records what actually ran. Linux results do not certify Windows or macOS.
 
-## Compilación reproducible
+## Reproducible builds
 
-- **B1 — Entorno:** registrar commit, SO, arquitectura, Node 22, Python 3.12 y Rust/Cargo. Usar `npm ci`, `Cargo.lock` con `--locked` y los requisitos Python del repositorio. Rust estable y las imágenes CI pueden evolucionar: registrar sus versiones efectivas.
-- **B2 — Comprobaciones:** formato, enlaces locales de documentación, pruebas TypeScript, build web/extensión, ambas suites Python y `cargo fmt`, `cargo check` y `cargo test` aprobados. No eliminar pruebas para obtener un resultado verde.
-- **B3 — Paquete nativo:** generar los paquetes de [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) en el SO y arquitectura correspondientes. Incluir la carpeta completa del motor. Conservar logs, artefactos y SHA256 de los instaladores finales.
-- **B4 — Instalación limpia:** instalar en un usuario sin Python, Node o Rust de desarrollo; abrir desde el lanzador y desde una ruta con espacios. El motor arranca y muestra estado comprensible; su proceso termina al cerrar la aplicación. El primer modelo puede necesitar red y espacio disponible.
+- **B1 — Environment:** record commit, OS/architecture, Node 22, Python 3.12, and Rust/Cargo versions. Use `npm ci`, `Cargo.lock` with `--locked`, and repository Python requirements. Record actual versions as stable toolchains and runners evolve.
+- **B2 — Checks:** approve formatting, documentation links, TypeScript tests, web/extension builds, both Python suites, `cargo fmt`, `cargo check`, and `cargo test`. Never remove tests to obtain a green result.
+- **B3 — Native package:** generate documented packages natively on the target OS/architecture, including the complete engine. Retain logs, artifacts, and final installer SHA256 hashes.
+- **B4 — Clean installation:** install without Python/Node/Rust development tools, launch from the menu and a path with spaces, verify engine startup and termination when the app closes. Initial model loading may need network/storage.
 
-## Dictado mínimo y accesibilidad
+## Dictation and accessibility
 
-- **M1 — Primer uso:** Ctrl/Cmd+Shift+M alterna editor/minimalista, Ctrl/Cmd+Shift+H oculta/restaura conservando esa vista; Ctrl/Cmd+Shift+Espacio inicia/termina e inserta sin ocultar. Verificar dos dictados consecutivos y ocultar/mostrar mientras se graba. Si hay conflicto o falta permiso, la interfaz explica cómo resolverlo y permite elegir otra combinación.
-- **M2 — Configuración:** capturar y guardar cada combinación por separado, probar las tres, reiniciar y comprobar que persisten. Rechazar combinaciones iguales entre las tres acciones. Una combinación ocupada conserva o recupera la anterior; recargas no duplican registros ni eliminan atajos ajenos.
-- **M3 — Audio:** mostrar actividad del micrófono real, estados de escucha/procesamiento/error y recuperación al denegar permisos o desconectar el dispositivo. No mostrar éxito mientras quede audio pendiente.
-- **M4 — Destino:** cambiar de aplicación/campo durante la grabación y comprobar que se selecciona el destino al terminar; dictar dos sesiones e insertar únicamente el texto nuevo una vez por sesión, con tildes, Unicode y varias líneas. Verificar también que el dictado completo queda en el portapapeles aunque no haya destino válido o falle el pegado; un fallo del portapapeles conserva el borrador y no comunica copia exitosa. Grabar con GOSU enfocado no debe exigir destino previo. No simular Enter ni ejecutar/enviar el texto automáticamente.
-- **M5 — Aplicaciones:** comprobar una terminal con agente, un campo de WhatsApp y Google Docs; registrar app, versión y resultado. Si el destino no admite inserción, conservar el texto y ofrecer copia sin fingir éxito.
-- **M6 — Escritorios:** repetir captura de foco e inserción en Windows, macOS, Linux X11, Hyprland y un portal Wayland compatible según los destinos anunciados. El portal genérico utiliza el campo enfocado y no identifica la aplicación: registrar esa limitación y los permisos concedidos.
+- **M1 — First use:** Ctrl/Cmd+Shift+M switches editor/panel, Ctrl/Cmd+Shift+H hides/restores the selected view, and Ctrl/Cmd+Shift+Space starts/stops dictation and inserts without hiding. Verify two consecutive sessions and hide/show during capture. Conflicts and permission denials must explain recovery and permit another shortcut.
+- **M2 — Settings:** configure, save, use, and persist all three shortcuts independently. Reject equivalent combinations; conflicts restore/preserve previous settings. Reloads must not duplicate registrations or remove another application's shortcuts.
+- **M3 — Audio:** display real microphone activity and capture/processing/error states. Recover after denied permission or disconnection. Do not report completion with pending audio.
+- **M4 — Destination:** switch applications/fields while recording; select the target on stop. Insert only the new session once, preserving Unicode and line breaks. Copy the whole dictation even if target identification/insertion fails. Clipboard failure preserves the draft without claiming success. Starting while GOSU is focused must not require a prior target. Never simulate Enter or automatically submit/execute text.
+- **M5 — Applications:** test an agent terminal, WhatsApp field, and Google Docs, recording application/version/result. Unsupported insertion preserves text and offers Copy.
+- **M6 — Desktops:** repeat focus/capture/insertion on Windows, macOS, Linux X11, Hyprland, and supported Wayland portals. A generic portal uses the focused field without identifying its application: record that limitation and granted permissions.
+- **M7 — Languages:** maintain an English interface independently of recognition language. For English, Mandarin Chinese, Hindi, Spanish, French, Arabic, Bengali, Portuguese, Russian, and Urdu, test language forwarding, Unicode preservation, documented command phrases, punctuation, backups, and RTL display. Mocked text tests do not prove recognition quality. Record real-speaker recordings, model/device, errors, and limitations before claiming a language validated.
 
-## Integridad y mantenimiento
+## Integrity and maintenance
 
-- **D1 — Recuperación:** un fallo de disco, transcripción o borrado permite reintentar/recargar sin perder audio recuperable ni duplicar texto confirmado. Mantener audio → transcripción → texto e ID → borrado de audio → limpieza de ID.
-- **D2 — Privacidad:** sesiones privadas permanecen en memoria; datos inválidos no provocan sobrescritura automática. No registrar audio, texto, claves ni rutas personales innecesarias en logs publicados.
-- **D3 — Compatibilidad:** conservar identificadores de almacenamiento e importaciones existentes o aportar migración y pruebas. Actualizar instrucciones y criterios cuando cambia un contrato.
-- **D4 — Cierre y errores:** cancelar/cerrar sin procesos huérfanos, conservar lo recuperable y comunicar los errores de permisos, motor, modelo y destino.
+- **D1 — Recovery:** disk, recognition, and deletion failures permit retry/reload without losing recoverable audio or duplicating committed text. Preserve audio → recognition → text plus ID → audio deletion → ID cleanup.
+- **D2 — Privacy:** private sessions remain in memory; invalid data cannot be overwritten automatically. Do not publish logs containing audio, text, tokens, or unnecessary personal paths.
+- **D3 — Compatibility:** preserve storage identities and existing backups or provide tested migration. Keep documentation and criteria coherent with contract changes.
+- **D4 — Shutdown and errors:** close/cancel without orphaned processes, preserve recovery, and report permissions, engine, model, and destination failures.
 
-## Registro por plataforma
+## Evidence by artifact and platform
 
-Usar una fila por artefacto y escritorio. Estados: **pendiente**, **aprobado**, **fallido** o **no aplicable con motivo**. Un criterio omitido permanece pendiente.
+Record one row per concrete artifact/desktop. Status is **pending**, **passed**, **failed**, or **not applicable with reason**. Omitted criteria remain pending.
 
-| Commit / artefacto / SHA256 | SO y arquitectura / escritorio | B1–B4 | M1–M6 | D1–D4 | Evidencia y pendientes |
+| Commit / artifact / SHA256 | OS / architecture / desktop | B1–B4 | M1–M7 | D1–D4 | Evidence and remaining work |
 |---|---|---|---|---|---|
-| Completar al validar | Versión exacta | Estado por ID | Estado por ID | Estado por ID | Log de CI, pruebas manuales y limitaciones |
+| Fill when validating | Exact versions | Status by criterion | Status by criterion | Status by criterion | CI logs, manual tests, and limitations |
 
-La aceptación de una mejora requiere los criterios afectados y las comprobaciones comunes; la aceptación de una distribución requiere además instalación limpia y pruebas reales de ese artefacto. Las pruebas simuladas no sustituyen micrófono, permisos ni foco real.
+A change needs relevant acceptance and common checks. A release additionally needs clean installation and real validation of its exact artifact. Mocked tests do not replace microphone, permissions, target focus, insertion, or language accuracy tests.

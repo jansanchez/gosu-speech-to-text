@@ -32,9 +32,9 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     }
     if (message.type === 'insert') {
       if (typeof message.text !== 'string' || message.text.length > 100000)
-        return { error: 'Texto inválido.' };
+        return { error: 'Invalid text.' };
       const { target } = await chrome.storage.session.get('target');
-      if (!target) return { error: 'No hay un campo de destino. Usa Copiar.' };
+      if (!target) return { error: 'No destination field. Use Copy.' };
       const results = await chrome.scripting.executeScript({
         target: { tabId: target },
         args: [message.text],
@@ -45,7 +45,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       await chrome.tabs.update(target, { active: true });
       return { ok: true };
     }
-    return { error: 'Acción desconocida.' };
+    return { error: 'Unknown action.' };
   })()
     .then(respond)
     .catch((e) => respond({ error: String(e) }));

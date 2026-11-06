@@ -16,7 +16,7 @@ const state = {
       text: 'No enviar 42 mensajes. 你好 👋',
       original: 'Original',
       created: Date.now(),
-      versions: ['Antes'],
+      versions: ['Before'],
       done: [],
     },
   ],
@@ -85,7 +85,7 @@ test('spoken punctuation is explicit and controls do not match ordinary sentence
     punctuation('Do not send comma wait full stop', 'en'),
     'Do not send, wait.',
   );
-  assert.equal(control('Confirmar cambio.'), 'confirm');
+  assert.equal(control('Confirm change.'), 'confirm');
   assert.equal(control('Quiero copiar el archivo mañana'), '');
   assert.equal(edit('tomorrow', 'replace tomorrow with Friday').text, 'Friday');
 });

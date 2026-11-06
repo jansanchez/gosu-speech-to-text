@@ -4,11 +4,11 @@ import { pathToFileURL } from 'node:url';
 
 export function validateRelease(version, changelog, ref) {
   if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version))
-    throw Error('La versión debe ser X.Y.Z sin ceros iniciales.');
+    throw Error('Version must use X.Y.Z without leading zeros.');
   if (!changelog.split(/\r?\n/).some((line) => line.startsWith(`## [${version}] — `)))
-    throw Error('Falta la entrada de esta versión en CHANGELOG.md.');
+    throw Error('This version is missing from CHANGELOG.md.');
   if (ref?.startsWith('refs/tags/') && ref !== `refs/tags/v${version}`)
-    throw Error(`La etiqueta debe ser v${version}; recibida: ${ref}`);
+    throw Error(`The tag must be v${version}; received: ${ref}`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
@@ -19,5 +19,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     await readFile(new URL('CHANGELOG.md', root), 'utf8'),
     process.env.GITHUB_REF,
   );
-  console.log(`Release coherente: v${brand.version}`);
+  console.log(`Release metadata consistent: v${brand.version}`);
 }

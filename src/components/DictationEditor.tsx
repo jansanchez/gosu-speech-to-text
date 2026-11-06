@@ -1,3 +1,4 @@
+import { countWords } from '../speech';
 import { Command, Check, RotateCcw, Undo2, Download, Trash2 } from 'lucide-react';
 import type { Session } from '../product';
 import type { Recognition } from '../transport';
@@ -69,7 +70,7 @@ export default function DictationEditor({
             disabled={disabled}
             onClick={() => onMode(false)}
           >
-            Dictar
+            Dictate
           </button>
           <button
             aria-pressed={editing}
@@ -77,16 +78,16 @@ export default function DictationEditor({
             disabled={disabled}
             onClick={() => onMode(true)}
           >
-            <Command size={14} /> Corregir
+            <Command size={14} /> Correct
           </button>
         </div>
         <span className="save-state">
           {saved && <Check size={13} />}{' '}
-          {privateMode ? 'Solo en memoria' : saved ? 'Guardado local' : 'Guardando…'}
+          {privateMode ? 'In memory only' : saved ? 'Saved locally' : 'Saving…'}
         </span>
       </div>
       <label className="sr-only" htmlFor="draft">
-        Tu borrador. Puedes escribir y seleccionar texto para corregirlo.
+        Your draft. Type or select text to correct it.
       </label>
       <textarea
         disabled={!loaded}
@@ -97,8 +98,8 @@ export default function DictationEditor({
         value={current.text}
         placeholder={
           editing
-            ? 'Selecciona texto y dicta una orden de corrección.'
-            : 'Empieza a hablar o escribe aquí.\n\nTus palabras aparecerán después de cada pausa.'
+            ? 'Select text and dictate a correction command.'
+            : 'Start speaking or type here.\n\nYour words will appear after each pause.'
         }
         onSelect={(e) =>
           onSelection([e.currentTarget.selectionStart, e.currentTarget.selectionEnd])
@@ -106,36 +107,36 @@ export default function DictationEditor({
         onChange={(e) => onText(e.target.value)}
       />
       {proposal && (
-        <section className="proposal" aria-label="Propuesta de corrección">
-          <h2>Revisa la propuesta</h2>
+        <section className="proposal" aria-label="Correction suggestion">
+          <h2>Review the suggestion</h2>
           <p>{proposal.instruction}</p>
           <div className="proposal-grid">
             <div>
-              <strong>Antes</strong>
+              <strong>Before</strong>
               <pre>{proposal.snapshot}</pre>
             </div>
             <div>
-              <strong>Propuesta</strong>
+              <strong>Suggestion</strong>
               <pre>{proposal.text}</pre>
             </div>
           </div>
           <button disabled={disabled} onClick={confirmProposal}>
-            Confirmar cambio
+            Confirm change
           </button>
           <button disabled={disabled} onClick={cancelProposal}>
-            Cancelar cambio
+            Cancel change
           </button>
           <small>
-            En Corregir también puedes decir «confirmar cambio» o «cancelar cambio».
+            In Correct mode, you can also say “confirm change” or “cancel change”.
           </small>
         </section>
       )}
       {choices && (
         <div className="choices" role="status">
-          Elige la aparición:
+          Choose an occurrence:
           {choices.ranges.map((r, i) => (
             <button key={i} disabled={disabled} onClick={() => chooseOption(i + 1)}>
-              Opción {i + 1}: …
+              Option {i + 1}: …
               {choices.snapshot.slice(
                 Math.max(0, r[0] - 20),
                 Math.min(choices.snapshot.length, r[1] + 20),
@@ -150,73 +151,72 @@ export default function DictationEditor({
           <span>
             {learn.from} → {learn.to}
           </span>
-          <button onClick={rememberRule}>Recordar esta corrección</button>
-          <button onClick={forgetRule}>Ahora no</button>
+          <button onClick={rememberRule}>Remember this correction</button>
+          <button onClick={forgetRule}>Not now</button>
         </div>
       )}
       {last?.words.some((w) => w.review) && (
         <div className="doubts">
-          <span>Revisa en el último tramo:</span>
+          <span>Review in the last chunk:</span>
           {last.words
             .filter((w) => w.review)
             .map((w, i) => (
               <button
                 className="uncertain"
                 key={i}
-                title="Seleccionar para revisar"
+                title="Select to review"
                 onClick={() => {
                   const word = w.text.trim(),
                     at = current.text.lastIndexOf(word);
                   if (at >= 0) chooseRange([at, at + word.length]);
-                  else note('El texto ya cambió; busca esa palabra en el borrador.');
+                  else note('The text has changed; find that word in the draft.');
                 }}
               >
                 {w.text.trim()}
               </button>
             ))}
-          <small>Señales del modelo; no son porcentajes de acierto.</small>
+          <small>Model signals, not accuracy percentages.</small>
         </div>
       )}
       <div className="editor-bottom">
         <span>
-          {current.text.trim() ? current.text.trim().split(/\s+/).length : 0} palabras ·{' '}
-          {current.versions.length} versiones
+          {countWords(current.text)} words · {current.versions.length} versiones
         </span>
         <div>
           <button
             onClick={() => {
-              if (confirm('¿Restaurar la transcripción original? Podrás deshacerlo.'))
+              if (confirm('Restore the original transcript? You can undo this.'))
                 restoreOriginal();
             }}
             disabled={disabled || !current.original}
-            aria-label="Restaurar transcripción original"
+            aria-label="Restore original transcript"
           >
             <RotateCcw size={16} />
           </button>
           <button
             onClick={() => undo()}
             disabled={!current.versions.length}
-            aria-label="Deshacer"
+            aria-label="Undo"
           >
             <Undo2 size={17} />
           </button>
           <button
             onClick={() => redo()}
             disabled={!current.redo?.length}
-            aria-label="Rehacer"
+            aria-label="Redo"
           >
             ↻
           </button>
           <button
             onClick={downloadText}
             disabled={!current.text}
-            aria-label="Descargar texto"
+            aria-label="Download text"
           >
             <Download size={17} />
           </button>
           <button
             disabled={disabled || hasPending}
-            aria-label="Eliminar borrador"
+            aria-label="Delete draft"
             onClick={deleteSession}
           >
             <Trash2 size={16} />

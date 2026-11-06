@@ -1,15 +1,15 @@
-# Compilar y probar en Windows
+# Build and test on Windows
 
-Destino documentado: Windows x64 con Rust **MSVC**, instalador NSIS. Consulta [compilación y distribución](BUILD-AND-RELEASE.md) y [criterios de éxito](CRITERIOS-DE-EXITO.md).
+Documented target: Windows x64, Rust **MSVC**, NSIS installer. See [build contract](BUILD-AND-RELEASE.md) and [acceptance criteria](CRITERIOS-DE-EXITO.md).
 
-## Requisitos
+## Requirements
 
-1. Node.js **22** con npm y Python **3.12** con el lanzador `py`.
-2. Visual Studio Build Tools: carga **Desarrollo para el escritorio con C++**, compilador MSVC x64 y Windows SDK.
-3. Rust estable instalado mediante rustup, toolchain `stable-x86_64-pc-windows-msvc`, y componente rustfmt.
-4. Runtime Microsoft Edge WebView2. Consulta los [requisitos oficiales de Tauri](https://v2.tauri.app/start/prerequisites/).
+1. Node.js **22** with npm and Python **3.12** with the `py` launcher.
+2. Visual Studio Build Tools: **Desktop development with C++**, MSVC x64 compiler, and Windows SDK.
+3. Stable Rust through rustup, `stable-x86_64-pc-windows-msvc`, and rustfmt.
+4. Microsoft Edge WebView2 Runtime. See [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 
-Abre una nueva PowerShell después de instalar. Desde la raíz del proyecto, en una carpeta escribible:
+Open a new PowerShell in the writable project directory after installation:
 
 ```powershell
 node --version
@@ -20,25 +20,26 @@ rustup component add rustfmt
 py -3.12 scripts/configurar.py
 ```
 
-El asistente crea `.venv`, instala dependencias y ejecuta las comprobaciones web, Python y Rust. No necesita activar el entorno. Un entorno existente con otro Python se rechaza sin borrarlo: renómbralo y vuelve a preparar. No copies `.venv`, `node_modules`, `target` o `engine-dist` de Linux/macOS.
+The helper prepares `.venv`, dependencies, and web/Python/Rust checks without requiring environment activation. Wrong-version environments are rejected without deletion: rename them before preparing a new one. Do not copy `.venv`, `node_modules`, `target`, or `engine-dist` from Linux/macOS.
 
-## Ejecutar y generar instalador
+## Run and build
 
 ```powershell
 py -3.12 scripts/configurar.py --dev
+# After closing development:
 py -3.12 scripts/configurar.py --build
 ```
 
-Ejecuta los comandos por separado; el modo desarrollo permanece abierto. El instalador queda en `src-tauri\target\release\bundle\nsis\`; los hashes, en `bundle\SHA256SUMS.txt`. El paquete incluye el motor Python completo. La primera descarga del modelo necesita red y espacio; comprueba su estado en la interfaz.
+Run separately; development remains open. Output: `src-tauri\target\release\bundle\nsis\`, with hashes in `bundle\SHA256SUMS.txt`. The full Python engine is included. Initial model download needs network/storage; monitor status in the UI.
 
-**Ctrl+Shift+M** alterna editor/minimalista y **Ctrl+Shift+H** oculta/restaura conservando la vista. Los tres atajos son configurables por separado en Preferencias. Con el motor listo, enfoca el campo de destino y usa **Ctrl+Shift+Espacio** para iniciar y detener. El panel muestra la actividad del micrófono y permite cambiar el atajo. Verifica terminal, WhatsApp y Google Docs, permisos de micrófono y cierre del motor tras salir. El texto no debe enviarse automáticamente con Enter. [Funcionamiento y límites](MINIMAL-MODE.md).
+Ctrl+Shift+M switches editor/panel; Ctrl+Shift+H hides/restores; Ctrl+Shift+Space starts/stops dictation. Configure each independently in Settings. With the engine ready, select the destination before stopping. Test terminal, WhatsApp, Google Docs, microphone permissions, and engine shutdown. Never automatically submit text with Enter. See [minimal mode](MINIMAL-MODE.md).
 
-## Diagnóstico
+## Troubleshooting
 
-- Si falta `link.exe` o un SDK, revisa la carga C++ y abre una terminal nueva. Una comprobación GNU desde Linux no valida esta compilación MSVC.
-- Si PowerShell bloquea `npm.ps1`, utiliza `npm.cmd`; no es necesario cambiar la política global.
-- Si falta micrófono, revisa los permisos de Windows para aplicaciones de escritorio y el dispositivo seleccionado.
-- Si un atajo está ocupado, elige otro en Preferencias; no desregistres combinaciones de otras aplicaciones.
-- `scripts/diagnostico-windows.ps1` ayuda a inspeccionar el entorno. Las guías [CORREGIR-WINDOWS.md](CORREGIR-WINDOWS.md) y [REPARAR-MOTOR.md](REPARAR-MOTOR.md) conservan diagnósticos históricos.
+- Missing `link.exe` or SDK: check the C++ workload and open a new terminal. A GNU cross-check on Linux does not validate MSVC packaging.
+- PowerShell blocking `npm.ps1`: use `npm.cmd`; no global policy change is required.
+- Missing microphone: check Windows desktop microphone permissions and the selected device.
+- Occupied shortcut: choose another in Settings; do not unregister other applications' combinations.
+- Use `scripts/diagnostico-windows.ps1` for environment inspection. [Historical communication](CORREGIR-WINDOWS.md) and [startup](REPARAR-MOTOR.md) guides retain earlier diagnostics.
 
-El workflow genera candidatos sin configurar firma de Windows. La instalación en un usuario limpio y la validación de dictado siguen siendo necesarias. Registra evidencia en [VALIDACION.md](VALIDACION.md).
+Windows signing is not yet configured. Clean installation and dictation acceptance remain necessary; record evidence in [VALIDACION.md](VALIDACION.md).

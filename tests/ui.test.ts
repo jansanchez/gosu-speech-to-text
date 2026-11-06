@@ -117,18 +117,18 @@ async function audio() {
 test('dictate, correct by voice, recover failed audio and reload saved history', async () => {
   await clear();
   await step(() => root.render(React.createElement(App)));
-  await step(() => click('Preferencias'));
+  await step(() => click('Settings'));
   await step(() => input(container.querySelector('input[type=password]')!, 'local-test'));
-  await step(() => click('Listo'));
-  await step(() => click('Empezar a dictar'));
+  await step(() => click('Done'));
+  await step(() => click('Start dictation'));
   await audio();
-  await step(() => click('Terminar'));
+  await step(() => click('Stop'));
   assert.equal(
     (container.querySelector('#draft') as HTMLTextAreaElement).value,
     'Mañana revisaré el documento.',
   );
-  await step(() => click('Corregir'));
-  await step(() => click('Dictar corrección'));
+  await step(() => click('Correct'));
+  await step(() => click('Dictate correction'));
   await audio();
   assert.equal(
     (container.querySelector('#draft') as HTMLTextAreaElement).value,
@@ -150,16 +150,16 @@ test('dictate, correct by voice, recover failed audio and reload saved history',
     ),
   );
   assert.equal(clipboard, 'Hoy revisaré el documento.');
-  assert.ok(button('Dictar corrección')); // one command automatically stops capture
-  await step(() => click('Dictar'));
+  assert.ok(button('Dictate correction')); // one command automatically stops capture
+  await step(() => click('Dictate'));
   fail = true;
-  await step(() => click('Empezar a dictar'));
+  await step(() => click('Start dictation'));
   await audio();
-  await step(() => click('Terminar'));
+  await step(() => click('Stop'));
   assert.equal((await get<any[]>('voz-jobs'))!.length, 1);
   const before = calls;
   fail = false;
-  await step(() => click('Reintentar'));
+  await step(() => click('Retry'));
   await step(() => {});
   assert.equal(calls, before + 1);
   assert.equal((await get<any[]>('voz-jobs'))!.length, 0);

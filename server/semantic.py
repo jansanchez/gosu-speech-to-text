@@ -17,9 +17,9 @@ cache={}
 cache_lock=threading.Lock()
 
 def search(request:SearchRequest):
-    if 'cloud' in request.model.lower():raise HTTPException(400,'Usa un modelo de embeddings local.')
+    if 'cloud' in request.model.lower():raise HTTPException(400,'Use a local embedding model.')
     info=local_post('/api/show',{'model':request.model},15)
-    if info.get('remote_model') or info.get('remote_host'):raise HTTPException(400,'El modelo de búsqueda debe estar instalado localmente.')
+    if info.get('remote_model') or info.get('remote_host'):raise HTTPException(400,'The search model must be installed locally.')
     def vector(text):
         key=hashlib.sha256((request.model+'\0'+text).encode()).hexdigest()
         with cache_lock:existing=cache.get(key)
@@ -31,7 +31,7 @@ def search(request:SearchRequest):
             norm=math.sqrt(sum(n*n for n in values))
             if not norm:raise ValueError()
             value=[n/norm for n in values]
-        except (KeyError,TypeError,ValueError,IndexError) as exc:raise HTTPException(502,'El modelo devolvió un vector no válido.') from exc
+        except (KeyError,TypeError,ValueError,IndexError) as exc:raise HTTPException(502,'The model returned an invalid vector.') from exc
         with cache_lock:
             if len(cache)>1000:cache.clear()
             cache[key]=value
@@ -39,6 +39,6 @@ def search(request:SearchRequest):
     query=vector(request.query);results=[]
     for doc in request.documents:
         values=vector(doc.text)
-        if len(values)!=len(query):raise HTTPException(502,'El modelo devolvió dimensiones inconsistentes.')
+        if len(values)!=len(query):raise HTTPException(502,'The model returned inconsistent dimensions.')
         results.append({'id':doc.id,'score':sum(a*b for a,b in zip(query,values))})
     return {'results':sorted(results,key=lambda a:a['score'],reverse=True)[:20]}

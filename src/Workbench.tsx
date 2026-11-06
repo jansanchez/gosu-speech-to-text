@@ -50,17 +50,17 @@ export default function Workbench(p: Props) {
     }
   }
   return (
-    <section className="workbench" aria-label="Herramientas del dictado">
+    <section className="workbench" aria-label="Dictation tools">
       <div className="utility-bar">
         <button disabled={p.disabled} onClick={() => void p.togglePrivate()}>
-          {p.privateMode ? 'Salir de sesión privada' : 'Sesión privada'}
+          {p.privateMode ? 'Exit private session' : 'Private session'}
         </button>
         <button onClick={p.read} disabled={!current.text}>
-          Leer en voz alta
+          Read aloud
         </button>
-        <button onClick={p.stopRead}>Detener lectura</button>
+        <button onClick={p.stopRead}>Stop reading</button>
         <label className="file-button">
-          Importar grabación
+          Import recording
           <input
             disabled={p.disabled || working}
             type="file"
@@ -75,18 +75,18 @@ export default function Workbench(p: Props) {
       </div>
       {p.privateMode && (
         <p role="status">
-          Sesión privada: texto y audio de esta sesión permanecen en memoria hasta salir.
-          Las exportaciones que tú solicites sí crean archivos.
+          Private session: text and audio stay in memory until you exit. Exports you
+          request still create files.
         </p>
       )}
       <details onToggle={(e) => setOpen(e.currentTarget.open)}>
-        <summary>Herramientas, preferencias y respaldos</summary>
+        <summary>Tools, settings, and backups</summary>
         {open && (
           <div className="tool-grid">
             <fieldset>
-              <legend>Organizar este dictado</legend>
+              <legend>Organize this dictation</legend>
               <label>
-                Título
+                Title
                 <input
                   value={current.title || ''}
                   onChange={(e) =>
@@ -100,7 +100,7 @@ export default function Workbench(p: Props) {
                 />
               </label>
               <label>
-                Etiquetas (separadas por coma)
+                Tags (comma-separated)
                 <input
                   value={current.tags || ''}
                   onChange={(e) =>
@@ -123,14 +123,14 @@ export default function Workbench(p: Props) {
                   }))
                 }
               >
-                {current.favorite ? 'Quitar favorito' : 'Marcar favorito'}
+                {current.favorite ? 'Remove favorite' : 'Mark favorite'}
               </button>
               <button
                 disabled={p.disabled}
                 onClick={() => {
                   if (
                     confirm(
-                      '¿Borrar las versiones anteriores de este dictado? El texto actual se conserva.',
+                      'Delete the previous versions of this dictation? The current text will be preserved.',
                     )
                   )
                     p.change((x) => ({
@@ -141,17 +141,17 @@ export default function Workbench(p: Props) {
                     }));
                 }}
               >
-                Limpiar versiones de este dictado
+                Clear history for this dictation
               </button>
               <label>
-                Unir al final de este dictado
+                Append to this dictation
                 <select value={other} onChange={(e) => setOther(e.target.value)}>
-                  <option value="">Elige otro borrador</option>
+                  <option value="">Choose another draft</option>
                   {p.state.sessions
                     .filter((a) => a.id !== current.id)
                     .map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.title || a.text.slice(0, 40) || 'Sin título'}
+                        {a.title || a.text.slice(0, 40) || 'Untitled'}
                       </option>
                     ))}
                 </select>
@@ -163,16 +163,16 @@ export default function Workbench(p: Props) {
                   setOther('');
                 }}
               >
-                Unir y conservar originales
+                Join and keep originals
               </button>
               <button disabled={p.disabled} onClick={p.split}>
-                Dividir en el cursor
+                Split at cursor
               </button>
             </fieldset>
             <fieldset>
-              <legend>Plantillas reutilizables</legend>
+              <legend>Reusable snippets</legend>
               <label>
-                Nombre
+                Name
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -180,7 +180,7 @@ export default function Workbench(p: Props) {
                 />
               </label>
               <label>
-                Texto
+                Text
                 <textarea
                   value={snippet}
                   onChange={(e) => setSnippet(e.target.value)}
@@ -205,7 +205,7 @@ export default function Workbench(p: Props) {
                   setSnippet('');
                 }}
               >
-                Guardar plantilla
+                Save snippet
               </button>
               {(p.state.snippets || []).map((a) => (
                 <div className="template-row" key={a.id}>
@@ -213,30 +213,30 @@ export default function Workbench(p: Props) {
                     {a.name}
                   </button>
                   <button
-                    aria-label={'Eliminar plantilla ' + a.name}
+                    aria-label={'Delete snippet ' + a.name}
                     onClick={() => {
-                      if (confirm('¿Eliminar esta plantilla?'))
+                      if (confirm('Delete this snippet?'))
                         p.change((x) => ({
                           ...x,
                           snippets: x.snippets?.filter((b) => a.id !== b.id),
                         }));
                     }}
                   >
-                    Eliminar
+                    Delete
                   </button>
                 </div>
               ))}
-              <small>Por voz, en Corregir: «insertar plantilla nombre».</small>
+              <small>In Correct mode, say “insert snippet name”.</small>
             </fieldset>
             <fieldset>
-              <legend>Lo que has enseñado a GOSU Speech to Text</legend>
-              <p>Solo se aplican reemplazos que tú guardas. Puedes quitarlos aquí.</p>
+              <legend>What you have taught GOSU Speech to Text</legend>
+              <p>Only replacements you save are applied. You can remove them here.</p>
               <label>
-                Lo que suele reconocer
+                What is usually recognized
                 <input value={from} onChange={(e) => setFrom(e.target.value)} />
               </label>
               <label>
-                Lo que quieres escribir
+                What you want to write
                 <input value={to} onChange={(e) => setTo(e.target.value)} />
               </label>
               <button
@@ -252,7 +252,7 @@ export default function Workbench(p: Props) {
                   setTo('');
                 }}
               >
-                Confirmar regla personal
+                Save personal rule
               </button>
               {Object.entries(dictionaryOf(s.dictionary)).map(([a, b]) => (
                 <div className="rule" key={a}>
@@ -260,30 +260,30 @@ export default function Workbench(p: Props) {
                     {a} → {b}
                   </span>
                   <button
-                    aria-label={'Olvidar ' + a}
+                    aria-label={'Forget ' + a}
                     onClick={() => {
                       const next = dictionaryOf(s.dictionary);
                       delete next[a];
                       setting({ dictionary: JSON.stringify(next) });
                     }}
                   >
-                    Olvidar
+                    Forget
                   </button>
                 </div>
               ))}
             </fieldset>
             <fieldset>
-              <legend>Edición natural local</legend>
+              <legend>Local natural editing</legend>
               <label className="check">
                 <input
                   type="checkbox"
                   checked={s.llm}
                   onChange={(e) => setting({ llm: e.target.checked })}
                 />{' '}
-                Activar propuestas con Ollama local
+                Enable suggestions with local Ollama
               </label>
               <label>
-                Modelo de búsqueda por significado
+                Semantic search model
                 <input
                   value={s.embeddingModel}
                   onChange={(e) => setting({ embeddingModel: e.target.value })}
@@ -291,7 +291,7 @@ export default function Workbench(p: Props) {
                 />
               </label>
               <label>
-                Modelo local
+                Local model
                 <input
                   value={s.llmModel}
                   onChange={(e) => setting({ llmModel: e.target.value })}
@@ -299,9 +299,9 @@ export default function Workbench(p: Props) {
                 />
               </label>
               <small>
-                Requiere instalar Ollama y descargar el modelo. En Corregir puedes pedir
-                «hazlo más breve», «traduce al inglés» o una modificación libre. Siempre
-                presenta una propuesta para confirmar.
+                Install Ollama and download a model first. In Correct mode, request “make
+                it shorter”, “translate into English”, or another edit. Always review and
+                confirm the suggestion.
               </small>
               <label className="check">
                 <input
@@ -309,7 +309,7 @@ export default function Workbench(p: Props) {
                   checked={s.punctuation}
                   onChange={(e) => setting({ punctuation: e.target.checked })}
                 />{' '}
-                Interpretar puntuación hablada (español/inglés)
+                Interpret spoken punctuation
               </label>
               <label className="check">
                 <input
@@ -317,13 +317,13 @@ export default function Workbench(p: Props) {
                   checked={s.sounds}
                   onChange={(e) => setting({ sounds: e.target.checked })}
                 />{' '}
-                Sonido al terminar la grabación
+                Play a sound when recording stops
               </label>
             </fieldset>
             <fieldset>
-              <legend>Accesibilidad</legend>
+              <legend>Accessibility</legend>
               <label>
-                Umbral del micrófono: {s.sensitivity.toFixed(3)}
+                Microphone threshold: {s.sensitivity.toFixed(3)}
                 <input
                   type="range"
                   min={0.002}
@@ -334,7 +334,8 @@ export default function Workbench(p: Props) {
                 />
               </label>
               <small>
-                Bájalo para voces suaves; súbelo si el ruido genera demasiados tramos.
+                Lower it for quiet voices; raise it if background noise creates too many
+                chunks.
               </small>
               <label className="check">
                 <input
@@ -342,10 +343,10 @@ export default function Workbench(p: Props) {
                   checked={s.contrast}
                   onChange={(e) => setting({ contrast: e.target.checked })}
                 />{' '}
-                Alto contraste
+                High contrast
               </label>
               <label>
-                Tamaño del editor: {s.fontSize}px
+                Editor size: {s.fontSize}px
                 <input
                   type="range"
                   min={16}
@@ -357,21 +358,21 @@ export default function Workbench(p: Props) {
               <button
                 onClick={() => setting({ fontSize: defaults.fontSize, contrast: false })}
               >
-                Restaurar apariencia
+                Reset appearance
               </button>
               <small>
-                Órdenes de control en Corregir: «deshacer», «rehacer», «copiar», «pegar»,
-                «leer texto», «detener lectura», «confirmar cambio» y «cancelar cambio».
+                Control commands in Correct mode: “undo”, “redo”, “copy text”, “paste
+                text”, “read text”, “stop reading”, “confirm change”, and “cancel change”.
               </small>
             </fieldset>
             <fieldset>
-              <legend>Respaldo completo y privacidad</legend>
+              <legend>Full backup and privacy</legend>
               <p>
-                Incluye textos, versiones, plantillas y preferencias. Excluye audio
-                pendiente y claves del motor.
+                Includes text, history, snippets, and settings. Excludes pending audio and
+                engine tokens.
               </p>
               <label>
-                Contraseña para cifrar o abrir un respaldo
+                Password to encrypt or open a backup
                 <input
                   type="password"
                   value={password}
@@ -384,23 +385,23 @@ export default function Workbench(p: Props) {
                 onClick={() =>
                   void action(async () => {
                     download(
-                      'gosu-speech-to-text-respaldo-' +
+                      'gosu-speech-to-text-backup-' +
                         new Date().toISOString().slice(0, 10) +
                         (password ? '.gosu' : '.json'),
                       await encodeBackup(p.state, password),
                     );
                     p.notify(
                       password
-                        ? 'Respaldo cifrado descargado. Conserva la contraseña.'
-                        : 'Respaldo sin cifrar descargado.',
+                        ? 'Encrypted backup downloaded. Keep the password safe.'
+                        : 'Unencrypted backup downloaded.',
                     );
                   })
                 }
               >
-                Descargar respaldo {password ? 'cifrado' : 'sin cifrar'}
+                Download backup {password ? 'cifrado' : 'unencrypted'}
               </button>
               <label className="file-button">
-                Restaurar respaldo
+                Restore backup
                 <input
                   disabled={p.disabled || working}
                   type="file"
@@ -413,7 +414,7 @@ export default function Workbench(p: Props) {
                         const restored = await decodeBackup(await file.text(), password);
                         if (
                           confirm(
-                            '¿Reemplazar la bandeja y preferencias por este respaldo? Exporta antes lo que quieras conservar.',
+                            'Replace the workspace and settings with this backup? Export anything you want to keep first.',
                           )
                         )
                           p.restore(restored);
@@ -422,7 +423,7 @@ export default function Workbench(p: Props) {
                 />
               </label>
               <label>
-                Antigüedad para limpieza (días, 0 conserva todo)
+                Cleanup age (days, 0 keeps everything)
                 <input
                   type="number"
                   min={0}
@@ -436,15 +437,15 @@ export default function Workbench(p: Props) {
                 />
               </label>
               <button disabled={p.disabled} onClick={p.cleanup}>
-                Revisar y limpiar antiguos
+                Review and clean up old drafts
               </button>
               <button disabled={p.disabled} onClick={p.erase}>
-                Borrar todos los datos de GOSU Speech to Text
+                Delete all GOSU Speech to Text data
               </button>
               <small>
-                La limpieza conserva favoritos y borradores con audio pendiente. La sesión
-                privada no cifra datos anteriores. El cifrado se aplica al archivo
-                exportado.
+                Cleanup preserves favorites and drafts with pending audio. Private mode
+                does not encrypt previous data. Encryption applies to the exported backup
+                file.
               </small>
             </fieldset>
           </div>

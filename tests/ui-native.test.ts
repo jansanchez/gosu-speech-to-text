@@ -140,7 +140,7 @@ const windowModes: string[] = [];
         args.text,
         'Copy the complete session before attempting paste',
       );
-      if (insertionFailure) throw Error('Destino cerrado');
+      if (insertionFailure) throw Error('Destination cerrado');
       insertions.push(args);
       return;
     }
@@ -160,7 +160,7 @@ const windowModes: string[] = [];
       return { ready: true, model: 'native-fake' };
     }
     if (cmd === 'engine_transcribe') {
-      assert.equal(args.language, 'es');
+      assert.equal(args.language, 'en');
       assert.ok(args.audio.length > 44);
       assert.deepEqual(args.audio.slice(0, 4), [82, 73, 70, 70]);
       calls++;
@@ -219,21 +219,21 @@ async function audio() {
 test('native IPC dictation, correction, clipboard and pending audio recovery without WebView fetch', async () => {
   await clear();
   await step(() => root.render(React.createElement(App)));
-  assert.match(container.textContent || '', /Motor sin conexión/);
-  await step(() => click('Empezar a dictar'));
+  assert.match(container.textContent || '', /Engine offline/);
+  await step(() => click('Start dictation'));
   assert.equal(node, undefined, 'Must not capture before engine readiness');
   nativeReady = true;
-  await step(() => click('Comprobar motor'));
-  assert.match(container.textContent || '', /Motor listo/);
-  await step(() => click('Empezar a dictar'));
+  await step(() => click('Check engine'));
+  assert.match(container.textContent || '', /Engine ready/);
+  await step(() => click('Start dictation'));
   await audio();
-  await step(() => click('Terminar'));
+  await step(() => click('Stop'));
   assert.equal(
     (container.querySelector('#draft') as HTMLTextAreaElement).value,
     'Mañana revisaré el documento.',
   );
-  await step(() => click('Corregir'));
-  await step(() => click('Dictar corrección'));
+  await step(() => click('Correct'));
+  await step(() => click('Dictate correction'));
   await audio();
   assert.equal(
     (container.querySelector('#draft') as HTMLTextAreaElement).value,
@@ -243,16 +243,16 @@ test('native IPC dictation, correction, clipboard and pending audio recovery wit
     (container.querySelector('button.header-copy') as HTMLButtonElement).click();
   });
   assert.equal(clipboard, 'Hoy revisaré el documento.');
-  assert.ok(button('Dictar corrección')); // one command automatically stops capture
-  await step(() => click('Dictar'));
+  assert.ok(button('Dictate correction')); // one command automatically stops capture
+  await step(() => click('Dictate'));
   fail = true;
-  await step(() => click('Empezar a dictar'));
+  await step(() => click('Start dictation'));
   await audio();
-  await step(() => click('Terminar'));
+  await step(() => click('Stop'));
   assert.equal((await get<any[]>('voz-jobs'))!.length, 1);
   const before = calls;
   fail = false;
-  await step(() => click('Reintentar'));
+  await step(() => click('Retry'));
   await step(() => {});
   assert.equal(calls, before + 1);
   assert.equal((await get<any[]>('voz-jobs'))!.length, 0);
@@ -282,12 +282,12 @@ test('natural proposals require confirmation; learned rules require consent; pri
     details.dispatchEvent(new win.Event('toggle') as any);
   });
   const llm = [...container.querySelectorAll('label')]
-    .find((a) => a.textContent?.includes('Activar propuestas con Ollama'))!
+    .find((a) => a.textContent?.includes('Enable suggestions with local Ollama'))!
     .querySelector('input')!;
   await step(() => llm.click());
   const prompt = container.querySelector('.natural-command input') as HTMLInputElement;
   await step(() => input(prompt, 'Hazlo más claro'));
-  await step(() => click('Preparar propuesta local'));
+  await step(() => click('Prepare local suggestion'));
   assert.equal(
     (container.querySelector('#draft') as HTMLTextAreaElement).value,
     'No enviar 42 mensajes.',
@@ -296,37 +296,37 @@ test('natural proposals require confirmation; learned rules require consent; pri
   await step(() =>
     input(container.querySelector('#draft')!, 'No enviar 42 mensajes. Añadido manual.'),
   );
-  await step(() => click('Confirmar cambio'));
-  assert.match(container.textContent || '', /El borrador cambió/);
-  await step(() => click('Cancelar cambio'));
-  await step(() => click('Preparar propuesta local'));
+  await step(() => click('Confirm change'));
+  assert.match(container.textContent || '', /The draft changed/);
+  await step(() => click('Cancel change'));
+  await step(() => click('Prepare local suggestion'));
   replies.push('confirmar cambio');
-  await step(() => click('Corregir'));
-  await step(() => click('Dictar corrección'));
+  await step(() => click('Correct'));
+  await step(() => click('Dictate correction'));
   await audio();
   assert.equal(
     (container.querySelector('#draft') as HTMLTextAreaElement).value,
     rewriteResult,
   );
   replies.push('cambia hoy por mañana');
-  await step(() => click('Dictar corrección'));
+  await step(() => click('Dictate correction'));
   await audio();
   assert.equal((await get<any>('voz-state')).settings.dictionary, '{}');
-  await step(() => click('Recordar esta corrección'));
+  await step(() => click('Remember this correction'));
   assert.equal(
     JSON.parse((await get<any>('voz-state')).settings.dictionary).hoy,
     'mañana',
   );
   const normal = (container.querySelector('#draft') as HTMLTextAreaElement).value;
-  await step(() => click('Sesión privada'));
+  await step(() => click('Private session'));
   await step(() =>
-    input(container.querySelector('#draft')!, 'Texto privado que no se guarda'),
+    input(container.querySelector('#draft')!, 'Text privado que no se guarda'),
   );
   const stored = await get<any>('voz-state');
   assert.equal(stored.sessions.find((x: any) => x.id === stored.active).text, normal);
-  assert.ok(!JSON.stringify(stored).includes('Texto privado'));
+  assert.ok(!JSON.stringify(stored).includes('Text privado'));
   assert.equal((await get<any[]>('voz-jobs'))?.length || 0, 0);
-  await step(() => click('Salir de sesión privada'));
+  await step(() => click('Exit private session'));
   assert.equal((container.querySelector('#draft') as HTMLTextAreaElement).value, normal);
   await step(() => root.unmount());
 });
@@ -343,12 +343,12 @@ test('retry after a failed transcript save persists the result before removing i
       return original.call(this, value, key);
     };
     replies.push('Resultado recuperable.');
-    await step(() => click('Empezar a dictar'));
+    await step(() => click('Start dictation'));
     await audio();
-    await step(() => click('Terminar'));
+    await step(() => click('Stop'));
     assert.equal((await get<any[]>('voz-jobs'))!.length, 1);
     proto.put = original;
-    await step(() => click('Reintentar'));
+    await step(() => click('Retry'));
     await step(() => {});
     const saved = await get<any>('voz-state');
     assert.equal(
@@ -376,14 +376,14 @@ test('failed audio deletion preserves its receipt and retry never transcribes tw
     };
     replies.push('Una sola transcripción.');
     const before = calls;
-    await step(() => click('Empezar a dictar'));
+    await step(() => click('Start dictation'));
     await audio();
-    await step(() => click('Terminar'));
+    await step(() => click('Stop'));
     const stored = await get<any>('voz-state');
     assert.equal(stored.sessions[0].done.length, 1);
     assert.equal((await get<any[]>('voz-jobs'))!.length, 1);
     proto.put = original;
-    await step(() => click('Reintentar'));
+    await step(() => click('Retry'));
     await step(() => {});
     assert.equal(calls, before + 1);
     assert.equal(
@@ -406,9 +406,9 @@ test('corrupt local state cannot be overwritten by the empty fallback workspace'
   root = createRoot(container);
   await step(() => root.render(React.createElement(App)));
   await step(() => {});
-  assert.match(container.textContent || '', /Los datos originales se conservan/);
+  assert.match(container.textContent || '', /original data has been preserved/);
   assert.equal((container.querySelector('#draft') as HTMLTextAreaElement).disabled, true);
-  assert.equal(button('Empezar a dictar').disabled, true);
+  assert.equal(button('Start dictation').disabled, true);
   assert.deepEqual(await get('voz-state'), corrupt);
   await step(() => root.unmount());
   assert.deepEqual(await get('voz-state'), corrupt);
@@ -430,12 +430,12 @@ test('simultaneous microphone clicks request permission once', async () => {
   };
   try {
     await step(() => {
-      click('Empezar a dictar');
-      click('Empezar a dictar');
+      click('Start dictation');
+      click('Start dictation');
     });
     assert.equal(requests, 1);
     await step(() => release({ getTracks: () => [{ stop() {}, onended: null }] }));
-    await step(() => click('Terminar'));
+    await step(() => click('Stop'));
   } finally {
     media.getUserMedia = original;
     await step(() => root.unmount());
@@ -446,19 +446,19 @@ test('restarting the engine keeps the workspace and pending audio intact', async
   await clear();
   root = createRoot(container);
   await step(() => root.render(React.createElement(App)));
-  await step(() => input(container.querySelector('#draft')!, 'Borrador conservado.'));
+  await step(() => input(container.querySelector('#draft')!, 'Draft conservado.'));
   fail = true;
-  await step(() => click('Empezar a dictar'));
+  await step(() => click('Start dictation'));
   await audio();
-  await step(() => click('Terminar'));
+  await step(() => click('Stop'));
   fail = false;
   const pending = await get<any[]>('voz-jobs'),
     before = restartCalls;
-  await step(() => click('Reiniciar motor'));
+  await step(() => click('Restart engine'));
   assert.equal(restartCalls, before + 1);
   assert.equal(
     (container.querySelector('#draft') as HTMLTextAreaElement).value,
-    'Borrador conservado.',
+    'Draft conservado.',
   );
   assert.deepEqual(
     (await get<any[]>('voz-jobs'))!.map((job) => job.id),
@@ -491,13 +491,13 @@ test('independent shortcuts record a fresh draft, shows microphone feedback and 
     input(container.querySelector('#draft')!, 'Este borrador no debe pegarse.'),
   );
   const before = insertions.length;
-  replies.push('Dictado para el agente.');
+  replies.push('Dictation para el agente.');
   await panelShortcut();
   assert.ok(container.querySelector('.minimal-dictation'));
-  assert.match(container.textContent || '', /Listo para dictar/);
+  assert.match(container.textContent || '', /Ready to dictate/);
   await primaryShortcut();
-  assert.match(container.textContent || '', /Te estoy escuchando/);
-  assert.match(container.textContent || '', /Destino al terminar/);
+  assert.match(container.textContent || '', /Listening to you/);
+  assert.match(container.textContent || '', /Destination on stop/);
   assert.equal(windowModes.at(-1), 'overlay');
   focusedTarget = 'last-focused-window';
   await audio();
@@ -511,10 +511,10 @@ test('independent shortcuts record a fresh draft, shows microphone feedback and 
   await step(() => {});
   assert.deepEqual(insertions.at(-1), {
     targetId: 'last-focused-window',
-    text: 'Dictado para el agente.',
+    text: 'Dictation para el agente.',
   });
-  assert.match(container.textContent || '', /Texto insertado/);
-  assert.equal(clipboard, 'Dictado para el agente.');
+  assert.match(container.textContent || '', /Text inserted/);
+  assert.equal(clipboard, 'Dictation para el agente.');
   assert.equal(windowModes.at(-1), 'overlay');
   await visibilityShortcut();
   assert.equal(windowModes.at(-1), 'hide');
@@ -522,14 +522,14 @@ test('independent shortcuts record a fresh draft, shows microphone feedback and 
   await visibilityShortcut();
   assert.equal(windowModes.at(-1), 'overlay');
   assert.equal(node, previousNode, 'Showing the panel never opens the microphone');
-  assert.match(container.textContent || '', /Texto insertado/);
+  assert.match(container.textContent || '', /Text inserted/);
   replies.push('Segundo dictado.');
   await primaryShortcut();
-  assert.match(container.textContent || '', /Te estoy escuchando/);
+  assert.match(container.textContent || '', /Listening to you/);
   await visibilityShortcut();
   assert.equal(windowModes.at(-1), 'hide');
   await visibilityShortcut();
-  assert.match(container.textContent || '', /Te estoy escuchando/);
+  assert.match(container.textContent || '', /Listening to you/);
   await audio();
   await primaryShortcut();
   assert.equal(insertions.at(-1)!.text, 'Segundo dictado.');
@@ -548,19 +548,19 @@ test('minimal mode preserves text when the target rejects insertion and never re
   await step(() => root.render(React.createElement(App)));
   const before = insertions.length;
   insertionFailure = true;
-  replies.push('Texto recuperable.');
+  replies.push('Text recuperable.');
   try {
     await primaryShortcut();
     await audio();
     await primaryShortcut();
     await step(() => {});
-    assert.match(container.textContent || '', /Destino cerrado/);
-    assert.equal(clipboard, 'Texto recuperable.');
+    assert.match(container.textContent || '', /Destination cerrado/);
+    assert.equal(clipboard, 'Text recuperable.');
     assert.equal(insertions.length, before);
     await step(() => click('Editor'));
     assert.equal(
       (container.querySelector('#draft') as HTMLTextAreaElement).value,
-      'Texto recuperable.',
+      'Text recuperable.',
     );
     assert.equal(insertions.length, before);
   } finally {
@@ -600,7 +600,7 @@ test('minimal insertion waits for the final in-flight transcript and ignores rep
     await primaryShortcut();
     await audio();
     await primaryShortcut();
-    assert.match(container.textContent || '', /Terminando transcripción/);
+    assert.match(container.textContent || '', /Finishing transcription/);
     focusedTarget = 'changed-during-processing';
     assert.equal(insertions.length, before);
     await primaryShortcut();
@@ -668,14 +668,14 @@ function shortcutControl(text: string, panel: boolean | number = false) {
   return button as HTMLButtonElement;
 }
 async function chooseShortcut(panel: boolean | number = false) {
-  await step(() => click('Preferencias'));
-  await step(() => shortcutControl('Elegir combinación', panel).click());
+  await step(() => click('Settings'));
+  await step(() => shortcutControl('Choose combination', panel).click());
   const field = container.querySelector(
     panel === 2
-      ? '.settings input[aria-label="Combinación del atajo de visibilidad"]'
+      ? '.settings input[aria-label="Visibility shortcut combination"]'
       : panel
-        ? '.settings input[aria-label="Combinación del atajo del panel"]'
-        : '.settings input[aria-label="Combinación del atajo de dictado"]',
+        ? '.settings input[aria-label="Panel shortcut combination"]'
+        : '.settings input[aria-label="Dictation shortcut combination"]',
   ) as HTMLInputElement;
   assert.equal(field.getAttribute('data-shortcut-capture'), 'true');
   assert.equal(
@@ -696,7 +696,7 @@ async function chooseShortcut(panel: boolean | number = false) {
     ),
   );
   assert.match(field.value, /Ctrl.*Alt.*K/);
-  await step(() => shortcutControl('Guardar atajo', panel).click());
+  await step(() => shortcutControl('Save shortcut', panel).click());
   await step(() => {});
 }
 test('the user can record a shortcut and it stays configured after restarting the interface', async () => {
@@ -729,7 +729,7 @@ test('an unavailable new shortcut restores the previous usable shortcut', async 
     assert.ok(nativeShortcuts.has('CommandOrControl+Shift+Space'));
     assert.match(
       container.querySelector('.settings')!.textContent || '',
-      /Se conservó el atajo anterior/,
+      /previous shortcut was preserved/,
     );
   } finally {
     rejectedShortcut = '';
@@ -779,17 +779,17 @@ test('recording starts while GOSU is focused and final text is copied even witho
   await step(() => root.render(React.createElement(App)));
   const before = insertions.length;
   targetFailure = true;
-  replies.push('Texto para pegar en WezTerm.');
+  replies.push('Text para pegar en WezTerm.');
   try {
     await panelShortcut();
     await primaryShortcut();
-    assert.match(container.textContent || '', /Te estoy escuchando/);
+    assert.match(container.textContent || '', /Listening to you/);
     await audio();
     await primaryShortcut();
     await step(() => {});
-    assert.equal(clipboard, 'Texto para pegar en WezTerm.');
+    assert.equal(clipboard, 'Text para pegar en WezTerm.');
     assert.equal(insertions.length, before);
-    assert.match(container.textContent || '', /Texto en el portapapeles/);
+    assert.match(container.textContent || '', /Text on clipboard/);
     assert.equal(windowModes.at(-1), 'overlay');
     await visibilityShortcut();
     assert.equal(windowModes.at(-1), 'hide');
@@ -817,7 +817,7 @@ test('clipboard failure preserves the draft without claiming a copy or sending k
     assert.match(container.textContent || '', /Portapapeles no disponible/);
     assert.doesNotMatch(
       container.textContent || '',
-      /Texto en el portapapeles|Texto insertado y copiado/,
+      /Text on clipboard|Text inserted and copied/,
     );
     await step(() => click('Editor'));
     assert.equal(

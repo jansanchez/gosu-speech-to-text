@@ -2,7 +2,7 @@ from pathlib import Path
 import hashlib,sys
 root=Path(sys.argv[1] if len(sys.argv)>1 else 'src-tauri/target/release/bundle')
 files=sorted(p for p in root.rglob('*') if p.is_file() and p.suffix.lower() in {'.exe','.dmg','.deb','.appimage','.zip'})
-if not files:raise SystemExit('No hay instaladores para calcular hashes.')
+if not files:raise SystemExit('No installers found for checksum calculation.')
 lines=[]
 for file in files:
  digest=hashlib.sha256()

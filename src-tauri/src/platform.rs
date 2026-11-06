@@ -7,12 +7,9 @@ pub(crate) fn run(program: &str, args: &[&str]) -> Result<String, String> {
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-        .map_err(|e| format!("No se pudo ejecutar {program}: {e}. El texto permanece copiado."))?;
-    let stdout = child.stdout.take().ok_or("No se pudo leer la salida.")?;
-    let stderr = child
-        .stderr
-        .take()
-        .ok_or("No se pudo leer el diagnóstico.")?;
+        .map_err(|e| format!("Could not run {program}: {e}. The text remains copied."))?;
+    let stdout = child.stdout.take().ok_or("Could not read output.")?;
+    let stderr = child.stderr.take().ok_or("Could not read diagnostics.")?;
     fn read(pipe: impl Read) -> std::io::Result<Vec<u8>> {
         let mut data = Vec::new();
         pipe.take(2_000_001).read_to_end(&mut data)?;
@@ -29,27 +26,25 @@ pub(crate) fn run(program: &str, args: &[&str]) -> Result<String, String> {
         if std::time::Instant::now() > deadline {
             let _ = child.kill();
             let _ = child.wait();
-            return Err(format!(
-                "{program} no respondió a tiempo. El texto sigue copiado."
-            ));
+            return Err(format!("{program} timed out. The text remains copied."));
         }
         std::thread::sleep(std::time::Duration::from_millis(30));
     }
     let status = child.wait().map_err(|e| e.to_string())?;
     let output = output
         .join()
-        .map_err(|_| "No se pudo leer la salida.")?
+        .map_err(|_| "Could not read output.")?
         .map_err(|e| e.to_string())?;
     let errors = errors
         .join()
-        .map_err(|_| "No se pudo leer el diagnóstico.")?
+        .map_err(|_| "Could not read diagnostics.")?
         .map_err(|e| e.to_string())?;
     if output.len() > 2_000_000 || errors.len() > 2_000_000 {
-        return Err("Respuesta del sistema demasiado grande.".into());
+        return Err("System response is too large.".into());
     }
     if !status.success() {
         return Err(format!(
-            "{program}: {}. El texto permanece copiado.",
+            "{program}: {}. The text remains copied.",
             String::from_utf8_lossy(if errors.is_empty() { &output } else { &errors }).trim()
         ));
     }
@@ -62,7 +57,7 @@ fn active() -> Result<String, String> {
         || std::env::var("DISPLAY").is_err()
     {
         return Err(
-            "En Wayland usa Copiar y Ctrl+V; el pegado entre aplicaciones depende del compositor."
+            "On Wayland use Copy and Ctrl+V; pasting between applications depends on the compositor."
                 .into(),
         );
     }
@@ -74,7 +69,7 @@ fn active() -> Result<String, String> {
 }
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
 fn active() -> Result<String, String> {
-    Err("Utiliza el portapapeles de tu sistema.".into())
+    Err("Use your system clipboard.".into())
 }
 fn external(id: &str) -> Result<bool, String> {
     #[cfg(target_os = "linux")]
@@ -112,24 +107,24 @@ pub fn paste(activate: bool) -> Result<(), String> {
     }
 
     let id = if activate {
-        TARGET.lock().map_err(|e|e.to_string())?.clone().ok_or("No hay un destino recordado. Usa el atajo en la aplicación de destino o pega manualmente.".to_owned())?
+        TARGET.lock().map_err(|e|e.to_string())?.clone().ok_or("No remembered destination. Use the shortcut in the destination application or paste manually.".to_owned())?
     } else {
         active()?
     };
     if !external(&id)? {
-        return Err("Selecciona otra aplicación. El texto está copiado.".into());
+        return Err("Select another application. The text is copied.".into());
     }
     #[cfg(target_os = "linux")]
     {
         if !id.chars().all(|c| c.is_ascii_digit()) {
-            return Err("Destino X11 no válido.".into());
+            return Err("Invalid X11 destination.".into());
         }
         if activate {
             run("xdotool", &["windowactivate", "--sync", &id])?;
         }
         std::thread::sleep(std::time::Duration::from_millis(150));
         if active()? != id {
-            return Err("El destino cambió. No se enviaron teclas.".into());
+            return Err("The destination changed. No keys were sent.".into());
         }
         let class = run("xprop", &["-id", &id, "WM_CLASS"]).unwrap_or_default();
         let keys = if crate::hyprland::terminal(&class) {
@@ -146,7 +141,7 @@ pub fn paste(activate: bool) -> Result<(), String> {
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || ".-_".contains(c))
         {
-            return Err("Identificador de aplicación no válido.".into());
+            return Err("Invalid application identifier.".into());
         }
         if activate {
             let script = format!("tell application id \"{id}\" to activate");
@@ -164,11 +159,11 @@ pub fn paste(activate: bool) -> Result<(), String> {
             std::thread::sleep(std::time::Duration::from_millis(20));
         }
         if unsafe { CGEventSourceFlagsState(0) } & modifiers != 0 {
-            return Err("Suelta las teclas del atajo y repite. El texto está copiado.".into());
+            return Err("Release the shortcut keys and try again. The text is copied.".into());
         }
         std::thread::sleep(std::time::Duration::from_millis(150));
         if active()? != id {
-            return Err("Cambió la aplicación activa. Pega manualmente.".into());
+            return Err("The active application changed. Paste manually.".into());
         }
         run(
             "osascript",
@@ -180,14 +175,14 @@ pub fn paste(activate: bool) -> Result<(), String> {
         return Ok(());
     }
     #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    Err("Texto copiado. Pega manualmente en el destino.".into())
+    Err("Text copied. Paste manually in the destination.".into())
 }
 
 /// Capture identity and application metadata without reading document contents.
 pub fn capture_destination() -> Result<crate::minimal::Destination, String> {
     let id = active()?;
     if !external(&id)? {
-        return Err("Enfoca otra aplicación y pulsa el atajo.".into());
+        return Err("Focus another application and press the shortcut.".into());
     }
     #[cfg(target_os = "linux")]
     {
@@ -199,7 +194,7 @@ pub fn capture_destination() -> Result<crate::minimal::Destination, String> {
             .split('"')
             .filter(|part| !part.trim().is_empty())
             .nth(3)
-            .unwrap_or("Aplicación X11")
+            .unwrap_or("X11 application")
             .to_owned();
         *TARGET.lock().map_err(|e| e.to_string())? = Some(id.clone());
         return Ok(crate::minimal::Destination {
@@ -222,24 +217,24 @@ pub fn capture_destination() -> Result<crate::minimal::Destination, String> {
         })
     }
     #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    Err("No se pudo detectar el destino.".into())
+    Err("Could not detect the destination.".into())
 }
 pub fn paste_destination(expected: &str) -> Result<(), String> {
     let target = TARGET
         .lock()
         .map_err(|e| e.to_string())?
         .clone()
-        .ok_or("No hay destino recordado.")?;
+        .ok_or("No remembered destination.")?;
     #[cfg(target_os = "linux")]
     {
         let pid = run("xdotool", &["getwindowpid", &target])?;
         if expected != format!("x11:{target}:{pid}") {
-            return Err("La ventana de destino cambió o se cerró.".into());
+            return Err("The destination window changed or closed.".into());
         }
     }
     #[cfg(target_os = "macos")]
     if expected != format!("macos:{target}") {
-        return Err("La aplicación de destino cambió.".into());
+        return Err("The destination application changed.".into());
     }
     paste(true)
 }

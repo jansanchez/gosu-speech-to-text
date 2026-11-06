@@ -4,6 +4,12 @@ Local dictation and transcription with a full editor and a minimal panel for voi
 
 [Privacy Policy](PRIVACY.md): local processing, storage, model downloads, permissions, and control over your data.
 
+## Languages
+
+The interface, diagnostics, and documentation are English. Recognition language is selected independently. The ten priority languages are English, Mandarin Chinese, Hindi, Spanish, French, Arabic, Bengali, Portuguese, Russian, and Urdu, with additional existing languages still selectable. New installations default to English; saved recognition preferences are preserved.
+
+See [LANGUAGES.md](LANGUAGES.md) for explicit speech commands, punctuation, RTL handling, and the distinction between automated coverage and real-speaker recognition validation.
+
 ## Minimal dictation
 
 With GOSU open and the engine ready, **Ctrl+Shift+M** switches between the editor and minimal panel, **Ctrl+Shift+H** hides or restores the current view, and **Ctrl+Shift+Space** starts or stops dictation (use Cmd on macOS). All three shortcuts are configurable independently. You can switch fields while recording: GOSU selects the destination when you stop dictation. The panel stays available for another session. The result is also copied to the clipboard even if insertion fails; use Ctrl+Shift+V to paste into a terminal. Hiding the panel does not stop recording. GOSU never automatically presses Enter. See [minimal mode](MINIMAL-MODE.md).
@@ -20,7 +26,7 @@ Shortcuts are available from first use when permitted by the operating system. U
 | macOS Intel, native x64 build | `.app` and `.dmg` | Separate Intel application and engine |
 | Chrome, independent of the desktop app | Extension ZIP | WASM recognition and insertion into compatible fields |
 
-Minimal mode has been exercised on Linux/Hyprland. Other adapters are implemented and have CI jobs; functional validation on real devices remains pending. Linux capabilities depend on the session, compositor, portals, and permissions. A successful build does not establish installation or runtime compatibility. See [validation records](VALIDACION.md) and [features and remaining work](FEATURES.md). Some linked maintenance documents are currently in Spanish.
+Minimal mode has been exercised on Linux/Hyprland. Other adapters are implemented and have CI jobs; functional validation on real devices remains pending. Linux capabilities depend on the session, compositor, portals, and permissions. A successful build does not establish installation or runtime compatibility. See [validation records](VALIDACION.md) and [features and remaining work](FEATURES.md).
 
 ## Build from source
 

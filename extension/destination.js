@@ -48,14 +48,14 @@ export function captureDestination() {
 }
 export function insertDestination(text) {
   const d = window.__vozDestination;
-  if (!d?.el?.isConnected) return 'El campo ya no está disponible. Usa Copiar.';
+  if (!d?.el?.isConnected) return 'The field is no longer available. Use Copy.';
   const el = d.el;
   if (d.kind === 'field') {
     if (el.value !== d.value)
-      return 'El campo cambió. No se sobrescribió nada. Usa Copiar.';
-    if (el.readOnly || el.disabled) return 'El campo está bloqueado.';
+      return 'The field changed. Nothing was overwritten. Use Copy.';
+    if (el.readOnly || el.disabled) return 'The field is locked.';
     if (d.start == null || d.end == null)
-      return 'Este campo no admite selección. Usa Copiar.';
+      return 'This field does not support selection. Use Copy.';
     const next = el.value.slice(0, d.start) + text + el.value.slice(d.end);
     const proto =
       el instanceof HTMLTextAreaElement
@@ -69,12 +69,12 @@ export function insertDestination(text) {
     );
   } else {
     if (el.innerHTML !== d.html || !el.contains(d.range.commonAncestorContainer))
-      return 'El editor cambió. Usa Copiar.';
+      return 'The editor changed. Use Copy.';
     if (
       !el.isContentEditable &&
       !['true', 'plaintext-only', ''].includes(el.getAttribute('contenteditable'))
     )
-      return 'El editor ya no es editable.';
+      return 'The editor is no longer editable.';
     el.focus();
     const selection = window.getSelection();
     selection.removeAllRanges();
@@ -83,7 +83,7 @@ export function insertDestination(text) {
       typeof document.execCommand !== 'function' ||
       !document.execCommand('insertText', false, text)
     )
-      return 'Este editor requiere pegar manualmente. Usa Copiar.';
+      return 'This editor requires manual pasting. Use Copy.';
   }
   window.__vozDestination = null;
   return null;

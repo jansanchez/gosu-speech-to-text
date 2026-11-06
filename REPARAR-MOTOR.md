@@ -1,50 +1,46 @@
-> Referencia de diagnóstico histórico. Para preparar o compilar el código actual, utiliza [README.md](README.md), [Windows](INSTALAR-WINDOWS.md) y [compilación](BUILD-AND-RELEASE.md). Las cifras y comprobaciones de esta guía corresponden a su diagnóstico original.
+# Historical engine startup fix — 0.3.2
 
-# Arranque del motor · GOSU Speech to Text 0.3.2
+For current setup/builds use [README.md](README.md), [Windows setup](INSTALAR-WINDOWS.md), and [build contract](BUILD-AND-RELEASE.md). This document preserves the original diagnostic scope.
 
-El error Windows `The system cannot find the path specified (os error 3)` aparece antes de que el reconocedor procese audio. Puede corresponder al Python del proyecto, al directorio de trabajo o al ejecutable empaquetado. El mensaje anterior no mostraba la ruta concreta, por lo que no permite atribuir con certeza el fallo a uno de esos casos.
+Windows error `The system cannot find the path specified (os error 3)` occurs before inference. It can refer to project Python, the working directory, or the packaged executable. The earlier message did not show the failing path, so it did not establish which one was missing.
 
-## Recuperar el desarrollo existente
-
-Desde tu carpeta del proyecto en Windows:
+## Recover existing development
 
 ```powershell
 cd D:\projects\voz
 py -3.12 scripts\configurar.py --dev
 ```
 
-Este comando ya existe en la entrega anterior: prepara .venv y dependencias antes de abrir el escritorio. No borra modelos ni dictados. Si tu proyecto está en otra carpeta, utiliza esa ruta.
+Use your actual project path. This prepares dependencies before launching and does not delete models/dictations.
 
-## Corrección permanente 0.3.2
+## Permanent startup preparation
 
-1. `npm run desktop` comprueba el Python local antes de abrir Tauri. Si falta .venv, busca Python 3.12, crea el entorno e instala los paquetes necesarios. Si encuentra una carpeta .venv incompleta, la conserva con un nombre de respaldo antes de crear otra.
-2. Un entorno sano no se reinstala en cada arranque. La comprobación importa paquetes sin descargar modelos ni iniciar el servidor.
-3. `npm run desktop:build -- --bundles nsis` prepara y empaqueta el motor automáticamente antes de generar el instalador. Los argumentos se envían al comando Tauri correcto.
-4. Después de compilar, se copia el runtime a `src-tauri/target/release/engine`. Para abrir el EXE de release directamente, debe conservarse esa carpeta a su lado. Para distribuir, usa preferentemente el instalador completo de bundle/.
-5. El lanzador comprueba las rutas antes de iniciar, acepta el nombre de motor heredado si existe y registra la ruta concreta en Diagnóstico del motor. Un binario de desarrollo cuyo proyecto se movió puede detectar un directorio de proyecto válido desde la ubicación de trabajo.
+1. `npm run desktop` checks Python before Tauri. Missing environments are created with Python 3.12; incomplete `.venv` directories are preserved with backup names.
+2. Healthy environments are not reinstalled every startup. The probe imports packages without downloading models or starting the server.
+3. `npm run desktop:build -- --bundles nsis` automatically packages the engine before the installer and forwards arguments to Tauri correctly.
+4. The runtime is copied to `src-tauri/target/release/engine`. A raw release EXE requires that adjacent directory; distribution should use the complete installer from `bundle/`.
+5. The launcher validates paths before starting, accepts an existing legacy engine name, and records concrete paths in diagnostics. Moved debug builds can find a valid source root from their working location.
 
-No se instala Python en segundo plano desde una aplicación pública empaquetada. La preparación automática corresponde al código de desarrollo; el instalador final debe incluir su runtime.
+A packaged application does not install Python silently; automatic environment setup belongs to source development, while final installers include their runtime.
 
-## Actualizar desde el ZIP
+## Historical source ZIP update
 
-Cierra la aplicación, detén su terminal con Ctrl+C y descarga gosu-speech-to-text-v0.3.2-source.zip en Downloads:
+Close the application and stop development with Ctrl+C:
 
 ```powershell
 $zip = Join-Path $env:USERPROFILE 'Downloads\gosu-speech-to-text-v0.3.2-source.zip'
 $update = Join-Path $env:TEMP ('gosu-update-' + [guid]::NewGuid().ToString())
 Expand-Archive -LiteralPath $zip -DestinationPath $update
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$update\gosu-speech-to-text\scripts\actualizar-windows.ps1" -ProjectPath 'D:\projects\voz'
-if ($LASTEXITCODE -ne 0) { throw 'La actualización falló.' }
+if ($LASTEXITCODE -ne 0) { throw 'Update failed.' }
 Set-Location 'D:\projects\voz'
 npm.cmd ci
-if ($LASTEXITCODE -ne 0) { throw 'Falló npm ci.' }
+if ($LASTEXITCODE -ne 0) { throw 'npm ci failed.' }
 npm.cmd run desktop
 ```
 
-Se conservan el identificador de aplicación, el historial, los modelos y las preferencias. El actualizador respalda el código anterior.
+Identity/history/models/settings remain unchanged and previous source is backed up. Rebuild/reinstall existing packages with `py -3.12 scripts\configurar.py --build`; changing source alone does not change an installed EXE.
 
-Si usabas un instalador o un EXE de release, genera de nuevo su paquete completo con `py -3.12 scripts\configurar.py --build`; actualizar los fuentes no modifica por sí solo un ejecutable ya instalado. Evita copiar únicamente el EXE de target/release sin su carpeta engine.
+## Evidence
 
-## Verificación
-
-Pruebas de preparación de .venv, conservación de entorno incompleto, instalación de paquetes, paso de argumentos al empaquetador y rutas del motor. Comprobación Rust para Windows GNU; no equivale a ejecutar un instalador MSVC en el equipo del usuario. Si persiste el fallo, el nuevo diagnóstico indicará las rutas comprobadas.
+Regression tests cover missing/healthy/incomplete environments, package installation, argument forwarding, and engine paths. A Windows GNU Rust check was performed; this was not execution of an MSVC installer on the user's machine. If startup still fails, diagnostics report the checked paths.

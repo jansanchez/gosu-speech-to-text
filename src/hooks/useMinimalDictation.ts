@@ -88,7 +88,7 @@ export function useMinimalDictation(options: Options) {
     }
     if (o.queueActive() || o.jobs.current.length) {
       await show();
-      fail('Resuelve el audio pendiente en el editor antes de iniciar otro dictado.');
+      fail('Resolve pending audio in the editor before starting another dictation.');
       return;
     }
     const request = ++generation.current;
@@ -106,7 +106,7 @@ export function useMinimalDictation(options: Options) {
       await o.start();
       if (!o.recording.current)
         throw Error(
-          'No se pudo iniciar el micrófono. Revisa el motor y los permisos en el editor.',
+          'Could not start the microphone. Check the engine and permissions in the editor.',
         );
       setPhase('listening');
     } catch (error) {
@@ -135,31 +135,30 @@ export function useMinimalDictation(options: Options) {
       if (request !== generation.current) return;
       if (!complete || o.jobs.current.some((job) => job.session === session.current)) {
         throw Error(
-          'Quedó audio pendiente. Abre el editor para recuperarlo; el texto aún no se insertó.',
+          'Audio is still pending. Open the editor to recover it; text has not been inserted yet.',
         );
       }
       // A target receives this shortcut session only, never an older draft.
       const draft = o.state.current.sessions.find((s) => s.id === session.current);
-      if (!draft)
-        throw Error('No se encontró el borrador del dictado. Revisa el editor.');
+      if (!draft) throw Error('The dictation draft was not found. Check the editor.');
       await o.persist(o.state.current);
       if (request !== generation.current) return;
       if (!draft.text.trim()) {
         setPhase('ready');
-        setError('No se detectó voz. Pulsa el atajo para intentarlo de nuevo.');
+        setError('No speech detected. Press the shortcut to try again.');
         return;
       }
       await invoke('copy_text', { text: draft.text });
       if (request !== generation.current) return;
       try {
         if (!destination)
-          throw Error(destinationError || 'No se encontró un campo de destino.');
+          throw Error(destinationError || 'No destination field was found.');
         await invoke('dictation_insert', { targetId: destination.id, text: draft.text });
       } catch (error) {
         if (request !== generation.current) return;
         setPhase('copied');
         setError(
-          'Texto copiado. Enfoca el campo y pega con Ctrl+V o Ctrl+Shift+V en la terminal. ' +
+          'Text copied. Focus the field and paste with Ctrl+V or Ctrl+Shift+V in a terminal. ' +
             String(error),
         );
         return;

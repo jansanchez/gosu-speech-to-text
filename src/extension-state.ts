@@ -12,7 +12,7 @@ export type ExtensionWorkspace = {
 };
 
 export function validateExtensionWorkspace(input: unknown): ExtensionWorkspace {
-  if (!input || typeof input !== 'object') throw Error('Borrador de extensión inválido.');
+  if (!input || typeof input !== 'object') throw Error('Invalid extension draft.');
   const value = input as Partial<ExtensionWorkspace>;
   const checked = validateWorkspace({
     active: 'extension',
@@ -47,7 +47,7 @@ export function validateExtensionJobs(input: unknown) {
     !Array.isArray(input) ||
     input.some((job) => !job || !['dictate', 'edit'].includes(job.mode))
   ) {
-    throw Error('Cola de extensión inválida.');
+    throw Error('Invalid extension queue.');
   }
   return validateJobs(
     input.map((job) => ({

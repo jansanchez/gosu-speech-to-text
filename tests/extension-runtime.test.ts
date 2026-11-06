@@ -161,7 +161,7 @@ test('Chrome recorder branches manual history, gates startup and recovers deleti
     await starting;
     page.failDeletion(true);
     page.device.chunk(new Blob([new Uint8Array(44)]));
-    await settle(() => page.element('status').textContent.includes('Cola pausada'));
+    await settle(() => page.element('status').textContent.includes('Queue paused'));
     assert.equal(page.inference(), 1);
     assert.equal(page.stored().done.length, 1);
     assert.equal((await get<any[]>('voz-extension-audio'))!.length, 1);
@@ -180,11 +180,11 @@ test('Chrome recorder preserves corrupt storage and disables editing', async () 
   const corrupt = { draft: 42 };
   const page = await setup(corrupt);
   try {
-    await assert.rejects(page.load(), /inválido/);
+    await assert.rejects(page.load(), /invalid/i);
     assert.equal(page.element('draft').disabled, true);
     assert.equal(page.element('load').disabled, true);
     assert.deepEqual(page.stored(), corrupt);
-    assert.match(page.element('status').textContent, /datos originales se conservan/);
+    assert.match(page.element('status').textContent, /original data has been preserved/);
   } finally {
     page.dispose();
   }

@@ -1,11 +1,12 @@
-# Prioridades de mantenimiento
+# Maintenance priorities
 
-La arquitectura y las reglas actuales se describen en [ARCHITECTURE.md](ARCHITECTURE.md), [AGENTS.md](AGENTS.md) y [CONTRIBUTING.md](CONTRIBUTING.md).
+See [architecture](ARCHITECTURE.md), [agent instructions](AGENTS.md), and [contributing](CONTRIBUTING.md).
 
-1. Obtener evidencia de los cuatro destinos nativos de CI y probar instalación limpia de cada artefacto. La matriz configurada no acredita un resultado exitoso.
-2. Completar dictado real en Windows, macOS Intel/ARM y Linux X11/portales GNOME-KDE. Hyprland cuenta con validación local; otros escritorios requieren evidencia propia.
-3. Verificar atajo inicial/configurable, conflictos, permisos, foco, Unicode y recuperación en terminal, WhatsApp y Google Docs.
-4. Preparar firma y notarización antes de distribución pública, incluyendo motor y dependencias.
-5. Revisar dependencias vulnerables y evaluar migraciones mayores con pruebas de WASM/extensión.
+1. Review native CI and clean-install each artifact. A configured matrix is not a passed run.
+2. Validate real dictation on Windows, ARM64/Intel macOS, X11, and GNOME/KDE portals. Hyprland evidence has its own limited scope.
+3. Test initial/custom shortcuts, conflicts, permissions, focus, Unicode, and recovery in a terminal, WhatsApp, and Google Docs.
+4. Evaluate the ten priority recognition languages with real speakers and recordings, including RTL and CJK behavior. Keep interface English and retain saved recognition languages.
+5. Configure signing/notarization, including engine dependencies, before claiming verified publisher distribution. Windows SignPath Foundation enrollment is pending; do not claim its approval or signed binaries prematurely.
+6. Review vulnerable dependencies and test WASM/extension major-version migrations.
 
-La aceptación se rige por [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md). Registra resultados, fallos y pendientes en [VALIDACION.md](VALIDACION.md).
+Apply [acceptance criteria](CRITERIOS-DE-EXITO.md) and record evidence/failures/pending work in [VALIDACION.md](VALIDACION.md).
