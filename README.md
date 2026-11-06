@@ -1,6 +1,8 @@
 # GOSU Speech to Text
 
-Dictado y transcripción local con editor completo y un modo mínimo para escribir con tu voz en otra aplicación. **Versión del código: 0.3.2 · licencia MIT.**
+Dictado y transcripción local con editor completo y un modo mínimo para escribir con tu voz en otra aplicación. **Licencia MIT · versión en [brand.json](brand.json).**
+
+[Política de privacidad / Privacy Policy](PRIVACY.md): procesamiento local, almacenamiento, descargas de modelos, permisos y control de tus datos.
 
 ## Dictado mínimo
 
