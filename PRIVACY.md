@@ -2,8 +2,6 @@
 
 Last updated: November 6, 2026.
 
-Resumen en español: GOSU procesa el reconocimiento en tu dispositivo y guarda datos locales para edición y recuperación. Puede descargar modelos y utilizar Ollama local de forma opcional. Copiar, insertar o exportar entrega el contenido al destino elegido. El modo privado evita el guardado automático de esa sesión, pero no borra datos anteriores ni copias externas. Las secciones siguientes detallan el alcance de esta política.
-
 This policy describes the desktop application and the companion Chrome extension maintained in the [GOSU Speech to Text repository](https://github.com/jansanchez/gosu-speech-to-text). It describes the project's current implementation; it does not cover independently modified versions or the privacy practices of other applications you use with GOSU.
 
 ## Local processing and information used

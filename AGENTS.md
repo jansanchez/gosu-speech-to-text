@@ -10,7 +10,8 @@
 - Usa `npm run format` y `cargo fmt --manifest-path src-tauri/Cargo.toml`. La marca se genera con `npm run brand:sync`; no edites `src/brand.ts` a mano.
 - Ejecuta `npm run check`, `.venv/bin/python scripts/test-python.py` y las comprobaciones Rust descritas en `CONTRIBUTING.md`, o `make check` con el entorno preparado. Añade pruebas de regresión para cambios en integridad de datos y concurrencia.
 - Distingue pruebas simuladas de validación real de micrófono, reconocimiento, permisos y pegado. No declares soporte validado en plataformas que no hayas probado.
-- Describe al usuario los cambios y las limitaciones en español.
+- Comunícate con el usuario en español, pero escribe el producto para un público mundial: interfaz, mensajes, textos, documentación pública y notas de release en inglés. Esta es la preferencia del usuario para este proyecto y sus futuros productos digitales. No confundir el idioma de dictado o transcripción elegido por el usuario con el idioma de la interfaz.
+- Mantén los registros internos de trabajo en español cuando ayuden a retomar el proyecto; no añadas resúmenes en español a páginas públicas en inglés. Al modificar textos existentes, adapta a inglés el contenido público afectado.
 
 ## Portabilidad y aceptación
 

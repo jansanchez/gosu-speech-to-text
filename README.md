@@ -1,34 +1,34 @@
 # GOSU Speech to Text
 
-Dictado y transcripción local con editor completo y un modo mínimo para escribir con tu voz en otra aplicación. **Licencia MIT · versión en [brand.json](brand.json).**
+Local dictation and transcription with a full editor and a minimal panel for voice typing into other applications. **MIT license · version in [brand.json](brand.json).**
 
-[Política de privacidad / Privacy Policy](PRIVACY.md): procesamiento local, almacenamiento, descargas de modelos, permisos y control de tus datos.
+[Privacy Policy](PRIVACY.md): local processing, storage, model downloads, permissions, and control over your data.
 
-## Dictado mínimo
+## Minimal dictation
 
-Con GOSU abierto y el motor listo, **Ctrl+Shift+M** alterna editor/minimalista, **Ctrl+Shift+H** oculta o restaura la vista actual y **Ctrl+Shift+Espacio** inicia o termina el dictado (usa Cmd en macOS). Los tres son configurables por separado en Preferencias. Puedes cambiar de campo mientras hablas: el destino se selecciona al terminar. El panel permanece disponible para seguir dictando y deja libre un margen inferior. Al terminar, el dictado también queda en el portapapeles aunque falle el destino o el pegado; puedes pegar con Ctrl+Shift+V en la terminal. Ocultarlo no detiene la grabación. No se añaden pulsaciones de Enter. Consulta [el modo mínimo](MINIMAL-MODE.md).
+With GOSU open and the engine ready, **Ctrl+Shift+M** switches between the editor and minimal panel, **Ctrl+Shift+H** hides or restores the current view, and **Ctrl+Shift+Space** starts or stops dictation (use Cmd on macOS). All three shortcuts are configurable independently. You can switch fields while recording: GOSU selects the destination when you stop dictation. The panel stays available for another session. The result is also copied to the clipboard even if insertion fails; use Ctrl+Shift+V to paste into a terminal. Hiding the panel does not stop recording. GOSU never automatically presses Enter. See [minimal mode](MINIMAL-MODE.md).
 
-El atajo está disponible desde el primer inicio si el sistema permite registrarlo. Se cambia pulsando la combinación mostrada en la ventana mínima o en **Preferencias → Atajo de dictado mínimo → Elegir combinación → Guardar atajo**. Se conserva al reiniciar; si una nueva combinación no está disponible, se recupera la anterior. [Uso, permisos y límites por escritorio](MINIMAL-MODE.md).
+Shortcuts are available from first use when permitted by the operating system. Use the shortcut controls in Preferences or the minimal panel to change them. Settings persist across restarts; an unavailable combination restores the previous shortcut. See [permissions and desktop limitations](MINIMAL-MODE.md).
 
-## Estado y plataformas
+## Platforms and validation
 
-| Destino de compilación | Paquetes | Integración de dictado mínimo |
+| Build target | Packages | Minimal dictation integration |
 |---|---|---|
-| Windows x64, toolchain MSVC | Instalador NSIS `.exe` | Ventana/proceso y teclado Win32 |
-| Linux x64, base Ubuntu 22.04 | `.deb` y `.AppImage` | X11; Hyprland; portales compatibles en GNOME/KDE Wayland |
-| macOS Apple Silicon, compilación nativa ARM64 | `.app` y `.dmg` | Automatización del sistema con sus permisos |
-| macOS Intel, compilación nativa x64 | `.app` y `.dmg` | Misma interfaz, binario y motor propios de Intel |
-| Chrome, independiente del escritorio | ZIP de extensión | Inferencia WASM e inserción en campos compatibles |
+| Windows x64, MSVC toolchain | NSIS `.exe` installer | Win32 window/process targeting and keyboard input |
+| Linux x64, Ubuntu 22.04 build baseline | `.deb` and `.AppImage` | X11, Hyprland, compatible GNOME/KDE Wayland portals |
+| macOS Apple Silicon, native ARM64 build | `.app` and `.dmg` | System automation with user-granted permissions |
+| macOS Intel, native x64 build | `.app` and `.dmg` | Separate Intel application and engine |
+| Chrome, independent of the desktop app | Extension ZIP | WASM recognition and insertion into compatible fields |
 
-El modo mínimo se ha comprobado en Linux/Hyprland. Los adaptadores de los demás sistemas están implementados y tienen trabajos de CI; su validación funcional en equipos reales sigue pendiente. Ubuntu puede usar Xorg o Wayland: las capacidades dependen de la sesión, los portales y los permisos. [Evidencia actual e histórica](VALIDACION.md) · [Funciones y pendientes](FEATURES.md).
+Minimal mode has been exercised on Linux/Hyprland. Other adapters are implemented and have CI jobs; functional validation on real devices remains pending. Linux capabilities depend on the session, compositor, portals, and permissions. A successful build does not establish installation or runtime compatibility. See [validation records](VALIDACION.md) and [features and remaining work](FEATURES.md). Some linked maintenance documents are currently in Spanish.
 
-## Compilar desde código
+## Build from source
 
-Ejecuta los comandos desde la carpeta que contiene `package.json`. Requisitos comunes: **Node 22.x actualizado con npm, Python 3.12 y Rust estable con rustfmt**, además de las herramientas nativas de tu sistema. No copies `.venv`, `node_modules` ni motores compilados entre sistemas o arquitecturas.
+Run commands from the directory containing `package.json`. Common requirements: **an up-to-date Node 22.x with npm, Python 3.12, and stable Rust with rustfmt**, plus the native tools for your platform. Do not copy `.venv`, `node_modules`, or packaged engines between operating systems or architectures.
 
 ### Linux
 
-Instala primero las [dependencias de Ubuntu/Debian o Arch/CachyOS](LINUX-MAKE.md).
+Install the [Ubuntu/Debian or Arch/CachyOS dependencies](LINUX-MAKE.md) first.
 
 ```bash
 make doctor
@@ -37,51 +37,51 @@ make check
 make dev
 ```
 
-Después de cerrar el desarrollo, genera el paquete que necesites:
+After closing the development application, build the packages you need:
 
 ```bash
 make appimage
-# O bien:
+# Or:
 make deb
-# O ambos:
+# Or both:
 make bundle
 ```
 
-`make install` instala el AppImage en tu usuario y crea el comando `gosu-speech-to-text`. `make help` muestra las opciones. Para distribución, la referencia de build Linux es Ubuntu 22.04; un paquete generado en una rolling release no garantiza compatibilidad con sistemas más antiguos.
+`make install` installs the AppImage for your user and creates the `gosu-speech-to-text` command. Use `make help` for available tasks. Ubuntu 22.04 is the Linux distribution build baseline; building on a rolling distribution does not guarantee compatibility with older systems.
 
 ### Windows x64 — PowerShell
 
-Instala [MSVC/C++ Build Tools, Windows SDK y WebView2](INSTALAR-WINDOWS.md), además de las herramientas comunes.
+Install [MSVC/C++ Build Tools, the Windows SDK, and WebView2](INSTALAR-WINDOWS.md), along with the common requirements.
 
 ```powershell
 py -3.12 scripts/configurar.py --dev
 ```
 
-Para generar el instalador, tras cerrar la aplicación de desarrollo:
+To build the installer after closing the development application:
 
 ```powershell
 py -3.12 scripts/configurar.py --build
 ```
 
-El asistente prepara las dependencias, ejecuta las comprobaciones y genera `src-tauri\target\release\bundle\nsis\*.exe`. En arranques posteriores basta `npm.cmd run desktop`.
+The setup helper prepares dependencies, runs checks, and produces `src-tauri\target\release\bundle\nsis\*.exe`. For subsequent development sessions, run `npm.cmd run desktop`.
 
-### macOS — Apple Silicon o Intel
+### macOS — Apple Silicon or Intel
 
-Prepara [Xcode Command Line Tools y las herramientas de tu arquitectura](INSTALAR-MACOS.md).
+Install [Xcode Command Line Tools and the tools for your architecture](INSTALAR-MACOS.md).
 
 ```bash
 python3.12 scripts/configurar.py --dev
 ```
 
-Para generar `.app` y `.dmg`, tras cerrar el desarrollo:
+To build `.app` and `.dmg` packages after closing the development application:
 
 ```bash
 python3.12 scripts/configurar.py --build
 ```
 
-Los resultados quedan en `src-tauri/target/release/bundle/`. Compila ARM64 en un entorno ARM64 e Intel en un entorno x64. No se genera una aplicación universal mezclando motores de ambas arquitecturas.
+Output is placed in `src-tauri/target/release/bundle/`. Build ARM64 on ARM64 and Intel on x64. Combining engines from both architectures does not produce a universal application.
 
-### Extensión Chrome
+### Chrome extension
 
 ```bash
 npm ci
@@ -89,41 +89,41 @@ npm run extension:build
 python3 scripts/package-extension.py
 ```
 
-En Windows, sustituye el último comando por `py -3.12 scripts/package-extension.py`. Carga `extension-dist/` desde `chrome://extensions` en modo desarrollador o utiliza el ZIP generado `gosu-speech-to-text-chrome.zip`. La copia compilada no se mantiene en Git; debe generarse o descargarse de una ejecución de CI.
+On Windows, use `py -3.12 scripts/package-extension.py` for the last command. Load `extension-dist/` through `chrome://extensions` in developer mode, or use the generated `gosu-speech-to-text-chrome.zip`. Compiled extension files are not tracked in Git; build them or download a CI artifact.
 
-## Distribución y pruebas
+## Distribution and checks
 
-[BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) es la guía central de preparación, comprobación, empaquetado y artefactos. [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md) define cuándo un cambio, un instalador y una plataforma pueden darse por aprobados.
+[BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) describes setup, verification, packaging, and release artifacts. [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md) defines acceptance for changes, installers, and platforms.
 
-- `npm run check`: enlaces locales de documentación, formato, pruebas TypeScript, build web y extensión.
-- `make check`: lo anterior, suites Python, formato y comprobaciones/pruebas Rust, con el entorno preparado.
-- Windows/macOS: el asistente `scripts/configurar.py` ejecuta el mismo conjunto de comprobaciones antes de abrir o empaquetar; la guía central incluye los comandos individuales.
-- `.github/workflows/ci.yml`: comprobaciones de cada push/PR en los cuatro destinos de escritorio.
-- `.github/workflows/release.yml`: candidatos de instalador y extensión por ejecución manual o etiqueta `v*`. Genera artefactos; no publica ni firma automáticamente.
+- `npm run check`: version consistency, documentation links, formatting, TypeScript tests, and web/extension builds.
+- `make check`: the above plus Python suites and Rust formatting, checks, and tests, using a prepared environment.
+- Windows/macOS: `scripts/configurar.py` runs the common checks before launching or packaging; individual commands are in the build guide.
+- `.github/workflows/ci.yml`: checks on branch pushes and pull requests across the four desktop targets.
+- `.github/workflows/release.yml`: installer and extension candidates from a manual run or a `v*` tag; automatic tagging and publication require explicit approval through the `publish` input. Signing is not currently configured.
 
-Los paquetes de escritorio deben incluir el motor Python. Sus usuarios no instalan Node, Python ni Rust, pero sí necesitan los componentes de sistema aplicables. Los pesos de Whisper se descargan al preparar el modelo y se reutilizan después. Ollama es opcional y no se incluye en el instalador básico.
+Desktop packages must include the Python engine. End users do not need Node, Python, or Rust installed, but applicable system components are still required. Whisper model weights are downloaded when the model is prepared and reused afterward. Ollama is optional and is not included in the base installer.
 
-## Documentación del proyecto
+## Project documentation
 
-| Documento | Uso |
+| Document | Purpose |
 |---|---|
-| [ESTADO-DEL-PROYECTO.md](ESTADO-DEL-PROYECTO.md) | Avance guardado, commit publicado, evidencia y pendientes para retomar |
-| [MINIMAL-MODE.md](MINIMAL-MODE.md) | Tres atajos, foco, portapapeles y límites por sistema |
-| [VALIDACION.md](VALIDACION.md) | Historial de pruebas y alcance real por plataforma |
-| [AGENTS.md](AGENTS.md) | Reglas de trabajo para Codex y otros agentes |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Desarrollo, comprobaciones y mantenimiento |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Responsabilidades e invariantes de datos/audio |
-| [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md) | Aceptación y registro de evidencia por plataforma |
-| [GUIA-0.3.md](GUIA-0.3.md) | Uso del editor, herramientas y modelos opcionales |
-| [ACTUALIZAR-GOSU.md](ACTUALIZAR-GOSU.md) | Actualización de una instalación anterior |
-| [REPARAR-MOTOR.md](REPARAR-MOTOR.md) | Diagnóstico de arranque |
-| [NOMBRES.md](NOMBRES.md) | Identidad y compatibilidad de datos |
-| [PRIVACY.md](PRIVACY.md) / [THIRD-PARTY.md](THIRD-PARTY.md) | Datos, dependencias y licencias |
+| [ESTADO-DEL-PROYECTO.md](ESTADO-DEL-PROYECTO.md) | Saved progress, commit references, evidence, and next steps |
+| [MINIMAL-MODE.md](MINIMAL-MODE.md) | Shortcuts, focus, clipboard, and desktop limitations |
+| [VALIDACION.md](VALIDACION.md) | Test history and actual validation scope |
+| [AGENTS.md](AGENTS.md) | Working instructions for coding agents |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development, checks, and maintenance |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Responsibilities and data/audio invariants |
+| [CRITERIOS-DE-EXITO.md](CRITERIOS-DE-EXITO.md) | Acceptance criteria and platform evidence |
+| [GUIA-0.3.md](GUIA-0.3.md) | Editor, tools, and optional models |
+| [ACTUALIZAR-GOSU.md](ACTUALIZAR-GOSU.md) | Updating an existing installation |
+| [REPARAR-MOTOR.md](REPARAR-MOTOR.md) | Engine startup troubleshooting |
+| [NOMBRES.md](NOMBRES.md) | Product identity and data compatibility |
+| [PRIVACY.md](PRIVACY.md) / [THIRD-PARTY.md](THIRD-PARTY.md) | Privacy, dependencies, and licenses |
 
-`brand.json` es la fuente del nombre y versión. Usa `npm run brand:sync` al cambiarla y `npm run brand:check` para verificar sus metadatos. Se conserva el identificador `org.voz.prototype` y las claves heredadas de almacenamiento para mantener los datos existentes.
+`brand.json` is the source of the product name and version. Run `npm run brand:sync` after changing it and `npm run brand:check` to verify generated metadata. The historical identifier `org.voz.prototype` and storage keys are retained to preserve existing data.
 
-## Versiones
+## Versions and releases
 
-La versión se mantiene en `brand.json` siguiendo SemVer. Consulta el [historial de cambios](CHANGELOG.md) y el [procedimiento de versiones y releases](BUILD-AND-RELEASE.md). Las etiquetas `vX.Y.Z` identifican código; la validación de instaladores se registra por separado.
+Versions follow SemVer and are maintained in `brand.json`. See the [changelog](CHANGELOG.md) and [release procedure](BUILD-AND-RELEASE.md). Tags such as `vX.Y.Z` identify source code; installer validation is recorded separately.
 
-Para publicar una versión aprobada: en **Actions → GOSU Speech to Text release candidates → Run workflow**, elige `main`, marca `publish` e introduce la versión exacta de `brand.json`. El workflow comprueba y compila todos los destinos, crea la etiqueta anotada y publica paquetes y hashes automáticamente. Sin marcar `publish`, solo genera candidatos. Consulta los requisitos y la recuperación de fallos en [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md).
+To publish an approved version, open **Actions → GOSU Speech to Text release candidates → Run workflow**, select `main`, enable `publish`, and enter the exact version from `brand.json`. After all checks and builds succeed, the workflow creates the annotated tag and publishes packages and hashes. Without `publish`, it only generates candidates. See [BUILD-AND-RELEASE.md](BUILD-AND-RELEASE.md) for acceptance requirements and recovery after a failed upload.
