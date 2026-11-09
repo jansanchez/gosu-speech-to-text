@@ -14,6 +14,10 @@ Checks for this preparation: `make check` passed outside the sandbox (85 TypeScr
 
 After `e6e042a` was pushed, the maintainer reported Node 20 deprecation annotations in approval and extension jobs. Both workflows now use checkout v6, setup-node v6, setup-python v6, upload-artifact v6, and download-artifact v7, verified against their upstream action.yml Node 24 declarations. Node 22 remains the project build version; Python 3.12, native runners, artifact layout and publication approval are preserved. GitHub-hosted runners must provide the modern action runner required by these actions. A fresh workflow run from the new commit is required; rerunning an old run uses its old workflow revision. Local make check passed (85 TypeScript, 26 Python, 11 Rust; one graphical exclusion) and both workflow YAML files parsed. See VALIDACION.md. No release/tag is created by this maintenance.
 
+## Windows Python test correction
+
+The maintainer supplied Windows CI logs: all 15 server tests passed, but the new Linux package fixture failed because Windows chmod/stat does not provide POSIX executable bits. Restrict the Linux content/permission test to Linux (explicit skip on Windows/macOS), keeping malformed/wrong-architecture ELF headers and missing/ambiguous package tests portable. The production Linux permission gate is unchanged. FastAPI's httpx deprecation warning was not the failing assertion; dependency migration is separate work. Local make check passed (85 TypeScript, 27 Python, 11 Rust; one graphical exclusion), with all three package tests passing on Linux. A fresh Windows CI run remains necessary; Linux validation does not establish a Windows pass.
+
 ## Current work
 
 The maintainer requires English for all digital products: UI, errors, tools, documentation, and release notes. Conversation with the maintainer remains Spanish. English migration is ready for candidate validation as **0.6.0** on base `97cb754`. Persistent identities, legacy filenames/entry points, backups, and multilingual user content are preserved. English becomes the new-install recognition default; existing saved language choices remain intact.

@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import tempfile
+import sys
 import unittest
 
 spec = importlib.util.spec_from_file_location('linux_packages', Path(__file__).parents[1] / 'scripts/check-linux-packages.py')
@@ -17,6 +18,7 @@ class LinuxPackageTests(unittest.TestCase):
         path.write_bytes(header)
         path.chmod(0o755)
 
+    @unittest.skipUnless(sys.platform == 'linux', 'Linux package contents and POSIX executable permissions')
     def test_incomplete_engine_and_wrong_architecture_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -44,6 +46,18 @@ class LinuxPackageTests(unittest.TestCase):
             app.chmod(0o644)
             with self.assertRaisesRegex(ValueError, 'permission'):
                 packages.inspect_tree(root)
+
+    def test_invalid_elf_headers_are_rejected_on_every_host(self):
+        with tempfile.TemporaryDirectory() as directory:
+            executable = Path(directory) / 'engine'
+            for content in (b'', b'not an ELF file'):
+                with self.subTest(content=content):
+                    executable.write_bytes(content)
+                    with self.assertRaisesRegex(ValueError, 'x86_64'):
+                        packages.check_elf(executable)
+            self.executable(executable, machine=183)
+            with self.assertRaisesRegex(ValueError, 'x86_64'):
+                packages.check_elf(executable)
 
     def test_missing_or_multiple_candidates_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

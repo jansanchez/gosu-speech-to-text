@@ -171,3 +171,11 @@ No real ten-language microphone/accuracy benchmark, native-speaker grammar revie
 - `npm run format`, `cargo fmt --manifest-path src-tauri/Cargo.toml`, YAML parsing of both workflows, and `git diff --check`: passed.
 - `make check` outside sandbox: passed (85 TypeScript, 26 Python, 11 Rust tests; one graphical Rust test ignored); local log `/tmp/gosu-actions-check.log`. These checks do not execute GitHub actions or validate remote credential cleanup/artifact transfer.
 - Run a fresh Checks/candidate workflow from the new commit to verify annotations and actual hosted-runner behavior. An old run's rerun retains its original workflow revision. No tag, release or package rebuild was performed for this maintenance.
+
+
+## Linux package tests on Windows CI — 2026-11-09
+
+- Baseline `10ee0f0`. Maintainer-provided Windows Python 3.12.10 log: 15 server tests passed; Linux package test failed at the POSIX executable permission assertion because chmod/stat on Windows cannot establish those bits. This was a test-platform assumption, not evidence of a broken Windows installer.
+- Limited the content/permission test to Linux with an explicit unittest skip. Added portable malformed/empty/AArch64 ELF-header rejection coverage; ambiguous/missing package selection remains portable. Production package inspection and its POSIX permission validation were preserved.
+- Host Linux x86_64/CachyOS, Node 26.13.0, Python 3.12.15, Rust 1.99.1: three targeted Linux-package tests passed; `make check` outside sandbox passed (85 TypeScript, 27 Python, 11 Rust tests; one graphical Rust test ignored). Formatting and diff checks passed. Local log `/tmp/gosu-windows-test-check.log`.
+- Real Windows/macOS CI reruns remain pending. No Windows runtime, installer, microphone, or signing validation is claimed. The FastAPI httpx deprecation warning is separate from the failure and remains unchanged. No version/tag/release created.

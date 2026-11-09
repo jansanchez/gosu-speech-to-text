@@ -4,6 +4,8 @@ Versions follow [SemVer 2.0.0](https://semver.org/). A Git tag identifies exact 
 
 ## Unreleased
 
+- Restrict Linux package permission/content tests to Linux hosts; retain portable invalid-ELF and package-selection checks on Windows/macOS.
+
 - Updated GitHub Actions to Node 24 action runtimes in checks and release workflows; the application build remains on Node 22.
 
 - Added an English Linux installation guide, explicit candidate compatibility matrix, and clean-install acceptance procedure for DEB/AppImage distribution.
