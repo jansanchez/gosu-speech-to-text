@@ -87,6 +87,18 @@ On Linux the coordinator adds bundled library directories to `LD_LIBRARY_PATH` o
 
 The resource is the complete `engine-dist/gosu-engine/` directory, not only its executable. Do not distribute the bare Tauri executable alone. Installers should run without Python/Node/Rust development tools, with applicable system components installed.
 
+## Linux candidate inspection
+
+On Linux x86_64, after building both packages in a clean bundle directory:
+
+```bash
+python3 scripts/check-linux-packages.py src-tauri/target/release/bundle --output src-tauri/target/release/bundle/linux-package-report.json
+```
+
+Requires `dpkg-deb`. Run only on trusted project builds: AppImage extraction executes its runtime, without starting GOSU. The release workflow runs this check before uploading Linux candidates. It rejects missing/ambiguous packages, mismatched DEB version/architecture, missing dependency metadata, and missing/wrong-architecture application or engine. It checks the bundled Python/audio library and desktop entry, and records hashes and commit. It does not establish dynamic-library resolution, recognition accuracy, installation, or desktop integration. The report stays in the candidate artifact; published assets remain installers and their manifest.
+
+Follow [Linux installation and acceptance](INSTALL-LINUX.md) before declaring any distribution supported. No package signatures or signed APT repository are configured. Keep the Ubuntu 22.04 builder baseline until replacement artifacts have been tested on the oldest supported target.
+
 ## Engine smoke test and checksums
 
 ```bash

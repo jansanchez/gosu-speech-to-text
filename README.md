@@ -28,6 +28,10 @@ Shortcuts are available from first use when permitted by the operating system. U
 
 Minimal mode has been exercised on Linux/Hyprland. Other adapters are implemented and have CI jobs; functional validation on real devices remains pending. Linux capabilities depend on the session, compositor, portals, and permissions. A successful build does not establish installation or runtime compatibility. See [validation records](VALIDACION.md) and [features and remaining work](FEATURES.md).
 
+## Install on Linux
+
+Download DEB or AppImage packages from [Releases](https://github.com/jansanchez/gosu-speech-to-text/releases), then follow [Linux installation and compatibility](INSTALL-LINUX.md). Current clean-install acceptance is pending; the guide distinguishes candidate targets from validated systems.
+
 ## Build from source
 
 Run commands from the directory containing `package.json`. Common requirements: **an up-to-date Node 22.x with npm, Python 3.12, and stable Rust with rustfmt**, plus the native tools for your platform. Do not copy `.venv`, `node_modules`, or packaged engines between operating systems or architectures.

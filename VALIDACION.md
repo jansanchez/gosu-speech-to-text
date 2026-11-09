@@ -148,3 +148,18 @@ New-install recognition defaults to English. Regression tests retain every expli
 - A source scan found no remaining Spanish public UI/error prose in tracked product files; non-English text remains intentionally in recognition phrase data, historical evidence quotes, and multilingual fixtures. Legacy Spanish-named documentation/script entry points remain to preserve links and commands.
 
 No real ten-language microphone/accuracy benchmark, native-speaker grammar review, screen-reader audit, signed installer, or Windows/macOS runtime validation was performed in this migration. No release/tag was created or published. Generate candidates from the new commit and follow LANGUAGES.md and the acceptance criteria before claiming real platform/language acceptance.
+
+## Linux distribution preparation — 2026-11-09
+
+- Source baseline: `ca74a71`, 0.6.0 plus the distribution preparation in this commit (tested before committing); host Linux x86_64 (CachyOS). No target distribution has been promoted to supported status.
+- `npm run format` and `cargo fmt --manifest-path src-tauri/Cargo.toml`: applied. `git diff --check`: passed.
+- `make check`: passed outside the sandbox, 85 TypeScript tests, 15 server plus 11 tooling Python tests, 11 Rust tests passed and one isolated-window graphical test ignored. Web/extension builds and locked Rust check passed. Log: `/tmp/gosu-linux-check-external.log` (local, not a published artifact).
+- Sandbox `make check` timed out in the first FastAPI test after 60 seconds; the external run passed. This does not establish a product defect.
+- Added two fixture tests for incomplete engine/runtime/audio library, wrong architecture, missing executable permissions, and ambiguous/missing package sets. These do not exercise real installation or recognition.
+- CI now inspects both Linux packages before uploading candidates. This session has not executed the changed GitHub workflow. Ubuntu/Mint/Debian/Fedora/Arch acceptance, real GNOME/KDE permissions/insertion and microphone recognition remain pending. See INSTALL-LINUX.md.
+
+- Local tools: Rust 1.99.1, Python 3.12.15, Node 26.13.0. CI remains on the documented Node 22 / Ubuntu 22.04 baseline; local success does not replace that run.
+- `npm run desktop:build -- --bundles deb,appimage --ci -- --locked`: produced DEB, then failed running linuxdeploy inside the sandbox. `npm run desktop:build -- --bundles appimage --verbose --ci -- --locked` outside the sandbox succeeded; log `/tmp/gosu-linux-build-external.log`. No source workaround or system installation was needed.
+- Extracted both real local 0.6.0 packages in temporary directories and ran `inspect_tree`: application/engine x86_64, bundled Python 3.12, libswresample and desktop entry passed. DEB control inspected with `ar` and Python tarfile: package `gosu-speech-to-text`, version `0.6.0`, architecture `amd64`, dependencies `libwebkit2gtk-4.1-0, libgtk-3-0`. This host lacks dpkg-deb, so the full CLI report remains pending on Ubuntu CI. No application launch/installation/microphone test was performed.
+- `python3 scripts/checksums.py`: passed for local outputs. DEB SHA256 `d9c4c4d3098999a8eaa3917c693bc792e49313f9b8acbd938e20ce9b58ec7a2a`; AppImage SHA256 `b037cddb81cc75552f6eeaaa237085a82843487b6ce050d8057f6495e655495a`. Files are under `src-tauri/target/release/bundle/`; built on CachyOS, not certified as portable Ubuntu artifacts. Do not mix these with CI candidates.
+- No tag, release, signature, store submission, or desktop shortcut change was made.

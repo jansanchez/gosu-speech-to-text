@@ -1,4 +1,14 @@
-# Resume state — 2026-11-06
+# Resume state — 2026-11-09
+
+## Linux distribution preparation
+
+Source baseline: `ca74a71` (0.6.0), Linux x86_64. The maintainer approved preparing DEB/AppImage distribution while Windows signing is unresolved. SignPath Foundation rejected the free application because public adoption/visibility is insufficient; paid signing remains an option, not configured. No sponsorship may be claimed.
+
+Added INSTALL-LINUX.md with download verification, end-user installation/update/removal, desktop dependencies and explicit pending acceptance for Ubuntu, Mint, Debian, Fedora, and Arch/CachyOS. Added package inspection to release CI before Linux artifact upload. This is packaging/tooling work recorded under Unreleased; brand version remains unchanged and no tag/publication/signing is authorized by this preparation.
+
+Initial local output was historical 0.3.2. New 0.6.0 DEB and AppImage packages were built on CachyOS; content inspection passed for both, but these are not Ubuntu-baseline delivery candidates. The AppImage sandbox build failed in linuxdeploy; an external verbose build succeeded. The full dpkg-based CLI report remains to be exercised on Ubuntu CI because dpkg-deb is absent locally. Generate candidates from the new committed source with publish unchecked; inspect the report and validate exact packages on clean systems. GNOME/KDE Wayland and real microphone/recognition remain pending. No store submission, APT repository, RPM, Flatpak or signature was created.
+
+Checks for this preparation: `make check` passed outside the sandbox (85 TypeScript, 26 Python, 11 Rust tests; one graphical Rust test ignored). The sandbox run reached the known FastAPI timeout. Package inspection tests use fixtures; current artifact and clean-install evidence remain separate.
 
 ## Current work
 
@@ -15,7 +25,7 @@ The migration is saved in its version commit after local checks. Compare this re
 - `fedf95e` saved resume context. `e9ca724` introduced **0.5.0** release automation and was pushed to main. `f374492` added the public privacy policy; `97cb754` standardized README/policy language and recorded the maintainer's preference.
 - The user reported candidate builds passed with publish correctly skipped, then confirmed releases were available. This session has not independently audited those artifacts or installation behavior.
 - Publication approval is **Actions → GOSU Speech to Text release candidates → Run workflow → main**, enable `publish`, exact version. Without that input, candidates only. All native builds must succeed before the same-run assets are checked, annotated tag created, draft uploaded, and release published. No PAT is required; only the publishing job requests `contents: write`.
-- Publication does not sign packages. The user has neither Apple Developer credentials nor a Windows signing provider yet, and chose to focus on Windows. SignPath Foundation was suggested as an application-based free OSS option; it has not been approved/configured. The user was filling its form. Public privacy URL: https://github.com/jansanchez/gosu-speech-to-text/blob/main/PRIVACY.md . Do not claim signed packages or SignPath sponsorship before approval. No service accounts/certificates were purchased or submitted by the agent.
+- Publication does not sign packages. The user has neither Apple Developer credentials nor a Windows signing provider yet, and chose to focus on Windows. SignPath Foundation declined the application for insufficient public trust/visibility; no signing service is configured. Public privacy URL: https://github.com/jansanchez/gosu-speech-to-text/blob/main/PRIVACY.md . Do not claim signed packages or SignPath sponsorship before approval. No service accounts/certificates were purchased or submitted by the agent.
 - Prepare a new version rather than replacing previously published releases. Do not create/push `v0.6.0` merely for migration work; the approved Actions flow creates it when explicitly requested.
 
 ## Next steps
@@ -24,7 +34,7 @@ The migration is saved in its version commit after local checks. Compare this re
 2. Review current Checks/candidate runs for the concrete commit on [Actions](https://github.com/jansanchez/gosu-speech-to-text/actions). Historical 0.4.0 macOS logs in Downloads are not evidence about newer versions.
 3. Generate unsigned candidates without publish, inspect the English UI including narrow minimal windows and RTL drafts, and validate the ten-language recordings with real speakers. Mocks establish contracts/Unicode behavior only.
 4. Clean-install each native package without development toolchains. Validate startup/parent exit, permissions, customizable shortcuts/conflicts, microphone, target focus, clipboard, and insertion without Enter. Preserve text/audio after errors.
-5. Complete SignPath application and obtain service details before integrating Windows signing. Sign inner application/engine and final installer as appropriate, verify signatures, then hash final bytes. Signing does not guarantee immediate SmartScreen reputation. macOS signing/notarization remains a separate credential-dependent task.
+5. SignPath Foundation declined the application for insufficient public visibility. Obtain paid service/certificate details or reapply after adoption grows before integrating Windows signing. Sign inner application/engine and final installer as appropriate, verify signatures, then hash final bytes. Signing does not guarantee immediate SmartScreen reputation. macOS signing/notarization remains a separate credential-dependent task.
 6. Retain pending X11/GNOME/KDE portal validation, application-specific tests (terminal/Codex, WhatsApp, Google Docs/ChatGPT), RAM/CPU measurements, screen-reader audits, and dependency review. Earlier audit had two high npm advisories; do not apply a forced Transformers major upgrade without WASM/cache/model/extension review.
 
 ## Current functional contract

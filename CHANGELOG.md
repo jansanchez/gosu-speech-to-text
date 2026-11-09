@@ -2,6 +2,11 @@
 
 Versions follow [SemVer 2.0.0](https://semver.org/). A Git tag identifies exact source; it does not certify installation or compatibility on untested platforms.
 
+## Unreleased
+
+- Added an English Linux installation guide, explicit candidate compatibility matrix, and clean-install acceptance procedure for DEB/AppImage distribution.
+- Added CI inspection of Linux candidate package structure, version/architecture, bundled engine/runtime/audio library, desktop entry, and hashes. This does not certify installation or desktop integration.
+
 ## [0.6.0] — 2026-11-06
 
 ### English product and multilingual speech

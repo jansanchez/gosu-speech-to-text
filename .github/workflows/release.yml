@@ -79,6 +79,9 @@ jobs:
       - run: cargo test --locked --manifest-path src-tauri/Cargo.toml
       - run: npm run desktop:build -- --bundles ${{ matrix.bundles }} --ci -- --locked
       - run: python scripts/checksums.py
+      - name: Inspect Linux candidate packages
+        if: runner.os == 'Linux'
+        run: python scripts/check-linux-packages.py src-tauri/target/release/bundle --output src-tauri/target/release/bundle/linux-package-report.json
       - uses: actions/upload-artifact@v4
         with:
           name: gosu-speech-to-text-${{ matrix.artifact }}

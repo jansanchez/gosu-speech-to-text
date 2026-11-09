@@ -1,5 +1,7 @@
 # Build and test on Linux
 
+For downloaded packages without development tools, see [Install on Linux](INSTALL-LINUX.md).
+
 Package baseline: Linux x64 on Ubuntu 22.04. Arch and other desktops need equivalent dependencies and their own validation. See [building and distribution](BUILD-AND-RELEASE.md).
 
 ## Dependencies
