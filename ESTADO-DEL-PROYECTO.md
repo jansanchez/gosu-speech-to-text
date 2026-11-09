@@ -18,6 +18,10 @@ After `e6e042a` was pushed, the maintainer reported Node 20 deprecation annotati
 
 The maintainer supplied Windows CI logs: all 15 server tests passed, but the new Linux package fixture failed because Windows chmod/stat does not provide POSIX executable bits. Restrict the Linux content/permission test to Linux (explicit skip on Windows/macOS), keeping malformed/wrong-architecture ELF headers and missing/ambiguous package tests portable. The production Linux permission gate is unchanged. FastAPI's httpx deprecation warning was not the failing assertion; dependency migration is separate work. Local make check passed (85 TypeScript, 27 Python, 11 Rust; one graphical exclusion), with all three package tests passing on Linux. A fresh Windows CI run remains necessary; Linux validation does not establish a Windows pass.
 
+## macOS engine-path test race correction
+
+After `ebec02c`, the maintainer supplied macOS logs: two parallel engine-path tests failed while resolving and removing temporary fixtures. The test helper used PID plus wall-clock nanoseconds with create_dir_all, so equal clock readings could silently share a directory. Replaced it with an atomic counter and exclusive create_dir, retrying AlreadyExists. Added regressions for pre-existing paths and 16 concurrent fixture reservations. Production path resolution and engine lifecycle are unchanged. Standalone tests passed, including 50 parallel suite runs; local make check passed (85 TypeScript, 27 Python, 13 Rust; one graphical exclusion). A native macOS Actions run is still required to confirm the reported platform failure is resolved.
+
 ## Current work
 
 The maintainer requires English for all digital products: UI, errors, tools, documentation, and release notes. Conversation with the maintainer remains Spanish. English migration is ready for candidate validation as **0.6.0** on base `97cb754`. Persistent identities, legacy filenames/entry points, backups, and multilingual user content are preserved. English becomes the new-install recognition default; existing saved language choices remain intact.

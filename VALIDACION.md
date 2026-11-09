@@ -179,3 +179,12 @@ No real ten-language microphone/accuracy benchmark, native-speaker grammar revie
 - Limited the content/permission test to Linux with an explicit unittest skip. Added portable malformed/empty/AArch64 ELF-header rejection coverage; ambiguous/missing package selection remains portable. Production package inspection and its POSIX permission validation were preserved.
 - Host Linux x86_64/CachyOS, Node 26.13.0, Python 3.12.15, Rust 1.99.1: three targeted Linux-package tests passed; `make check` outside sandbox passed (85 TypeScript, 27 Python, 11 Rust tests; one graphical Rust test ignored). Formatting and diff checks passed. Local log `/tmp/gosu-windows-test-check.log`.
 - Real Windows/macOS CI reruns remain pending. No Windows runtime, installer, microphone, or signing validation is claimed. The FastAPI httpx deprecation warning is separate from the failure and remains unchanged. No version/tag/release created.
+
+
+## macOS parallel engine-path fixture isolation — 2026-11-09
+
+- Baseline `ebec02c`. Maintainer-supplied macOS log from `python scripts/test-engine-paths.py`: release lookup passed, source-root lookup and fixture removal failed concurrently (missing fixture files and DirectoryNotEmpty). The helper named directories using PID and wall-clock nanoseconds and called create_dir_all, allowing an existing path to be silently reused if clock readings collided. The logs are consistent with this race; no native macOS reproduction was available locally.
+- Test-only fix: atomic sequence plus exclusive create_dir; retry AlreadyExists, never adopt an existing fixture. Added deterministic pre-existing-path collision coverage and 16 concurrent fixture reservations. Production engine/path functions are unchanged.
+- Linux x86_64/CachyOS, Rust 1.99.1, Python 3.12.15, Node 26.13.0: `python3 scripts/test-engine-paths.py` passed all five tests. Compiled the standalone suite once and ran it 50 times with `--test-threads=32`: 250 test executions passed. This stress run supplements the deterministic collision test and does not establish macOS acceptance.
+- Formatting, `git diff --check`, and external `make check` passed: 85 TypeScript, 27 Python, 13 Rust tests, one graphical Rust test ignored. Local log `/tmp/gosu-mac-path-check.log`.
+- Fresh macOS Intel/ARM64 Actions verification remains pending. No installer rebuild, tag, release, signing, engine lifecycle or user-data change was performed.

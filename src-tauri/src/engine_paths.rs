@@ -45,17 +45,72 @@ pub fn release_engine(resources: Option<&Path>, executable: &Path) -> Result<Pat
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
     fn temp() -> PathBuf {
-        let path = std::env::temp_dir().join(format!(
-            "gosu-path-test-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        ));
-        std::fs::create_dir_all(&path).unwrap();
-        path
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        temp_in(&std::env::temp_dir(), &NEXT)
+    }
+
+    fn temp_in(parent: &Path, next: &AtomicU64) -> PathBuf {
+        loop {
+            let path = parent.join(format!(
+                "gosu-path-test-{}-{}",
+                std::process::id(),
+                next.fetch_add(1, Ordering::Relaxed)
+            ));
+            // Reserve exclusively: timestamps can collide between parallel tests.
+            match std::fs::create_dir(&path) {
+                Ok(()) => return path,
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(error) => panic!("Cannot create test directory {}: {error}", path.display()),
+            }
+        }
+    }
+
+    #[test]
+    fn temporary_directories_never_reuse_existing_paths() {
+        let root = temp();
+        let first = temp_in(&root, &AtomicU64::new(0));
+        std::fs::write(first.join("owner"), "first").unwrap();
+        let second = temp_in(&root, &AtomicU64::new(0));
+        assert_ne!(first, second);
+        std::fs::remove_dir_all(second).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(first.join("owner")).unwrap(),
+            "first"
+        );
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn parallel_temporary_directories_are_independent() {
+        let root = temp();
+        let next = AtomicU64::new(0);
+        let barrier = std::sync::Barrier::new(16);
+        let paths = std::thread::scope(|scope| {
+            let handles: Vec<_> = (0..16)
+                .map(|_| {
+                    scope.spawn(|| {
+                        barrier.wait();
+                        temp_in(&root, &next)
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .map(|h| h.join().unwrap())
+                .collect::<Vec<_>>()
+        });
+        assert_eq!(
+            paths.iter().collect::<std::collections::HashSet<_>>().len(),
+            16
+        );
+        for path in paths {
+            assert!(path.is_dir());
+            std::fs::remove_dir(path).unwrap();
+        }
+        std::fs::remove_dir(root).unwrap();
     }
     #[test]
     fn missing_python_reports_the_actual_path() {

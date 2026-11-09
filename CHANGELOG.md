@@ -4,6 +4,8 @@ Versions follow [SemVer 2.0.0](https://semver.org/). A Git tag identifies exact 
 
 ## Unreleased
 
+- Reserve independent temporary directories for parallel engine-path tests, retrying collisions instead of reusing timestamp-based paths.
+
 - Restrict Linux package permission/content tests to Linux hosts; retain portable invalid-ELF and package-selection checks on Windows/macOS.
 
 - Updated GitHub Actions to Node 24 action runtimes in checks and release workflows; the application build remains on Node 22.
