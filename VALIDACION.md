@@ -163,3 +163,11 @@ No real ten-language microphone/accuracy benchmark, native-speaker grammar revie
 - Extracted both real local 0.6.0 packages in temporary directories and ran `inspect_tree`: application/engine x86_64, bundled Python 3.12, libswresample and desktop entry passed. DEB control inspected with `ar` and Python tarfile: package `gosu-speech-to-text`, version `0.6.0`, architecture `amd64`, dependencies `libwebkit2gtk-4.1-0, libgtk-3-0`. This host lacks dpkg-deb, so the full CLI report remains pending on Ubuntu CI. No application launch/installation/microphone test was performed.
 - `python3 scripts/checksums.py`: passed for local outputs. DEB SHA256 `d9c4c4d3098999a8eaa3917c693bc792e49313f9b8acbd938e20ce9b58ec7a2a`; AppImage SHA256 `b037cddb81cc75552f6eeaaa237085a82843487b6ce050d8057f6495e655495a`. Files are under `src-tauri/target/release/bundle/`; built on CachyOS, not certified as portable Ubuntu artifacts. Do not mix these with CI candidates.
 - No tag, release, signature, store submission, or desktop shortcut change was made.
+
+
+## GitHub Actions Node 24 runtimes — 2026-11-09
+
+- Baseline `e6e042a`, Linux x86_64/CachyOS, Node 26.13.0, Python 3.12.15, Rust 1.99.1. Updated both workflows' GitHub-maintained JavaScript actions to Node 24 runtimes; build Node remains 22 in CI. Upstream action.yml verified: checkout/setup-node/setup-python/upload-artifact v6 and download-artifact v7. Download v6 still declares node20, so v7 is required here.
+- `npm run format`, `cargo fmt --manifest-path src-tauri/Cargo.toml`, YAML parsing of both workflows, and `git diff --check`: passed.
+- `make check` outside sandbox: passed (85 TypeScript, 26 Python, 11 Rust tests; one graphical Rust test ignored); local log `/tmp/gosu-actions-check.log`. These checks do not execute GitHub actions or validate remote credential cleanup/artifact transfer.
+- Run a fresh Checks/candidate workflow from the new commit to verify annotations and actual hosted-runner behavior. An old run's rerun retains its original workflow revision. No tag, release or package rebuild was performed for this maintenance.

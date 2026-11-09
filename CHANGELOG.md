@@ -4,6 +4,8 @@ Versions follow [SemVer 2.0.0](https://semver.org/). A Git tag identifies exact 
 
 ## Unreleased
 
+- Updated GitHub Actions to Node 24 action runtimes in checks and release workflows; the application build remains on Node 22.
+
 - Added an English Linux installation guide, explicit candidate compatibility matrix, and clean-install acceptance procedure for DEB/AppImage distribution.
 - Added CI inspection of Linux candidate package structure, version/architecture, bundled engine/runtime/audio library, desktop entry, and hashes. This does not certify installation or desktop integration.
 

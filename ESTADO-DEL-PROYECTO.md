@@ -10,6 +10,10 @@ Initial local output was historical 0.3.2. New 0.6.0 DEB and AppImage packages w
 
 Checks for this preparation: `make check` passed outside the sandbox (85 TypeScript, 26 Python, 11 Rust tests; one graphical Rust test ignored). The sandbox run reached the known FastAPI timeout. Package inspection tests use fixtures; current artifact and clean-install evidence remain separate.
 
+## GitHub Actions runtime maintenance
+
+After `e6e042a` was pushed, the maintainer reported Node 20 deprecation annotations in approval and extension jobs. Both workflows now use checkout v6, setup-node v6, setup-python v6, upload-artifact v6, and download-artifact v7, verified against their upstream action.yml Node 24 declarations. Node 22 remains the project build version; Python 3.12, native runners, artifact layout and publication approval are preserved. GitHub-hosted runners must provide the modern action runner required by these actions. A fresh workflow run from the new commit is required; rerunning an old run uses its old workflow revision. Local make check passed (85 TypeScript, 26 Python, 11 Rust; one graphical exclusion) and both workflow YAML files parsed. See VALIDACION.md. No release/tag is created by this maintenance.
+
 ## Current work
 
 The maintainer requires English for all digital products: UI, errors, tools, documentation, and release notes. Conversation with the maintainer remains Spanish. English migration is ready for candidate validation as **0.6.0** on base `97cb754`. Persistent identities, legacy filenames/entry points, backups, and multilingual user content are preserved. English becomes the new-install recognition default; existing saved language choices remain intact.
