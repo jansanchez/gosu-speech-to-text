@@ -1,4 +1,22 @@
-# Resume state — 2026-11-09
+# Resume state — 2026-11-11
+
+## Development profile isolation
+
+The maintainer clarified that the native release opened without history; it must NOT be recorded as recovery of the old profile. Fresh installations and development history were expected to be separate. Evidence supports fresh-profile operation only, and the cause of the original IndexedDB error is still unresolved.
+
+Implemented: production remains `org.voz.prototype`; debug builds select `org.voz.prototype.dev` before Tauri resolves paths/creates windows. npm run desktop applies a development config overlay for platform build metadata. Debug titles show (Development). Linux shortcut bridge uses a separate development directory, and Hyprland recognizes/rejects both application identities as insertion targets. Existing legacy directories/IndexedDB keys/backups are untouched; no migration/reset/copy occurs. Native release and AppImage are both production and intentionally keep the production profile across upgrades.
+
+Local verification passed: npm checks/builds (85 TypeScript), 27 Python tests, 16 final Rust tests (one graphical exclusion), locked debug/release Rust checks, formatting and brand sync. Lockfiles unchanged. Regression scope: production config preservation, development-only config changes, Tauri's actual path resolver via MockRuntime for distinct data/local-data/config/cache/log paths without windows, and Hyprland development identity handling. Native GUI, persistence and macOS/Windows isolation need real acceptance. Previously generated binaries do not include this source change. Run npm run desktop to test current development; rebuild candidates to test changed release source. The isolation fix does not itself repair the existing-profile AppImage failure.
+
+## CachyOS AppImage storage investigation
+
+Current source `7b7483a`. The maintainer reports all candidate jobs successful. Downloaded `/home/jan/Applications/gosu-0.6.0/linux-package-report.json` identifies commit `7b7483a700e00be2c208215d5f660927f33b2017`, Ubuntu/glibc 2.35 builder, version 0.6.0. Actual AppImage launch on CachyOS fails with IndexedDB UnknownError: Unable to establish IDB database file. Start dictation remains disabled because useWorkspace never sets loaded after a storage-open failure; preserve this recovery gate.
+
+Engine logs supplied by the maintainer show the process/server started and model base loading. The maintainer then confirms the same AppImage works correctly with isolated XDG_DATA_HOME and XDG_CACHE_HOME under a mktemp directory. This establishes fresh-profile operation, not existing-profile compatibility or full platform acceptance. Do not delete/reset the original profile or use a temporary profile as the final installation.
+
+Read-only metadata investigation: system WebKitGTK 2.54.2; original production and dev IndexedDB metadata versions both 2. Data directory owner is jan and free space is sufficient. Metadata queried only from disposable copies; no original database edits. Bundled WebKit version could not be resolved in isolation because its Ubuntu dependencies were not fully extracted; missing-library errors from these metadata probes do not mean those libraries are missing from the complete AppImage. Compatibility with the older bundled WebKit is a hypothesis, not a confirmed root cause. No source/storage migration has been implemented.
+
+Next: close AppImage, preserve a filesystem backup of the original profile, and test the existing native CachyOS build with system WebKit to recover/export a supported application backup if it opens. The binary and staged engine exist at src-tauri/target/release/gosu-speech-to-text and src-tauri/target/release/engine/gosu-engine. A permanent profile/recovery workflow still needs validation. Avoid simultaneous instances sharing a profile. Pending: repeated persistence, real audio/insertion acceptance, exact bundled WebKit version and original-profile diagnosis.
 
 ## Linux distribution preparation
 

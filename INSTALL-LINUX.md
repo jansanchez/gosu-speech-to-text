@@ -18,6 +18,12 @@ The following is a validation plan, **not a list of certified systems**. No clea
 
 Test X11 and Wayland separately where available. Other distributions may work but are unverified. An AppImage still depends on compatible system libraries, graphics drivers, and desktop services. Do not bypass missing-library errors with arbitrary symlinks or libraries copied from another distribution.
 
+## Existing data and development
+
+Installing or updating a production package reuses production preferences/history if present. AppImage and the native release binary share `org.voz.prototype`; changing executable paths does not create a fresh profile. Current debug development uses `org.voz.prototype.dev` and a window title marked `(Development)`. Older development used a separate web origin inside the production directory; those legacy files are preserved without automatic copying. See [profile architecture](ARCHITECTURE.md).
+
+If startup reports `Could not open local storage`, dictation stays disabled to protect recoverable work. Preserve a backup with every GOSU instance closed before investigating; do not delete IndexedDB files or bypass the load gate. A fresh temporary XDG profile can help diagnose the failure, but is not a permanent installation or proof that existing data are corrupt. Production profile compatibility must be tested before release acceptance.
+
 ## Verify a download
 
 Download the installer and `SHA256SUMS.txt` from the **same release** into a new directory. The release manifest lists all platforms. To verify just your downloaded package, replace the filename below with its exact name:

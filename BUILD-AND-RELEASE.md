@@ -30,6 +30,8 @@ Platform dependencies: [Linux](LINUX-MAKE.md), [Windows](INSTALAR-WINDOWS.md), [
 
 The helper creates `.venv` if absent, checks Python version, installs `server/requirements-build.txt`, runs `npm ci`, and performs common checks. Failures stop before launching or packaging. It does not install system tools or delete an existing environment with the wrong Python version.
 
+Development uses a separate `org.voz.prototype.dev` profile through the CLI overlay and debug runtime configuration. Production keeps `org.voz.prototype` across upgrades. Old data are preserved and not imported automatically. The native release binary and AppImage are both production; installing a package is not a request to erase earlier production data. See [profile architecture](ARCHITECTURE.md).
+
 For subsequent development sessions, run `npm run desktop` (`npm.cmd run desktop` in PowerShell). The desktop automatically connects to its engine without manually starting a server or copying a token. `npm run dev` runs only the web frontend and does not provide desktop global shortcuts.
 
 ## Individual checks

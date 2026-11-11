@@ -37,6 +37,16 @@ Preserve `org.voz.prototype`, `voz-state`, and `voz-jobs`. Renaming product text
 
 Chrome shares capture, deterministic editing, preferences, history, and backups but runs its own WASM recognizer without Python. Its controller is `extension/recorder.js`; runtime tests replace only devices and recognition. Interface language is English independently of recognition language. Existing saved recognition languages and user text are retained.
 
+## Development and production profiles
+
+Production retains `org.voz.prototype`, its existing storage directories, IndexedDB keys, and backup formats. The supported `npm run desktop` development command applies `tauri.dev.conf.json` with `org.voz.prototype.dev`; debug builds also select that identity in Rust before Tauri creates windows or resolves paths. The development window title includes `(Development)`. The CLI overlay supplies the development identifier to build-time platform metadata as well as runtime configuration.
+
+On Linux, default application data/log roots are `~/.local/share/org.voz.prototype` for production and `~/.local/share/org.voz.prototype.dev` for development (subject to XDG overrides). Tauri resolves corresponding app-specific paths on Windows/macOS. The Linux shortcut control bridge also uses a separate development directory; real system shortcut combinations can still conflict and must remain recoverable. Hyprland recognizes both identities as GOSU windows and rejects them as external insertion targets.
+
+Earlier development used a different web origin (`http://127.0.0.1:1420`) inside the production base directory, while packaged builds use `tauri://localhost`. Origins already separated records, but WebKit metadata and logs shared a base profile. No old profile is copied, renamed, reset, or automatically imported. Existing development data remain in the legacy directory; use explicit application backup/export/import when appropriate. New development starts in its own profile. Production reinstalls/updates keep production data; native release and AppImage builds are both production, not independent installations. Recognition model downloads may still share dependency-managed caches; those are not workspace history.
+
+A fresh diagnostic XDG profile working does not prove original-profile corruption or a bundled-WebKit incompatibility. Desktop/runtime acceptance must be recorded separately from configuration tests.
+
 ## Storage invariants
 
 - Invalid loaded data blocks autosave; never silently replace corrupted history with empty state.

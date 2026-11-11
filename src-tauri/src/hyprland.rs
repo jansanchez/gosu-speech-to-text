@@ -58,7 +58,10 @@ pub fn terminal(app: &str) -> bool {
     .any(|name| app.contains(name))
 }
 fn own_class(app: &str) -> bool {
-    matches!(app, "org.voz.prototype" | "gosu-speech-to-text")
+    matches!(
+        app,
+        "org.voz.prototype" | "org.voz.prototype.dev" | "gosu-speech-to-text"
+    )
 }
 fn destination(value: &Value) -> Result<Destination, String> {
     let id = value["address"].as_str().unwrap_or_default();
@@ -308,12 +311,15 @@ fn overlay_window(clients: &Value) -> Result<Value, String> {
         return Ok(window.clone());
     }
     let mut matches = items.iter().filter(|item| {
-        ["org.voz.prototype", "gosu-speech-to-text"]
-            .iter()
-            .any(|class| {
-                item["class"].as_str() == Some(*class)
-                    || item["initialClass"].as_str() == Some(*class)
-            })
+        [
+            "org.voz.prototype",
+            "org.voz.prototype.dev",
+            "gosu-speech-to-text",
+        ]
+        .iter()
+        .any(|class| {
+            item["class"].as_str() == Some(*class) || item["initialClass"].as_str() == Some(*class)
+        })
     });
     let window = matches.next().ok_or("The GOSU window was not found.")?;
     if matches.next().is_some() {
@@ -451,7 +457,11 @@ mod tests {
     }
     #[test]
     fn overlay_identifies_webkit_window_and_rejects_ambiguity() {
-        for class in ["org.voz.prototype", "gosu-speech-to-text"] {
+        for class in [
+            "org.voz.prototype",
+            "org.voz.prototype.dev",
+            "gosu-speech-to-text",
+        ] {
             let window = serde_json::json!({"pid":999999,"class":class,"address":"0xabc"});
             assert_eq!(
                 overlay_window(&serde_json::json!([window.clone()])).unwrap()["address"],
@@ -464,6 +474,10 @@ mod tests {
     #[test]
     fn empty_and_own_windows_are_not_destinations() {
         assert!(destination(&serde_json::json!({})).is_err());
+        assert!(destination(
+            &serde_json::json!({"address":"0x123","pid":999999,"class":"org.voz.prototype.dev"})
+        )
+        .is_err());
         assert!(destination(&serde_json::json!({"address":"0x123","pid":std::process::id(),"class":"org.voz.prototype"})).is_err());
         assert!(destination(
             &serde_json::json!({"address":"0x123","pid":999999,"class":"gosu-speech-to-text"})

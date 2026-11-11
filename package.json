@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
     "build": "node scripts/sync-brand.mjs --check && tsc --noEmit && vite build",
     "test": "node --import tsx --test --test-timeout=30000 tests/*.test.ts",
-    "desktop": "node scripts/prepare-desktop.mjs && tauri dev",
+    "desktop": "node scripts/prepare-desktop.mjs && tauri dev --config src-tauri/tauri.dev.conf.json",
     "desktop:build": "node scripts/build-desktop.mjs",
     "extension:build": "node scripts/sync-brand.mjs --check && node scripts/build-extension.mjs",
     "brand:sync": "node scripts/sync-brand.mjs",

@@ -10,6 +10,7 @@ mod minimal;
 mod platform;
 #[cfg(target_os = "linux")]
 mod portal;
+mod profiles;
 use tauri::Manager;
 
 #[cfg(windows)]
@@ -186,6 +187,8 @@ fn main() {
     if minimal::handle_cli() {
         return;
     }
+    let mut context = tauri::generate_context!();
+    profiles::configure(context.config_mut(), cfg!(debug_assertions));
     let app = tauri::Builder::default()
         .manage(engine::Engine::default())
         .setup(|app| {
@@ -214,7 +217,7 @@ fn main() {
             engine::engine_rewrite,
             engine::engine_search
         ])
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("Could not start GOSU Speech to Text");
     app.run(|handle, event| {
         if let tauri::RunEvent::Exit = event {

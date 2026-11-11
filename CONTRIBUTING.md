@@ -24,6 +24,10 @@ Storage, queue, privacy, and concurrency changes must cover the failure they cor
 
 TypeScript tests have a 30-second deadline per file; the full UI suite exceeded 15 seconds on a macOS Intel runner. Python suites have a 60-second deadline. In restricted environments, FastAPI TestClient can hang even for an empty API: repeat outside the sandbox before diagnosing an application defect. Do not remove tests or disable checks to hide a timeout.
 
+## Desktop profiles
+
+Use `npm run desktop` (or the documented Make/Python helper), which applies the development Tauri overlay. Debug windows show `(Development)` and use `org.voz.prototype.dev`; production retains `org.voz.prototype`. See [architecture](ARCHITECTURE.md) for legacy-data preservation. Do not use a release binary as a development profile or reset application data to make a test pass. Validate persistence and isolation with test content in controlled profiles before claiming native platform acceptance.
+
 ## Compatibility
 
 - Preserve previous data and migrate missing fields without overwriting existing settings.

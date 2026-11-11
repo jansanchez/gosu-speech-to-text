@@ -225,7 +225,7 @@ mod bridge {
     fn path() -> Result<PathBuf, String> {
         let root = std::env::var_os("XDG_RUNTIME_DIR").ok_or("XDG_RUNTIME_DIR is missing.")?;
         Ok(PathBuf::from(root)
-            .join("gosu-speech-to-text")
+            .join(crate::profiles::bridge_directory(cfg!(debug_assertions)))
             .join("control.sock"))
     }
     pub fn send(command: &str) -> Result<(), String> {

@@ -32,6 +32,8 @@ Minimal mode has been exercised on Linux/Hyprland. Other adapters are implemente
 
 Download DEB or AppImage packages from [Releases](https://github.com/jansanchez/gosu-speech-to-text/releases), then follow [Linux installation and compatibility](INSTALL-LINUX.md). Current clean-install acceptance is pending; the guide distinguishes candidate targets from validated systems.
 
+Development and production use separate application profiles. `npm run desktop` opens a window marked `(Development)`; production updates preserve production history. Existing legacy data are retained without automatic copying. See [profile isolation](ARCHITECTURE.md).
+
 ## Build from source
 
 Run commands from the directory containing `package.json`. Common requirements: **an up-to-date Node 22.x with npm, Python 3.12, and stable Rust with rustfmt**, plus the native tools for your platform. Do not copy `.venv`, `node_modules`, or packaged engines between operating systems or architectures.
