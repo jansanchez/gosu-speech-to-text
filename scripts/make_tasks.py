@@ -20,6 +20,7 @@ HELP = """GOSU Speech to Text · GNU Make tasks for Linux
   make appimage     Check and build AppImage with SHA256SUMS
   make deb          Check and build DEB with SHA256SUMS
   make bundle       Check and build AppImage and DEB
+  make arch         Check/build native Arch/CachyOS candidate for pacman
   make build        Alias for make appimage
   make extension    Build and package the Chrome extension
   make smoke        Check the bundled engine (downloads tiny if missing)
@@ -210,7 +211,7 @@ def doctor():
 
 def main():
     parser=argparse.ArgumentParser(description=HELP,formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('task',choices=['help','doctor','setup','dev','test','check','frontend','engine','appimage','deb','bundle','extension','smoke','install','uninstall','clean'])
+    parser.add_argument('task',choices=['help','doctor','setup','dev','test','check','frontend','engine','appimage','deb','bundle','arch','extension','smoke','install','uninstall','clean'])
     parser.add_argument('--prefix',default=str(Path.home()/'.local'))
     args=parser.parse_args()
     if args.task=='help':print(HELP)
@@ -229,6 +230,12 @@ def main():
     elif args.task=='frontend':frontend()
     elif args.task=='engine':engine()
     elif args.task in {'appimage','deb','bundle'}:build('appimage,deb' if args.task=='bundle' else args.task)
+    elif args.task=='arch':
+        native_requirements()
+        tool('makepkg');tool('pacman');tool('bsdtar')
+        run(sys.executable, 'scripts/make_tasks.py', 'check')
+        run(tool('npm'), 'run', 'desktop:build', '--', '--no-bundle', '--', '--locked')
+        run(sys.executable, 'scripts/package-arch.py')
     elif args.task=='extension':
         if not (ROOT/'node_modules').is_dir():run(tool('npm'),'ci')
         run(tool('npm'),'run','extension:build');run(sys.executable,'scripts/package-extension.py')

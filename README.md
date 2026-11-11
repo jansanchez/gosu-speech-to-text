@@ -30,6 +30,8 @@ Minimal mode has been exercised on Linux/Hyprland. Other adapters are implemente
 
 ## Install on Linux
 
+For CachyOS, a native pacman candidate can be built with `make arch`; it uses system WebKitGTK and is not currently an Actions download. See the compatibility warning in the Linux guide before alternating native builds and an older AppImage.
+
 Download DEB or AppImage packages from [Releases](https://github.com/jansanchez/gosu-speech-to-text/releases), then follow [Linux installation and compatibility](INSTALL-LINUX.md). Current clean-install acceptance is pending; the guide distinguishes candidate targets from validated systems.
 
 Development and production use separate application profiles. `npm run desktop` opens a window marked `(Development)`; production updates preserve production history. Existing legacy data are retained without automatic copying. See [profile isolation](ARCHITECTURE.md).

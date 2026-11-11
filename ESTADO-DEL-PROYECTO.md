@@ -1,5 +1,15 @@
 # Resume state — 2026-11-11
 
+## CachyOS native package and confirmed WebKit downgrade failure
+
+Baseline `640b727`. Confirmed with the downloaded CI AppImage: bundled WebKitGTK 2.50.4 versus CachyOS system 2.54.2. A reproducible real GTK/WebKit test on a virtual X11 display using disposable databases yields: native fresh opens (MetadataVersion 2); bundled fresh opens (1); bundled opening native-created database fails with the user's exact UnknownError; native opening bundled database succeeds and upgrades metadata to 2. This explains why even an empty profile previously opened natively can fail in the older AppImage. No user records/profiles were used or edited in the reproduction.
+
+Added `make arch`: checks, native app/engine build with --no-bundle, and makepkg packaging for Arch/CachyOS x86_64. Ships /opt/gosu-speech-to-text app plus adjacent complete engine, /usr/bin symlink, menu/icon, licenses/notices, source/host/WebKit provenance and SHA256. Uses system WebKit with a minimum builder-version dependency; no bundled WebKit replacement or data reset. Git-based candidate package versions, dirty builds explicitly marked, output never overwritten. Does not install/sign/publish. Current Actions still builds Ubuntu DEB/AppImage, not Arch packages.
+
+Local make arch passed (85 TypeScript, 29 Python, 16 Rust, one graphical exclusion) and built a dirty diagnostic native candidate. Final clean-commit candidate should be generated before maintainer installation. `pacman -Qip` and archive contents validated; native binary links system /usr/lib WebKit. Real pacman installation, reopening/persistence, mic/shortcuts/insertion still require maintainer acceptance. The older AppImage remains incompatible with a newer-migrated profile; do not switch back to it on the same profile.
+
+Repro source: scripts/test-webkit-storage.py and tests/native/indexeddb-probe.c. Command in BUILD-AND-RELEASE.md; exit 1 currently means the diagnosed old-runtime compatibility failure. Results: /tmp/gosu-webkit-compatibility.json; make/build log /tmp/gosu-arch-build.log. This diagnosis supersedes earlier unconfirmed hypotheses below.
+
 ## Development profile isolation
 
 The maintainer clarified that the native release opened without history; it must NOT be recorded as recovery of the old profile. Fresh installations and development history were expected to be separate. Evidence supports fresh-profile operation only, and the cause of the original IndexedDB error is still unresolved.

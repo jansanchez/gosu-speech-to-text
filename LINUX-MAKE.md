@@ -49,6 +49,14 @@ Each build checks and packages engine/UI. Output is `src-tauri/target/release/bu
 
 `make install` installs an AppImage for your user; `make uninstall` removes that managed installation. A custom prefix is supported: `make install PREFIX=/another/path`. Uninstall with the same prefix. `make clean` removes generated output; read `make help` first. Do not run GOSU with sudo.
 
+## Native package for Arch / CachyOS
+
+```bash
+make arch
+```
+
+Build on native Arch/CachyOS x86_64 with `base-devel`, `pacman`, and `bsdtar` available. This runs checks, builds the complete application and engine without an AppImage, and creates a pacman candidate using system WebKit. Output and SHA256 manifest: `src-tauri/target/release/bundle/archlinux/<candidate>/`. It does not install the result or change desktop settings. See [native installation and IndexedDB compatibility](INSTALL-LINUX.md).
+
 ## Desktops and permissions
 
 - **X11:** `xdotool` handles focus/paste; `xprop` helps identify terminal applications.

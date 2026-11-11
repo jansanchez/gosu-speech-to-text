@@ -5,7 +5,7 @@ PYTHON ?= python3
 PREFIX ?= $(HOME)/.local
 TASK = $(PYTHON) scripts/make_tasks.py
 
-.PHONY: help doctor setup dev run test check frontend engine appimage deb bundle build extension smoke install uninstall clean
+.PHONY: help doctor setup dev run test check frontend engine appimage deb bundle arch build extension smoke install uninstall clean
 help:
 	@$(TASK) help
 doctor:
@@ -29,6 +29,8 @@ deb:
 	$(TASK) deb
 bundle:
 	$(TASK) bundle
+arch:
+	$(TASK) arch
 build: appimage
 extension:
 	$(TASK) extension

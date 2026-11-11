@@ -4,6 +4,8 @@ Versions follow [SemVer 2.0.0](https://semver.org/). A Git tag identifies exact 
 
 ## Unreleased
 
+- Added native Arch/CachyOS pacman candidates using system WebKitGTK, including the full Python engine, launcher, notices, provenance and checksums. Reproduced the IndexedDB runtime downgrade failure between WebKitGTK 2.54.2 and the AppImage’s 2.50.4; no user database edits or reset. Arch packages are local candidates and are not yet in the release workflow.
+
 - Isolated desktop development identity, data/log directories and Linux control bridge from production. Preserved the production identifier, storage keys, backups and legacy files; no automatic data migration.
 
 - Reserve independent temporary directories for parallel engine-path tests, retrying collisions instead of reusing timestamp-based paths.

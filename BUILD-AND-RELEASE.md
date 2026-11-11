@@ -69,6 +69,7 @@ Close the development application first. Helpers run setup and checks before bui
 | Windows x64/MSVC | `py -3.12 scripts/configurar.py --build` | `nsis/*.exe` |
 | Linux x64 AppImage | `make appimage` | `appimage/*.AppImage` |
 | Linux x64 DEB | `make deb` | `deb/*.deb` |
+| Arch/CachyOS x64 native candidate | `make arch` on native Arch/CachyOS | `archlinux/<candidate>/*.pkg.tar.zst` |
 | Linux x64 both | `make bundle` | `appimage/` and `deb/` |
 | macOS ARM64, native host | `python3.12 scripts/configurar.py --build` | `macos/*.app`, `dmg/*.dmg` |
 | macOS Intel, native x64 host | `python3.12 scripts/configurar.py --build` | `macos/*.app`, `dmg/*.dmg` |
@@ -88,6 +89,16 @@ Use `npm.cmd` in PowerShell. `-- --locked` after Tauri arguments is forwarded to
 On Linux the coordinator adds bundled library directories to `LD_LIBRARY_PATH` only for its build subprocess. This lets linuxdeploy resolve private wheel dependencies such as `av.libs/libswresample-*.so.*`. If `Could not find dependency: libswresample-…` appears, use updated `make appimage` or `npm run desktop:build`; invoking `tauri build` directly bypasses preparation. Preserve original library names.
 
 The resource is the complete `engine-dist/gosu-engine/` directory, not only its executable. Do not distribute the bare Tauri executable alone. Installers should run without Python/Node/Rust development tools, with applicable system components installed.
+
+Arch/CachyOS native candidates use `make arch`, require native Arch/CachyOS x86_64, and ship the complete staged engine beside the executable under `/opt/gosu-speech-to-text`. They depend on system WebKitGTK at least as recent as the builder version. `makepkg` runs as an ordinary user; no automatic installation, signing, package overwrite, or runtime library substitution. The candidate package records commit, dirty status, host and WebKit version and has its own SHA256 manifest. These packages are local candidates, not part of the current Ubuntu CI matrix or six published release assets. See [Linux installation](INSTALL-LINUX.md) for the reproduced WebKit downgrade failure and acceptance scope.
+
+For maintainers investigating WebKit storage interoperability, a standalone real WebKit probe is available (Linux development dependencies plus Xvfb and D-Bus):
+
+```bash
+xvfb-run -a dbus-run-session -- python3 scripts/test-webkit-storage.py '/absolute/path/to/trusted/GOSU.AppImage'
+```
+
+It extracts only the trusted project artifact, compiles the probe, creates disposable databases, and compares native/bundled runtimes in both directions. It does not open user profiles or test recognition. A nonzero result reports compatibility failure; do not bypass that gate by resetting user data. The probe is not part of ordinary unit tests or an assertion of clean installation.
 
 ## Linux candidate inspection
 

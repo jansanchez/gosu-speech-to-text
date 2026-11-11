@@ -1,0 +1,14 @@
+# Generated candidate package: build and package natively on Arch/CachyOS.
+pkgname=gosu-speech-to-text
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc='Local dictation and transcription (native Linux candidate)'
+arch=('x86_64')
+url='https://github.com/jansanchez/gosu-speech-to-text'
+license=('MIT')
+depends=('webkit2gtk-4.1>=@WEBKIT@' 'gtk3' 'openssl' 'gcc-libs')
+optdepends=('xdotool: X11 focus and text insertion' 'xorg-xprop: X11 terminal identification')
+options=('!strip' '!debug')
+package() {
+  cp -a "$startdir/payload/." "$pkgdir/"
+}
