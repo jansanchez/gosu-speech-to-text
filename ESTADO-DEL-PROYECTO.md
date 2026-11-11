@@ -1,5 +1,25 @@
 # Resume state — 2026-11-11
 
+## Resume here
+
+Last implementation commit: `12323629f3dc724da80ef118b17b049178531d08`; validation record pushed in `3d0bb03`. The maintainer asked to save progress after receiving native installation instructions. There is **no confirmation yet of pacman installation or native candidate acceptance**. Compare Git and filesystem evidence on resume; do not rebuild or replace the existing candidate unnecessarily.
+
+Next maintainer action, with all GOSU instances closed and a backup retained:
+
+```bash
+cd /home/jan/Projects/personal/gosu-speech-to-text/src-tauri/target/release/bundle/archlinux/0.6.0.r23.g12323629
+sha256sum --check SHA256SUMS.txt
+# Proceed only if checksum verification reports OK:
+sudo pacman -U ./gosu-speech-to-text-0.6.0.r23.g12323629-1-x86_64.pkg.tar.zst
+/usr/bin/gosu-speech-to-text
+```
+
+Then confirm storage opens, Start dictation is enabled, real microphone/recognition work, saved text survives restart, and configurable shortcuts/insertion work without Enter. Record the exact installed package and session/desktop. Do not launch the older AppImage on that production profile. An older user AppImage launcher may shadow the command; use the explicit /usr/bin path during acceptance.
+
+Package is a local unsigned candidate, not a published SemVer release. Current brand version remains 0.6.0; changes accumulate under Unreleased. No new tag, release publication, signature, package installation, original-data reset or permanent shortcut change was performed. Arch packaging is not yet in GitHub Actions; no new Actions run is needed to test the already-built local candidate. Other platforms, Linux distributions, ten-language recognition acceptance and Windows signing remain pending as documented.
+
+Temporary extracted CI runtime was removed after diagnosis. Synthetic compatibility results remain in /tmp logs while available; the reproducible probe and full conclusions are committed. No existing user profile was modified by the agent.
+
 ## CachyOS native package and confirmed WebKit downgrade failure
 
 Baseline `640b727`. Confirmed with the downloaded CI AppImage: bundled WebKitGTK 2.50.4 versus CachyOS system 2.54.2. A reproducible real GTK/WebKit test on a virtual X11 display using disposable databases yields: native fresh opens (MetadataVersion 2); bundled fresh opens (1); bundled opening native-created database fails with the user's exact UnknownError; native opening bundled database succeeds and upgrades metadata to 2. This explains why even an empty profile previously opened natively can fail in the older AppImage. No user records/profiles were used or edited in the reproduction.
@@ -12,7 +32,7 @@ Repro source: scripts/test-webkit-storage.py and tests/native/indexeddb-probe.c.
 
 ## Development profile isolation
 
-The maintainer clarified that the native release opened without history; it must NOT be recorded as recovery of the old profile. Fresh installations and development history were expected to be separate. Evidence supports fresh-profile operation only, and the cause of the original IndexedDB error is still unresolved.
+The maintainer clarified that the native release opened without history; it must NOT be recorded as recovery of the old profile. Fresh installations and development history were expected to be separate. At that stage evidence supported fresh-profile operation only; the later real WebKit reproduction above establishes the downgrade failure.
 
 Implemented: production remains `org.voz.prototype`; debug builds select `org.voz.prototype.dev` before Tauri resolves paths/creates windows. npm run desktop applies a development config overlay for platform build metadata. Debug titles show (Development). Linux shortcut bridge uses a separate development directory, and Hyprland recognizes/rejects both application identities as insertion targets. Existing legacy directories/IndexedDB keys/backups are untouched; no migration/reset/copy occurs. Native release and AppImage are both production and intentionally keep the production profile across upgrades.
 
@@ -24,9 +44,9 @@ Current source `7b7483a`. The maintainer reports all candidate jobs successful. 
 
 Engine logs supplied by the maintainer show the process/server started and model base loading. The maintainer then confirms the same AppImage works correctly with isolated XDG_DATA_HOME and XDG_CACHE_HOME under a mktemp directory. This establishes fresh-profile operation, not existing-profile compatibility or full platform acceptance. Do not delete/reset the original profile or use a temporary profile as the final installation.
 
-Read-only metadata investigation: system WebKitGTK 2.54.2; original production and dev IndexedDB metadata versions both 2. Data directory owner is jan and free space is sufficient. Metadata queried only from disposable copies; no original database edits. Bundled WebKit version could not be resolved in isolation because its Ubuntu dependencies were not fully extracted; missing-library errors from these metadata probes do not mean those libraries are missing from the complete AppImage. Compatibility with the older bundled WebKit is a hypothesis, not a confirmed root cause. No source/storage migration has been implemented.
+Read-only metadata investigation: system WebKitGTK 2.54.2; original production and dev IndexedDB metadata versions both 2. Data directory owner is jan and free space is sufficient. Metadata queried only from disposable copies; no original database edits. Bundled WebKit version could not be resolved in isolation because its Ubuntu dependencies were not fully extracted; missing-library errors from these metadata probes do not mean those libraries are missing from the complete AppImage. At that stage bundled-WebKit compatibility was only a hypothesis; the later reproduction above confirms the runtime downgrade failure. No user database migration or reset has been implemented.
 
-Next: close AppImage, preserve a filesystem backup of the original profile, and test the existing native CachyOS build with system WebKit to recover/export a supported application backup if it opens. The binary and staged engine exist at src-tauri/target/release/gosu-speech-to-text and src-tauri/target/release/engine/gosu-engine. A permanent profile/recovery workflow still needs validation. Avoid simultaneous instances sharing a profile. Pending: repeated persistence, real audio/insertion acceptance, exact bundled WebKit version and original-profile diagnosis.
+Historical proposed step (superseded by the native package handoff above): close AppImage, preserve a filesystem backup of the original profile, and test the existing native CachyOS build with system WebKit to recover/export a supported application backup if it opens. The binary and staged engine exist at src-tauri/target/release/gosu-speech-to-text and src-tauri/target/release/engine/gosu-engine. A permanent profile/recovery workflow still needs validation. Avoid simultaneous instances sharing a profile. Pending: repeated persistence, real audio/insertion acceptance, exact bundled WebKit version and original-profile diagnosis.
 
 ## Linux distribution preparation
 
